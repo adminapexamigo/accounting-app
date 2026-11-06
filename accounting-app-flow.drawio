@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-10-25T09:44:21.187Z" agent="Mozilla/5.0 Antigravity" version="21.0.0" type="device">
+  <diagram id="accounting-app-complete-flow" name="Startup Accounting App - Complete Architecture &amp; Feature Flow">
+    <mxGraphModel dx="2600" dy="1800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2400" pageHeight="1800" background="#f8fafc" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+    <mxCell id="c_3" value="🖥️ 1. DESKTOP LAUNCHER &amp; LOCAL DOMAIN INFRASTRUCTURE" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;html=1;fillColor=#1e3a8a;strokeColor=#172554;fontColor=#ffffff;rounded=1;shadow=1;fontSize=14;fontFamily=Segoe UI;" parent="1" vertex="1">
+      <mxGeometry x="40" y="40" width="460" height="480" as="geometry" />
+    </mxCell>
+    <mxCell id="c_4" value="&lt;b&gt;Amigo Control.html&lt;/b&gt;&lt;br/&gt;Desktop 1-Click GUI&lt;br/&gt;• Start Server &amp;amp; Launch Browser&lt;br/&gt;• Stop Server &amp;amp; Clear Hosts&lt;br/&gt;• Token Auth (127.0.0.1)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#3b82f6;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_3" vertex="1">
+      <mxGeometry x="20" y="55" width="200" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="c_5" value="&lt;b&gt;AmigoLauncher Helper&lt;/b&gt;&lt;br/&gt;(launcher.js + run-hidden.vbs)&lt;br/&gt;• Windows Scheduled Task&lt;br/&gt;• Elevated Port 80/443 listener&lt;br/&gt;• Dynamic hosts file update" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#64748b;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_3" vertex="1">
+      <mxGeometry x="240" y="55" width="200" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="c_6" value="&lt;b&gt;DNS &amp;amp; Hosts Resolution&lt;/b&gt;&lt;br/&gt;127.0.0.1 amigo-enterprises.com&lt;br/&gt;• Auto-injected in Windows hosts&lt;br/&gt;• Cleaned up on server stop" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ecfdf5;strokeColor=#10b981;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_3" vertex="1">
+      <mxGeometry x="20" y="175" width="200" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="c_7" value="&lt;b&gt;SSL / TLS Certificate Engine&lt;/b&gt;&lt;br/&gt;(certs/amigo.pfx, key.pem, cert.pem)&lt;br/&gt;• Self-Signed Trusted Root CA&lt;br/&gt;• Enables HTTPS for Camera API&lt;br/&gt;• Auto-switch HTTP &amp;rarr; HTTPS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#f59e0b;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_3" vertex="1">
+      <mxGeometry x="240" y="175" width="200" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="c_8" value="&lt;b&gt;Client Browser &amp;amp; Hardware&lt;/b&gt;&lt;br/&gt;• Chrome / Edge / Firefox&lt;br/&gt;• WebCam Video Feed Access&lt;br/&gt;• Single-Page Web App (index.html)&lt;br/&gt;• Responsive Desktop UI" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e0e7ff;strokeColor=#6366f1;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_3" vertex="1">
+      <mxGeometry x="100" y="285" width="260" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="c_9" value="&lt;b&gt;Zero-Dependency Node.js Backend&lt;/b&gt;&lt;br/&gt;(server.js)&lt;br/&gt;• Built-in http/https, tls, crypto, fs, zlib&lt;br/&gt;• Zero external npm packages&lt;br/&gt;• Atomic file writes &amp;amp; Chained mutex" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f1f5f9;strokeColor=#475569;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_3" vertex="1">
+      <mxGeometry x="60" y="390" width="340" height="75" as="geometry" />
+    </mxCell>
+    <mxCell id="c_10" value="Local Token API" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2563eb;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="c_3" source="c_4" target="c_5" edge="1">
+      <mxGeometry relative="1" as="geometry">
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c_11" value="Writes Hosts" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#10b981;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="c_3" source="c_5" target="c_6" edge="1">
+      <mxGeometry relative="1" as="geometry">
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c_12" value="Validates Cert" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#f59e0b;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="c_3" source="c_5" target="c_7" edge="1">
+      <mxGeometry relative="1" as="geometry">
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c_13" value="HTTPS :3000 / :443" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4f46e5;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="c_3" source="c_8" target="c_9" edge="1">
+      <mxGeometry relative="1" as="geometry">
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c_14" value="🔐 2. DUAL-ROLE AUTHENTICATION &amp; MULTI-FACTOR VERIFICATION FLOW" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;html=1;fillColor=#0f766e;strokeColor=#134e4a;fontColor=#ffffff;rounded=1;shadow=1;fontSize=14;fontFamily=Segoe UI;" parent="1" vertex="1">
+      <mxGeometry x="540" y="40" width="1050" height="480" as="geometry" />
+    </mxCell>
+    <mxCell id="c_15" value="&lt;b&gt;User Enters Credentials&lt;/b&gt;&lt;br/&gt;Username &amp;amp; Password&lt;br/&gt;POST /api/login" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0d9488;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;fontStyle=0;shadow=1;" parent="c_14" vertex="1">
+      <mxGeometry x="30" y="70" width="170" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="c_16" value="&lt;b&gt;Password Verification&lt;/b&gt;&lt;br/&gt;Scrypt Hash &amp;amp; Salt Match&lt;br/&gt;crypto.timingSafeEqual" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0fdfa;strokeColor=#14b8a6;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;fontStyle=0;shadow=1;" parent="c_14" vertex="1">
+      <mxGeometry x="230" y="70" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="c_17" value="Role?&lt;br/&gt;Admin vs Employee" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ccfbf1;strokeColor=#0f766e;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;fontStyle=1;shadow=1;align=center;verticalAlign=middle;" parent="c_14" vertex="1">
+      <mxGeometry x="420" y="65" width="130" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="c_18" value="&lt;b&gt;Admin Direct Login&lt;/b&gt;&lt;br/&gt;No Face / No OTP required&lt;br/&gt;Instant Admin Session" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ecfdf5;strokeColor=#059669;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_14" vertex="1">
+      <mxGeometry x="600" y="55" width="180" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="c_19" value="&lt;b&gt;Admin Forgot Password?&lt;/b&gt;&lt;br/&gt;• Enters username&lt;br/&gt;• 6-Digit Reset Code via Gmail SMTP&lt;br/&gt;• 10m TTL / 5 tries max&lt;br/&gt;• Update password &amp;amp; auto logout all" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff1f2;strokeColor=#e11d48;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_14" vertex="1">
+      <mxGeometry x="600" y="125" width="200" height="85" as="geometry" />
+    </mxCell>
+    <mxCell id="c_20" value="&lt;b&gt;Verification Choice&lt;/b&gt;&lt;br/&gt;Employee selects:&lt;br/&gt;[1] Face Verification&lt;br/&gt;[2] Email OTP (6-digit)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fefce8;strokeColor=#ca8a04;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_14" vertex="1">
+      <mxGeometry x="395" y="220" width="180" height="75" as="geometry" />
+    </mxCell>
+    <mxCell id="c_21" value="&lt;b&gt;Method A: Face Recognition&lt;/b&gt;&lt;br/&gt;• Camera captures frame&lt;br/&gt;• &lt;b&gt;face-api.js&lt;/b&gt; generates 128-d vector&lt;br/&gt;• Euclidean distance &amp;le; 0.5 threshold&lt;br/&gt;• Compared with enrolled descriptor" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f3ff;strokeColor=#8b5cf6;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_14" vertex="1">
+      <mxGeometry x="240" y="340" width="220" height="95" as="geometry" />
+    </mxCell>
+    <mxCell id="c_22" value="&lt;b&gt;Method B: Email OTP&lt;/b&gt;&lt;br/&gt;• 6-digit random code generated&lt;br/&gt;• Built-in SMTP over TLS via Gmail&lt;br/&gt;• Sent to employee email on file&lt;br/&gt;• 10-min validity / 4 sends / 5 tries" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#3b82f6;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_14" vertex="1">
+      <mxGeometry x="510" y="340" width="220" height="95" as="geometry" />
+    </mxCell>
+    <mxCell id="c_23" value="&lt;b&gt;Authenticated Session Created&lt;/b&gt;&lt;br/&gt;• HTTP-only Cookie (sid) with 8h TTL&lt;br/&gt;• Write entry into &lt;b&gt;logins.csv&lt;/b&gt;&lt;br/&gt;• Load UI Profile &amp;amp; Role Permissions" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#16a34a;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_14" vertex="1">
+      <mxGeometry x="820" y="215" width="200" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="c_24" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0d9488;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="c_14" source="c_15" target="c_16" edge="1">
+      <mxGeometry relative="1" as="geometry">
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c_25" value="Valid" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0d9488;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="c_14" source="c_16" target="c_17" edge="1">
+      <mxGeometry relative="1" as="geometry">
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c_26" value="Admin" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#059669;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="c_14" source="c_17" target="c_18" edge="1">
+      <mxGeometry relative="1" as="geometry">
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c_27" value="Employee" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#ca8a04;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="c_14" source="c_17" target="c_20" edge="1">
+      <mxGeometry relative="1" as="geometry">
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c_28" value="Grant" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#16a34a;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="c_14" source="c_18" target="c_23" edge="1">
+      <mxGeometry relative="1" as="geometry">
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c_29" value="Face API" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#8b5cf6;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="c_14" source="c_20" target="c_21" edge="1">
+      <mxGeometry relative="1" as="geometry">
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c_30" value="Email OTP" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#3b82f6;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="c_14" source="c_20" target="c_22" edge="1">
+      <mxGeometry relative="1" as="geometry">
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c_31" value="Match &amp;le; 0.5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#16a34a;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="c_14" source="c_21" target="c_23" edge="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="350" y="460" />
+          <mxPoint x="920" y="460" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c_32" value="Code Valid" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#16a34a;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="c_14" source="c_22" target="c_23" edge="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="620" y="450" />
+          <mxPoint x="880" y="450" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c_33" value="POST /api/login" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0284c7;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="1" source="c_9" target="c_15" edge="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="500" y="470" />
+          <mxPoint x="520" y="470" />
+          <mxPoint x="520" y="150" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c_34" value="🎛️ 3. CORE APPLICATION GATEWAY &amp; ROLE NAVIGATION" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;html=1;fillColor=#334155;strokeColor=#1e293b;fontColor=#ffffff;rounded=1;shadow=1;fontSize=14;fontFamily=Segoe UI;" parent="1" vertex="1">
+      <mxGeometry x="40" y="560" width="320" height="560" as="geometry" />
+    </mxCell>
+    <mxCell id="c_35" value="&lt;b&gt;Gateway Dashboard&lt;/b&gt;&lt;br/&gt;Role-Based Menu Renderer&lt;br/&gt;(Admin vs Employee Tabs)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#475569;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_34" vertex="1">
+      <mxGeometry x="20" y="55" width="280" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="c_36" value="📊 &lt;b&gt;Financial Overview&lt;/b&gt;&lt;br/&gt;Revenue, Tax, Outstandings KPI Cards&lt;br/&gt;&lt;i&gt;(Admin Only)&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef2ff;strokeColor=#6366f1;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_34" vertex="1">
+      <mxGeometry x="20" y="130" width="280" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="c_37" value="🧾 &lt;b&gt;Billing &amp;amp; Orders&lt;/b&gt;&lt;br/&gt;Tax Invoices, Quotations, PI, PO" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#3b82f6;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_34" vertex="1">
+      <mxGeometry x="20" y="200" width="280" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="c_38" value="🏛️ &lt;b&gt;Tally ERP &amp;amp; Books&lt;/b&gt;&lt;br/&gt;Ledgers, Vouchers, Day Book, Balance Sheet" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ecfdf5;strokeColor=#10b981;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_34" vertex="1">
+      <mxGeometry x="20" y="270" width="280" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="c_39" value="👥 &lt;b&gt;Master Data&lt;/b&gt;&lt;br/&gt;Clients / Parties &amp;amp; Products / Services" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fefce8;strokeColor=#eab308;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_34" vertex="1">
+      <mxGeometry x="20" y="340" width="280" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="c_40" value="✍️ &lt;b&gt;Work &amp;amp; Operations&lt;/b&gt;&lt;br/&gt;Daily Work Updates, Weekly Sync &amp;amp; Docs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fdf2f8;strokeColor=#ec4899;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_34" vertex="1">
+      <mxGeometry x="20" y="410" width="280" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="c_41" value="⚙️ &lt;b&gt;Administration &amp;amp; Security&lt;/b&gt;&lt;br/&gt;User Accounts, Sync Merge, Company, Mail&lt;br/&gt;&lt;i&gt;(Admin Only)&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff1f2;strokeColor=#f43f5e;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_34" vertex="1">
+      <mxGeometry x="20" y="480" width="280" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="c_42" value="Active Session" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#16a34a;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="1" source="c_23" target="c_35" edge="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="920" y="310" />
+          <mxPoint x="920" y="540" />
+          <mxPoint x="200" y="540" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c_43" value="🧾 4. BILLING &amp; COMMERCIAL ORDERS PIPELINE" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;html=1;fillColor=#1e40af;strokeColor=#1e3a8a;fontColor=#ffffff;rounded=1;shadow=1;fontSize=14;fontFamily=Segoe UI;" parent="1" vertex="1">
+      <mxGeometry x="400" y="560" width="580" height="560" as="geometry" />
+    </mxCell>
+    <mxCell id="c_44" value="📑 &lt;b&gt;Quotation Module&lt;/b&gt;&lt;br/&gt;• Propose commercial items &amp;amp; rates&lt;br/&gt;• Auto FY Prefix (e.g. AE/26-27/30)&lt;br/&gt;• Terms, Delivery &amp;amp; Validity block&lt;br/&gt;• Export: PDF Print / Word (.doc)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#3b82f6;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_43" vertex="1">
+      <mxGeometry x="20" y="55" width="250" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="c_45" value="📋 &lt;b&gt;Proforma Invoice (PI)&lt;/b&gt;&lt;br/&gt;• Commercial Proforma Billing&lt;br/&gt;• Auto numbering (AEPI-26-27-011)&lt;br/&gt;• P&amp;amp;F charges &amp;amp; Discount %&lt;br/&gt;• GST breakdown (Intra/Inter state)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#3b82f6;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_43" vertex="1">
+      <mxGeometry x="310" y="55" width="250" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="c_46" value="🧾 &lt;b&gt;Tax Invoice Engine (GST)&lt;/b&gt;&lt;br/&gt;• &lt;b&gt;In-State (Maharashtra):&lt;/b&gt; 9% CGST + 9% SGST&lt;br/&gt;• &lt;b&gt;Out-of-State:&lt;/b&gt; 18% IGST (Auto-detected via GSTIN)&lt;br/&gt;• Billed-to &amp;amp; Shipped-to Client Parties&lt;br/&gt;• Digital Stamp &amp;amp; Signature embed&lt;br/&gt;• PDF Print Dialog &amp;amp; Word (.doc) output" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_43" vertex="1">
+      <mxGeometry x="20" y="180" width="540" height="110" as="geometry" />
+    </mxCell>
+    <mxCell id="c_47" value="📦 &lt;b&gt;Purchase Order (PO)&lt;/b&gt;&lt;br/&gt;• Outgoing Orders to Suppliers/Vendors&lt;br/&gt;• Item specifications, HSN, Tax rates&lt;br/&gt;• Payment terms &amp;amp; Freight terms&lt;br/&gt;• Export to PDF / Word (.doc)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2563eb;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_43" vertex="1">
+      <mxGeometry x="20" y="325" width="250" height="95" as="geometry" />
+    </mxCell>
+    <mxCell id="c_48" value="🛒 &lt;b&gt;Purchases Register&lt;/b&gt;&lt;br/&gt;• Record vendor procurement bills&lt;br/&gt;• Expense tracking &amp;amp; GST input credit&lt;br/&gt;• Summary totals &amp;amp; Date filters" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2563eb;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_43" vertex="1">
+      <mxGeometry x="310" y="325" width="250" height="95" as="geometry" />
+    </mxCell>
+    <mxCell id="c_49" value="👥 &lt;b&gt;Master Data Integration&lt;/b&gt;&lt;br/&gt;• &lt;b&gt;Clients:&lt;/b&gt; GSTIN, Billing/Shipping Addresses, Contact Person&lt;br/&gt;• &lt;b&gt;Products:&lt;/b&gt; Standard Unit Rates, HSN/SAC Codes, GST %" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0f9ff;strokeColor=#0284c7;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_43" vertex="1">
+      <mxGeometry x="20" y="445" width="540" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="c_50" value="Convert / Reference" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2563eb;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="c_43" source="c_44" target="c_45" edge="1">
+      <mxGeometry relative="1" as="geometry">
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c_51" value="Generate Tax Invoice" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2563eb;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="c_43" source="c_45" target="c_46" edge="1">
+      <mxGeometry relative="1" as="geometry">
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c_52" value="Auto-fill Data" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0284c7;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="c_43" source="c_49" target="c_46" edge="1">
+      <mxGeometry relative="1" as="geometry">
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c_53" value="Fulfillment" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2563eb;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="c_43" source="c_47" target="c_48" edge="1">
+      <mxGeometry relative="1" as="geometry">
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c_54" value="Open Tab" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2563eb;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="1" source="c_37" target="c_46" edge="1">
+      <mxGeometry relative="1" as="geometry">
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c_55" value="🧮 5. TALLY ERP ACCOUNTING ENGINE &amp; FINANCIAL STATEMENTS" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;html=1;fillColor=#065f46;strokeColor=#064e3b;fontColor=#ffffff;rounded=1;shadow=1;fontSize=14;fontFamily=Segoe UI;" parent="1" vertex="1">
+      <mxGeometry x="1020" y="560" width="580" height="560" as="geometry" />
+    </mxCell>
+    <mxCell id="c_56" value="🏛️ &lt;b&gt;Chart of Accounts &amp;amp; Ledgers&lt;/b&gt;&lt;br/&gt;• &lt;b&gt;Standard Groups:&lt;/b&gt; Sundry Debtors, Sundry Creditors, Bank, Cash, Direct/Indirect Expenses, Sales/Purchase, Duties &amp;amp; Taxes&lt;br/&gt;• Opening Balances (Debit / Credit) &amp;amp; GSTIN" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ecfdf5;strokeColor=#059669;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_55" vertex="1">
+      <mxGeometry x="20" y="55" width="540" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="c_57" value="📝 &lt;b&gt;Dual-Entry Voucher Engine&lt;/b&gt;&lt;br/&gt;• &lt;b&gt;Payment (F5) / Receipt (F6)&lt;/b&gt;: Bank &amp;amp; Cash inflow/outflow&lt;br/&gt;• &lt;b&gt;Contra (F4)&lt;/b&gt;: Bank deposit/withdrawal/transfer&lt;br/&gt;• &lt;b&gt;Journal (F7)&lt;/b&gt;: Adjustment &amp;amp; Depreciation entries&lt;br/&gt;• &lt;b&gt;Sales (F8) / Purchase (F9)&lt;/b&gt;: Book transactions&lt;br/&gt;• &lt;i&gt;Enforces Total Debit == Total Credit constraint&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0fdf4;strokeColor=#16a34a;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_55" vertex="1">
+      <mxGeometry x="20" y="160" width="540" height="105" as="geometry" />
+    </mxCell>
+    <mxCell id="c_58" value="📅 &lt;b&gt;Day Book&lt;/b&gt;&lt;br/&gt;Chronological daily audit log of all financial vouchers with search &amp;amp; filter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#10b981;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_55" vertex="1">
+      <mxGeometry x="20" y="285" width="250" height="65" as="geometry" />
+    </mxCell>
+    <mxCell id="c_59" value="📈 &lt;b&gt;Core Financial Statements&lt;/b&gt;&lt;br/&gt;• &lt;b&gt;Trial Balance:&lt;/b&gt; Full Dr/Cr reconciliation&lt;br/&gt;• &lt;b&gt;Profit &amp;amp; Loss (P&amp;amp;L):&lt;/b&gt; Income vs Expenses &amp;amp; Net Profit&lt;br/&gt;• &lt;b&gt;Balance Sheet:&lt;/b&gt; Assets = Liabilities + Capital&lt;br/&gt;• &lt;b&gt;Ledger Statement:&lt;/b&gt; Running debit/credit balance&lt;br/&gt;• &lt;b&gt;Outstanding Aging:&lt;/b&gt; Receivables &amp;amp; Payables" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ecfdf5;strokeColor=#047857;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_55" vertex="1">
+      <mxGeometry x="20" y="370" width="540" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="c_60" value="📗 &lt;b&gt;Excel &amp;amp; Word Sheets Tool&lt;/b&gt;&lt;br/&gt;In-browser spreadsheets &amp;amp; Word notes with category tags" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#10b981;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_55" vertex="1">
+      <mxGeometry x="290" y="285" width="270" height="65" as="geometry" />
+    </mxCell>
+    <mxCell id="c_61" value="Ledger Select" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#059669;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="c_55" source="c_56" target="c_57" edge="1">
+      <mxGeometry relative="1" as="geometry">
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c_62" value="Records" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#10b981;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="c_55" source="c_57" target="c_58" edge="1">
+      <mxGeometry relative="1" as="geometry">
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c_63" value="Calculates Balances" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#047857;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="c_55" source="c_57" target="c_59" edge="1">
+      <mxGeometry relative="1" as="geometry">
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c_64" value="Open Tally" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#059669;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="1" source="c_38" target="c_56" edge="1">
+      <mxGeometry relative="1" as="geometry">
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c_65" value="⚡ 6. WORK OPERATIONS, HR ALERTS &amp; EMAIL DISPATCH" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;html=1;fillColor=#831843;strokeColor=#700733;fontColor=#ffffff;rounded=1;shadow=1;fontSize=14;fontFamily=Segoe UI;" parent="1" vertex="1">
+      <mxGeometry x="1640" y="560" width="520" height="560" as="geometry" />
+    </mxCell>
+    <mxCell id="c_66" value="✍️ &lt;b&gt;Daily Work Update Submission&lt;/b&gt;&lt;br/&gt;• Logged work items &amp;amp; pending blockers&lt;br/&gt;• Login time vs Submission time calculation&lt;br/&gt;• Automated duty hours computation&lt;br/&gt;• Enforces 1 update per employee per day" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff1f2;strokeColor=#db2777;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_65" vertex="1">
+      <mxGeometry x="20" y="55" width="480" height="85" as="geometry" />
+    </mxCell>
+    <mxCell id="c_67" value="⏰ &lt;b&gt;Automated Work Reminder Engine&lt;/b&gt;&lt;br/&gt;• Orange persistent top banner until submitted&lt;br/&gt;• Reminder popup at set time (default 17:30)&lt;br/&gt;• 30-minute snooze intervals&lt;br/&gt;• Logout confirmation safeguard if unsubmitted" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fdf2f8;strokeColor=#f43f5e;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_65" vertex="1">
+      <mxGeometry x="20" y="160" width="480" height="85" as="geometry" />
+    </mxCell>
+    <mxCell id="c_68" value="✉️ &lt;b&gt;Built-in SMTP Email Engine (Node.js)&lt;/b&gt;&lt;br/&gt;• TLS connection to Gmail (App Password)&lt;br/&gt;• Branded HTML email layout with embedded CID logo&lt;br/&gt;• Subject: &amp;lt;Full Name&amp;gt;_&amp;lt;Date&amp;gt; work update&lt;br/&gt;• Metrics grid: Login, Submit, Duty, Hours" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce7f3;strokeColor=#e11d48;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_65" vertex="1">
+      <mxGeometry x="20" y="265" width="480" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="c_69" value="📋 &lt;b&gt;Admin Work Log &amp;amp; Resend&lt;/b&gt;&lt;br/&gt;• Overview of all employee daily submissions&lt;br/&gt;• Email dispatch status tracking (OK / Failed)&lt;br/&gt;• 1-Click &quot;Resend Email&quot; button for failures" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#be185d;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_65" vertex="1">
+      <mxGeometry x="20" y="375" width="480" height="75" as="geometry" />
+    </mxCell>
+    <mxCell id="c_70" value="⏱️ &lt;b&gt;Security Login Audit Log&lt;/b&gt;&lt;br/&gt;Timestamped employee login entries in &lt;b&gt;logins.csv&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#be185d;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_65" vertex="1">
+      <mxGeometry x="20" y="470" width="480" height="65" as="geometry" />
+    </mxCell>
+    <mxCell id="c_71" value="Triggers Employee" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#f43f5e;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="c_65" source="c_67" target="c_66" edge="1">
+      <mxGeometry relative="1" as="geometry">
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c_72" value="On Submit &amp;rarr; Send Email" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#e11d48;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="c_65" source="c_66" target="c_68" edge="1">
+      <mxGeometry relative="1" as="geometry">
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c_73" value="Save Status" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#be185d;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="c_65" source="c_68" target="c_69" edge="1">
+      <mxGeometry relative="1" as="geometry">
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c_74" value="Open Work" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#db2777;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="1" source="c_40" target="c_66" edge="1">
+      <mxGeometry relative="1" as="geometry">
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c_75" value="💾 7. DATA STORAGE, BACKUP &amp; WEEKLY SYNC MERGE ENGINE" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;html=1;fillColor=#1e1b4b;strokeColor=#0f172a;fontColor=#ffffff;rounded=1;shadow=1;fontSize=14;fontFamily=Segoe UI;" parent="1" vertex="1">
+      <mxGeometry x="40" y="1160" width="2120" height="480" as="geometry" />
+    </mxCell>
+    <mxCell id="c_76" value="📅 &lt;b&gt;Sunday Weekly Backup Alert&lt;/b&gt;&lt;br/&gt;Automatic notification banner reminds employee to backup and email data to Admin" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f3ff;strokeColor=#7c3aed;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_75" vertex="1">
+      <mxGeometry x="30" y="60" width="320" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="c_77" value="📦 &lt;b&gt;Built-in Zip Packing Engine&lt;/b&gt;&lt;br/&gt;• Gzip / Deflate raw sync algorithm (Node zlib)&lt;br/&gt;• Bundles all CSV tables + company.json&lt;br/&gt;• Generates &lt;code&gt;data_&amp;lt;user&amp;gt;_&amp;lt;date&amp;gt;.zip&lt;/code&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ede9fe;strokeColor=#6d28d9;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_75" vertex="1">
+      <mxGeometry x="390" y="60" width="340" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="c_78" value="📤 &lt;b&gt;1-Click Email to Management&lt;/b&gt;&lt;br/&gt;Transmits compressed data.zip attachment to company email via Gmail SMTP" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_75" vertex="1">
+      <mxGeometry x="770" y="60" width="320" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="c_79" value="🔄 &lt;b&gt;Admin Data Merge Engine&lt;/b&gt;&lt;br/&gt;• Admin uploads employee data.zip&lt;br/&gt;• In-memory unzipping &amp;amp; schema parsing&lt;br/&gt;• Record deduplication by unique ID&lt;br/&gt;• Merges remote transactions into central database" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ecfdf5;strokeColor=#059669;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_75" vertex="1">
+      <mxGeometry x="1130" y="60" width="350" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="c_80" value="🛡️ &lt;b&gt;Automatic Daily Startup Backup&lt;/b&gt;&lt;br/&gt;Full copy of /data directory into &lt;code&gt;backups/YYYY-MM-DD/&lt;/code&gt; on every application startup" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#d97706;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_75" vertex="1">
+      <mxGeometry x="1520" y="60" width="340" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="c_81" value="&lt;b&gt;users.csv&lt;/b&gt;&lt;br/&gt;Roles, Passwords, Photos, Face 128-d" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#f1f5f9;strokeColor=#475569;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;fontStyle=1;shadow=1;" parent="c_75" vertex="1">
+      <mxGeometry x="30" y="180" width="180" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="c_82" value="&lt;b&gt;invoices.csv&lt;/b&gt;&lt;br/&gt;Invoices, GST, Items, Shipping" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#f1f5f9;strokeColor=#475569;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;fontStyle=1;shadow=1;" parent="c_75" vertex="1">
+      <mxGeometry x="230" y="180" width="180" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="c_83" value="&lt;b&gt;docs.csv&lt;/b&gt;&lt;br/&gt;Quotes, PI, PO (JSON data)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#f1f5f9;strokeColor=#475569;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;fontStyle=1;shadow=1;" parent="c_75" vertex="1">
+      <mxGeometry x="430" y="180" width="180" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="c_84" value="&lt;b&gt;vouchers.csv&lt;/b&gt;&lt;br/&gt;Tally Double-Entry Entries" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#f1f5f9;strokeColor=#475569;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;fontStyle=1;shadow=1;" parent="c_75" vertex="1">
+      <mxGeometry x="630" y="180" width="180" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="c_85" value="&lt;b&gt;ledgers.csv&lt;/b&gt;&lt;br/&gt;Accounts, Groups, Balances" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#f1f5f9;strokeColor=#475569;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;fontStyle=1;shadow=1;" parent="c_75" vertex="1">
+      <mxGeometry x="830" y="180" width="180" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="c_86" value="&lt;b&gt;clients.csv&lt;/b&gt;&lt;br/&gt;Clients, GSTIN, Addresses" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#f1f5f9;strokeColor=#475569;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;fontStyle=1;shadow=1;" parent="c_75" vertex="1">
+      <mxGeometry x="1030" y="180" width="180" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="c_87" value="&lt;b&gt;products.csv&lt;/b&gt;&lt;br/&gt;Catalog, HSN, Tax %" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#f1f5f9;strokeColor=#475569;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;fontStyle=1;shadow=1;" parent="c_75" vertex="1">
+      <mxGeometry x="1230" y="180" width="180" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="c_88" value="&lt;b&gt;workupdates.csv&lt;/b&gt;&lt;br/&gt;Daily Updates &amp;amp; Hours" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#f1f5f9;strokeColor=#475569;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;fontStyle=1;shadow=1;" parent="c_75" vertex="1">
+      <mxGeometry x="1430" y="180" width="180" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="c_89" value="&lt;b&gt;purchases.csv&lt;/b&gt;&lt;br/&gt;Direct Vendor Bills" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#f1f5f9;strokeColor=#475569;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;fontStyle=1;shadow=1;" parent="c_75" vertex="1">
+      <mxGeometry x="1630" y="180" width="180" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="c_90" value="&lt;b&gt;sheets.csv&lt;/b&gt;&lt;br/&gt;Spreadsheets &amp;amp; Docs" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#f1f5f9;strokeColor=#475569;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;fontStyle=1;shadow=1;" parent="c_75" vertex="1">
+      <mxGeometry x="1830" y="180" width="180" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="c_91" value="🔒 &lt;b&gt;Atomic Safe-Write File Engine&lt;/b&gt;&lt;br/&gt;• Writes to &lt;code&gt;filename.tmp&lt;/code&gt; first, then atomic &lt;code&gt;fs.renameSync&lt;/code&gt;&lt;br/&gt;• Serialized Promise chain prevents concurrency corruption&lt;br/&gt;• UTF-8 CSV parsing with RFC-4180 quotes handling&lt;br/&gt;• Configurations in &lt;code&gt;company.json&lt;/code&gt; (Profiles/Stamps) and &lt;code&gt;mail.json&lt;/code&gt; (SMTP Credentials)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#334155;fontColor=#1e293b;fontFamily=Segoe UI;fontSize=12;align=center;verticalAlign=middle;shadow=1;" parent="c_75" vertex="1">
+      <mxGeometry x="30" y="290" width="1980" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="c_92" value="Trigger Export" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7c3aed;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="c_75" source="c_76" target="c_77" edge="1">
+      <mxGeometry relative="1" as="geometry">
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c_93" value="Attach Zip" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6d28d9;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="c_75" source="c_77" target="c_78" edge="1">
+      <mxGeometry relative="1" as="geometry">
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c_94" value="Delivered to Admin" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2563eb;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="c_75" source="c_78" target="c_79" edge="1">
+      <mxGeometry relative="1" as="geometry">
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c_95" value="Merge Records" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#059669;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="c_75" source="c_79" target="c_91" edge="1">
+      <mxGeometry relative="1" as="geometry">
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c_96" value="Daily Snapshot" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d97706;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="c_75" source="c_91" target="c_80" edge="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1690" y="280" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c_97" value="Write" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#3b82f6;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="1" source="c_46" target="c_82" edge="1">
+      <mxGeometry relative="1" as="geometry">
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c_98" value="Write" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#10b981;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="1" source="c_57" target="c_84" edge="1">
+      <mxGeometry relative="1" as="geometry">
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c_99" value="Write" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#db2777;strokeWidth=2;dashed=0;fontFamily=Segoe UI;fontSize=11;fontColor=#334155;" parent="1" source="c_66" target="c_88" edge="1">
+      <mxGeometry relative="1" as="geometry">
+      </mxGeometry>
+    </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

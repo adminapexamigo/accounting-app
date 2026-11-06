@@ -1,0 +1,104 @@
+{
+  "enabled": true,
+  "workDays": [
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+    "Sat"
+  ],
+  "workStartTime": "09:30",
+  "workEndTime": "18:30",
+  "lunchStartTime": "13:00",
+  "lunchEndTime": "14:00",
+  "offlineThresholdMins": 90,
+  "alertEmails": "",
+  "holidays": [
+    {
+      "id": "h-2026-01-26",
+      "date": "2026-01-26",
+      "name": "Republic Day"
+    },
+    {
+      "id": "h-2026-03-03",
+      "date": "2026-03-03",
+      "name": "Holi"
+    },
+    {
+      "id": "h-2026-03-20",
+      "date": "2026-03-20",
+      "name": "Eid-ul-Fitr"
+    },
+    {
+      "id": "h-2026-04-03",
+      "date": "2026-04-03",
+      "name": "Good Friday"
+    },
+    {
+      "id": "h-2026-04-14",
+      "date": "2026-04-14",
+      "name": "Dr. Ambedkar Jayanti"
+    },
+    {
+      "id": "h-2026-05-01",
+      "date": "2026-05-01",
+      "name": "Maharashtra Day / Labour Day"
+    },
+    {
+      "id": "h-2026-05-27",
+      "date": "2026-05-27",
+      "name": "Bakrid / Eid al-Adha"
+    },
+    {
+      "id": "h-2026-08-15",
+      "date": "2026-08-15",
+      "name": "Independence Day"
+    },
+    {
+      "id": "h-2026-08-28",
+      "date": "2026-08-28",
+      "name": "Raksha Bandhan"
+    },
+    {
+      "id": "h-2026-09-04",
+      "date": "2026-09-04",
+      "name": "Janmashtami"
+    },
+    {
+      "id": "h-2026-09-14",
+      "date": "2026-09-14",
+      "name": "Ganesh Chaturthi"
+    },
+    {
+      "id": "h-2026-10-02",
+      "date": "2026-10-02",
+      "name": "Mahatma Gandhi Jayanti"
+    },
+    {
+      "id": "h-2026-10-20",
+      "date": "2026-10-20",
+      "name": "Dussehra / Vijayadashami"
+    },
+    {
+      "id": "h-2026-11-08",
+      "date": "2026-11-08",
+      "name": "Diwali (Lakshmi Pujan)"
+    },
+    {
+      "id": "h-2026-11-09",
+      "date": "2026-11-09",
+      "name": "Diwali Balipratipada / New Year"
+    },
+    {
+      "id": "h-2026-11-24",
+      "date": "2026-11-24",
+      "name": "Guru Nanak Jayanti"
+    },
+    {
+      "id": "h-2026-12-25",
+      "date": "2026-12-25",
+      "name": "Christmas"
+    }
+  ]
+}

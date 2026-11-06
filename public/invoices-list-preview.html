@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tax Invoices UI Redesign Options - Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f8fafc;
+  --card:#ffffff;
+  --ink:#0f172a;
+  --ink-soft:#334155;
+  --mute:#64748b;
+  --pri:#4f46e5;
+  --pri-light:#6366f1;
+  --pri-dark:#3730a3;
+  --pri-bg:#eef2ff;
+  --line:#e2e8f0;
+  --danger:#ef4444;
+  --danger-bg:#fef2f2;
+  --ok:#10b981;
+  --ok-bg:#ecfdf5;
+  --warn:#f59e0b;
+  --warn-bg:#fffbeb;
+  --radius-sm:8px;
+  --radius-md:12px;
+  --radius-lg:16px;
+  --radius-xl:20px;
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.04),0 1px 2px rgba(0,0,0,0.02);
+  --shadow-md:0 6px 16px -2px rgba(15,23,42,0.06),0 2px 6px -1px rgba(15,23,42,0.04);
+  --shadow-lg:0 16px 32px -4px rgba(15,23,42,0.08),0 6px 12px -2px rgba(15,23,42,0.03);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font:14px/1.6 'Plus Jakarta Sans',system-ui,-apple-system,sans-serif;
+  background-color:var(--bg);
+  background-image:radial-gradient(#cbd5e1 0.75px,transparent 0.75px);
+  background-size:24px 24px;
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+  padding-bottom:80px;
+}
+
+/* Prototype Switcher Bar */
+.proto-banner{
+  background:linear-gradient(135deg,#0f172a,#1e1b4b);
+  color:#fff;
+  padding:14px 24px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  box-shadow:0 4px 20px rgba(0,0,0,0.25);
+  position:sticky;
+  top:0;
+  z-index:900;
+  backdrop-filter:blur(8px);
+}
+.proto-title{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-weight:700;
+  font-size:15px;
+}
+.proto-pill{
+  background:rgba(255,255,255,0.15);
+  border:1px solid rgba(255,255,255,0.25);
+  padding:3px 10px;
+  border-radius:20px;
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+}
+.proto-options{
+  display:flex;
+  gap:8px;
+  background:rgba(255,255,255,0.08);
+  padding:4px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,0.1);
+}
+.proto-btn{
+  background:transparent;
+  border:0;
+  color:#cbd5e1;
+  padding:6px 14px;
+  font-size:12.5px;
+  font-weight:600;
+  border-radius:6px;
+  cursor:pointer;
+  transition:all 0.15s ease;
+  font-family:inherit;
+}
+.proto-btn.active{
+  background:#4f46e5;
+  color:#ffffff;
+  box-shadow:0 2px 8px rgba(79,70,229,0.5);
+}
+.proto-btn:hover:not(.active){
+  background:rgba(255,255,255,0.12);
+  color:#fff;
+}
+
+/* Page Container */
+.container{
+  max-width:1380px;
+  margin:24px auto;
+  padding:0 20px;
+}
+
+/* Toast Message */
+.toast-notice{
+  background:#ecfdf5;
+  border:1px solid #a7f3d0;
+  color:#065f46;
+  padding:10px 16px;
+  border-radius:12px;
+  margin-bottom:20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  font-size:13px;
+  font-weight:500;
+  box-shadow:0 2px 6px rgba(16,185,129,0.08);
+  animation:slideIn 0.3s ease;
+}
+@keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.toast-close{
+  background:none;
+  border:0;
+  color:#065f46;
+  font-size:16px;
+  cursor:pointer;
+  opacity:0.6;
+}
+.toast-close:hover{opacity:1}
+
+/* KPI Summary Cards */
+.kpi-row{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:16px;
+  margin-bottom:24px;
+}
+.kpi-card{
+  background:#ffffff;
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  padding:18px 20px;
+  box-shadow:var(--shadow-sm);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  transition:all 0.2s ease;
+}
+.kpi-card:hover{
+  transform:translateY(-2px);
+  box-shadow:var(--shadow-md);
+  border-color:#cbd5e1;
+}
+.kpi-val{
+  font-size:24px;
+  font-weight:800;
+  font-family:'JetBrains Mono',monospace;
+  color:var(--ink);
+  line-height:1.2;
+}
+.kpi-lbl{
+  font-size:12px;
+  color:var(--mute);
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  margin-top:4px;
+}
+.kpi-icon{
+  width:46px;
+  height:46px;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:22px;
+  flex-shrink:0;
+}
+
+/* Header & Filter Controls */
+.header-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:16px;
+  margin-bottom:18px;
+}
+.page-title{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin:0;
+}
+.page-title h1{
+  font-size:24px;
+  font-weight:800;
+  margin:0;
+  letter-spacing:-0.5px;
+  color:#0f172a;
+}
+.count-badge{
+  background:#eef2ff;
+  color:#4338ca;
+  font-size:12px;
+  font-weight:700;
+  padding:4px 12px;
+  border-radius:20px;
+  border:1px solid #c7d2fe;
+}
+.action-buttons{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+/* Common Buttons */
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  background:linear-gradient(135deg,var(--pri),var(--pri-light));
+  color:#ffffff;
+  border:0;
+  padding:9px 18px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:600;
+  font-size:13.5px;
+  box-shadow:0 2px 6px rgba(79,70,229,0.25);
+  transition:all 0.15s ease;
+  font-family:inherit;
+}
+.btn:hover{
+  background:linear-gradient(135deg,var(--pri-dark),var(--pri));
+  box-shadow:0 4px 12px rgba(79,70,229,0.35);
+  transform:translateY(-1px);
+}
+.btn.ghost{
+  background:#ffffff;
+  color:#475569;
+  border:1px solid #cbd5e1;
+  box-shadow:var(--shadow-sm);
+}
+.btn.ghost:hover{
+  background:#f8fafc;
+  border-color:#94a3b8;
+  color:#1e293b;
+}
+.btn.sm{
+  padding:5px 10px;
+  font-size:12px;
+  border-radius:7px;
+}
+
+/* Control Toolbar Card */
+.control-card{
+  background:#ffffff;
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  padding:14px 18px;
+  box-shadow:var(--shadow-sm);
+  margin-bottom:16px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:14px;
+}
+.search-box{
+  position:relative;
+  flex:1;
+  min-width:260px;
+  max-width:440px;
+}
+.search-icon{
+  position:absolute;
+  left:12px;
+  top:50%;
+  transform:translateY(-50%);
+  color:#94a3b8;
+  font-size:14px;
+  pointer-events:none;
+}
+.search-input{
+  width:100%;
+  padding:8px 12px 8px 36px;
+  border:1.5px solid #e2e8f0;
+  border-radius:10px;
+  font-size:13.5px;
+  font-family:inherit;
+  background:#f8fafc;
+  transition:all 0.15s ease;
+}
+.search-input:focus{
+  outline:none;
+  background:#fff;
+  border-color:#6366f1;
+  box-shadow:0 0 0 3px rgba(99,102,241,0.12);
+}
+.filter-pills{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  overflow-x:auto;
+}
+.pill-tab{
+  padding:6px 12px;
+  border-radius:20px;
+  font-size:12.5px;
+  font-weight:600;
+  border:1px solid #e2e8f0;
+  background:#f8fafc;
+  color:#64748b;
+  cursor:pointer;
+  transition:all 0.15s ease;
+  white-space:nowrap;
+}
+.pill-tab.active{
+  background:#eef2ff;
+  border-color:#c7d2fe;
+  color:#4338ca;
+  box-shadow:0 1px 2px rgba(67,56,202,0.06);
+}
+.pill-tab:hover:not(.active){
+  background:#f1f5f9;
+  color:#334155;
+}
+
+/* Master Table Card */
+.table-card{
+  background:#ffffff;
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-sm);
+  overflow:hidden;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  text-align:left;
+  font-size:13.5px;
+}
+thead th{
+  background:#f8fafc;
+  color:#475569;
+  font-size:11.5px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:0.6px;
+  padding:12px 18px;
+  border-bottom:1px solid var(--line);
+  white-space:nowrap;
+  user-select:none;
+}
+tbody td{
+  padding:14px 18px;
+  border-bottom:1px solid #f1f5f9;
+  vertical-align:middle;
+  color:#334155;
+}
+tbody tr:last-child td{
+  border-bottom:0;
+}
+tbody tr{
+  transition:background-color 0.15s ease;
+}
+tbody tr:hover{
+  background-color:#f8faff;
+}
+
+/* Cell-Specific Components */
+.inv-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  font-family:'JetBrains Mono',monospace;
+  font-weight:700;
+  font-size:13px;
+  color:#1e293b;
+  background:#f1f5f9;
+  padding:4px 9px;
+  border-radius:6px;
+  border:1px solid #e2e8f0;
+  letter-spacing:-0.2px;
+}
+.inv-badge .copy-btn{
+  background:none;
+  border:none;
+  color:#94a3b8;
+  cursor:pointer;
+  padding:0;
+  font-size:11px;
+  line-height:1;
+  transition:color 0.15s;
+}
+.inv-badge .copy-btn:hover{color:#4f46e5}
+
+.client-cell{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.client-avatar{
+  width:32px;
+  height:32px;
+  border-radius:8px;
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+  font-size:12px;
+  flex-shrink:0;
+}
+.client-name{
+  font-weight:700;
+  color:#0f172a;
+}
+.client-sub{
+  font-size:11.5px;
+  color:#64748b;
+}
+
+/* Tax Type Badges */
+.tax-tag{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:4px 9px;
+  border-radius:6px;
+  font-size:12px;
+  font-weight:600;
+  white-space:nowrap;
+}
+.tax-tag.in-state{
+  background:#ecfdf5;
+  color:#065f46;
+  border:1px solid #a7f3d0;
+}
+.tax-tag.interstate{
+  background:#fffbeb;
+  color:#92400e;
+  border:1px solid #fde68a;
+}
+
+/* Total Column */
+.total-amt{
+  font-family:'JetBrains Mono',monospace;
+  font-weight:700;
+  font-size:14.5px;
+  color:#0f172a;
+  text-align:right;
+}
+
+/* User Pill */
+.user-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  font-size:12.5px;
+  color:#475569;
+  background:#f8fafc;
+  padding:3px 8px;
+  border-radius:12px;
+  border:1px solid #e2e8f0;
+}
+.user-dot{
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#10b981;
+}
+
+/* Action Toolbar */
+.action-group{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:6px;
+}
+.action-btn{
+  background:#ffffff;
+  border:1px solid #e2e8f0;
+  color:#475569;
+  padding:5px 9px;
+  border-radius:8px;
+  font-size:12px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all 0.15s ease;
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+}
+.action-btn:hover{
+  background:#f8fafc;
+  border-color:#cbd5e1;
+  color:#1e293b;
+  transform:translateY(-1px);
+}
+.action-btn.primary{
+  background:#eef2ff;
+  border-color:#c7d2fe;
+  color:#4338ca;
+}
+.action-btn.primary:hover{
+  background:#e0e7ff;
+  border-color:#a5b4fc;
+}
+.action-btn.danger{
+  color:#dc2626;
+  border-color:#fecaca;
+  background:#fff;
+}
+.action-btn.danger:hover{
+  background:#fef2f2;
+  border-color:#fca5a5;
+}
+
+/* Slide-Over Drawer for Quick Preview */
+.drawer-backdrop{
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,0.4);
+  backdrop-filter:blur(2px);
+  z-index:1000;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.25s ease;
+}
+.drawer-backdrop.open{
+  opacity:1;
+  pointer-events:auto;
+}
+.drawer-panel{
+  position:fixed;
+  top:0;
+  right:-500px;
+  width:460px;
+  max-width:90vw;
+  height:100vh;
+  background:#ffffff;
+  box-shadow:-10px 0 30px rgba(0,0,0,0.15);
+  z-index:1001;
+  transition:right 0.3s cubic-bezier(0.16,1,0.3,1);
+  display:flex;
+  flex-direction:column;
+}
+.drawer-panel.open{
+  right:0;
+}
+.drawer-header{
+  padding:18px 24px;
+  border-bottom:1px solid #e2e8f0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.drawer-body{
+  padding:24px;
+  overflow-y:auto;
+  flex:1;
+}
+.drawer-footer{
+  padding:16px 24px;
+  border-top:1px solid #e2e8f0;
+  background:#f8fafc;
+  display:flex;
+  gap:10px;
+}
+
+/* OPTION 2: Compact High-Density Grid */
+.compact-mode table thead th{
+  padding:8px 12px;
+  font-size:11px;
+}
+.compact-mode table tbody td{
+  padding:8px 12px;
+  font-size:12.5px;
+}
+.compact-mode .inv-badge{
+  font-size:12px;
+  padding:2px 6px;
+}
+.compact-mode .client-avatar{
+  width:26px;
+  height:26px;
+  font-size:11px;
+}
+.compact-mode .tax-tag{
+  padding:2px 6px;
+  font-size:11px;
+}
+.compact-mode .action-btn{
+  padding:3px 7px;
+  font-size:11.5px;
+}
+
+/* OPTION 3: Modern Card-Row Layout */
+.card-rows-container{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.inv-card-row{
+  background:#ffffff;
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:16px 20px;
+  display:grid;
+  grid-template-columns:190px 110px 1.5fr 1.3fr 130px 100px auto;
+  align-items:center;
+  gap:16px;
+  transition:all 0.15s ease;
+  box-shadow:0 1px 3px rgba(0,0,0,0.03);
+}
+.inv-card-row:hover{
+  transform:translateY(-2px);
+  box-shadow:0 6px 16px rgba(0,0,0,0.06);
+  border-color:#cbd5e1;
+}
+</style>
+</head>
+<body>
+
+<!-- PROTOTYPE CONTROLLER BANNER -->
+<div class="proto-banner">
+  <div class="proto-title">
+    <span>💎 Tax Invoices UI Redesign Preview</span>
+    <span class="proto-pill">Interactive Prototype</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:16px">
+    <span style="font-size:12.5px;color:#cbd5e1">Choose Design Variant:</span>
+    <div class="proto-options">
+      <button class="proto-btn active" onclick="switchDesign('opt1')">Option 1: Executive KPI & Action Table (Recommended)</button>
+      <button class="proto-btn" onclick="switchDesign('opt2')">Option 2: Compact High-Density Grid</button>
+      <button class="proto-btn" onclick="switchDesign('opt3')">Option 3: Modern Card-Row Layout</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Success Toast Notice (Polished) -->
+  <div class="toast-notice" id="toastNotice">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:16px">✅</span>
+      <span><strong>Invoice INV-26-27/6 saved successfully.</strong> GST calculations and client ledgers updated.</span>
+    </div>
+    <button class="toast-close" onclick="document.getElementById('toastNotice').style.display='none'">&times;</button>
+  </div>
+
+  <!-- KPI SUMMARY ROW -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div>
+        <div class="kpi-val">₹487.25</div>
+        <div class="kpi-lbl">Total Invoiced (Nov)</div>
+      </div>
+      <div class="kpi-icon" style="background:#e0e7ff;color:#4338ca">₹</div>
+    </div>
+    <div class="kpi-card">
+      <div>
+        <div class="kpi-val">7</div>
+        <div class="kpi-lbl">Invoices Issued</div>
+      </div>
+      <div class="kpi-icon" style="background:#dbeafe;color:#1e40af">📄</div>
+    </div>
+    <div class="kpi-card">
+      <div>
+        <div class="kpi-val">6 <span style="font-size:13px;font-weight:600;color:#059669">(CGST+SGST)</span></div>
+        <div class="kpi-lbl">In-State Invoices</div>
+      </div>
+      <div class="kpi-icon" style="background:#ecfdf5;color:#047857">🏛️</div>
+    </div>
+    <div class="kpi-card">
+      <div>
+        <div class="kpi-val">1 <span style="font-size:13px;font-weight:600;color:#d97706">(IGST)</span></div>
+        <div class="kpi-lbl">Interstate Invoices</div>
+      </div>
+      <div class="kpi-icon" style="background:#fffbeb;color:#b45309">🚚</div>
+    </div>
+  </div>
+
+  <!-- PAGE HEADER & MAIN BUTTON -->
+  <div class="header-row">
+    <div class="page-title">
+      <h1>Tax Invoices</h1>
+      <span class="count-badge" id="totalCountBadge">7 Total Invoices</span>
+    </div>
+    <div class="action-buttons">
+      <button class="btn ghost" onclick="alert('Exporting Tax Invoices Register to Excel...')">
+        <span>📊</span> Export Excel
+      </button>
+      <button class="btn" onclick="alert('Redirects to Split-View Invoice Builder')">
+        <span>+</span> New invoice
+      </button>
+    </div>
+  </div>
+
+  <!-- SEARCH & FILTER TOOLBAR -->
+  <div class="control-card">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" class="search-input" placeholder="Search by Invoice #, Client Name, User, or Tax Type..." onkeyup="filterInvoices()">
+    </div>
+    <div class="filter-pills">
+      <button class="pill-tab active" onclick="setFilter('all', this)">All Invoices (7)</button>
+      <button class="pill-tab" onclick="setFilter('in-state', this)">In-State CGST/SGST (6)</button>
+      <button class="pill-tab" onclick="setFilter('igst', this)">Interstate IGST (1)</button>
+      <button class="pill-tab" onclick="setFilter('recent', this)">This Month (Nov)</button>
+    </div>
+  </div>
+
+  <!-- DESIGN CONTAINER: Will switch between Option 1, 2, and 3 -->
+  <div id="viewContainer">
+    <!-- OPTION 1: Master Table Card (Default) -->
+    <div class="table-card" id="tableCardView">
+      <table id="invoicesTable">
+        <thead>
+          <tr>
+            <th onclick="sortTable(0)" style="cursor:pointer">Invoice Number ↕</th>
+            <th onclick="sortTable(1)" style="cursor:pointer">Date ↕</th>
+            <th>Client Name</th>
+            <th>Tax Type / GST</th>
+            <th style="text-align:right;cursor:pointer" onclick="sortTable(4)">Total Amount ↕</th>
+            <th>Created By</th>
+            <th style="text-align:right">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="invoiceTableBody">
+          <!-- Dynamically populated via JS -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- OPTION 3 CONTAINER (Hidden initially) -->
+    <div class="card-rows-container" id="cardRowsView" style="display:none">
+      <!-- Populated via JS -->
+    </div>
+  </div>
+
+</div>
+
+<!-- SLIDE-OVER QUICK PREVIEW DRAWER -->
+<div class="drawer-backdrop" id="drawerBackdrop" onclick="closeDrawer()"></div>
+<div class="drawer-panel" id="drawerPanel">
+  <div class="drawer-header">
+    <div>
+      <div style="font-size:12px;font-weight:700;color:var(--mute);text-transform:uppercase">Quick Invoice View</div>
+      <h3 style="margin:2px 0 0;font-size:18px" id="drawerInvNumber">INV-26-27/6</h3>
+    </div>
+    <button class="action-btn" onclick="closeDrawer()" style="font-size:18px;padding:4px 8px">&times;</button>
+  </div>
+  <div class="drawer-body" id="drawerContent">
+    <!-- Dynamic content -->
+  </div>
+  <div class="drawer-footer">
+    <button class="btn" style="flex:1" onclick="alert('Downloading PDF for ' + currentDrawerInv)">
+      <span>📥</span> Download PDF
+    </button>
+    <button class="btn ghost" onclick="alert('Sending email with invoice attached...')">
+      <span>✉️</span> Mail
+    </button>
+    <button class="btn ghost" onclick="alert('Opening in Split-View Builder for editing...')">
+      <span>✏️</span> Edit
+    </button>
+  </div>
+</div>
+
+<script>
+const sampleInvoices = [
+  { id: 7, number: 'INV-26-27/6', date: '2026-11-01', clientName: 'ABC', taxType: 'CGST+SGST', total: 28.75, createdBy: 'admin', itemsCount: 1, gstin: '27AABCU9603R1ZM' },
+  { id: 6, number: 'INV-26-27/5', date: '2026-10-30', clientName: 'ABC', taxType: 'CGST+SGST', total: 28.75, createdBy: 'admin', itemsCount: 1, gstin: '27AABCU9603R1ZM' },
+  { id: 5, number: 'INV-26-27/4', date: '2026-10-25', clientName: 'ABC', taxType: 'IGST', total: 29.50, createdBy: 'admin', itemsCount: 2, gstin: '24AABCU9603R1ZQ' },
+  { id: 4, number: 'INV-26-27/3', date: '2026-10-25', clientName: 'ABC', taxType: 'CGST+SGST', total: 29.50, createdBy: 'admin', itemsCount: 2, gstin: '27AABCU9603R1ZM' },
+  { id: 3, number: 'INV-26-27/2', date: '2026-10-23', clientName: 'ABC', taxType: 'CGST+SGST', total: 29.50, createdBy: 'Sangram', itemsCount: 1, gstin: '27AABCU9603R1ZM' },
+  { id: 2, number: 'INV-26-27/1', date: '2026-10-19', clientName: 'ABC', taxType: 'CGST+SGST', total: 293.25, createdBy: 'Sangram', itemsCount: 3, gstin: '27AABCU9603R1ZM' },
+  { id: 1, number: 'INV-2026-0001', date: '2026-10-18', clientName: 'ABC', taxType: 'CGST+SGST', total: 57.50, createdBy: 'admin', itemsCount: 1, gstin: '27AABCU9603R1ZM' }
+];
+
+let activeFilter = 'all';
+let currentDesign = 'opt1';
+let currentDrawerInv = null;
+
+function renderInvoices() {
+  const q = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+  
+  const filtered = sampleInvoices.filter(inv => {
+    if (activeFilter === 'in-state' && inv.taxType !== 'CGST+SGST') return false;
+    if (activeFilter === 'igst' && inv.taxType !== 'IGST') return false;
+    if (activeFilter === 'recent' && !inv.date.startsWith('2026-11')) return false;
+    
+    if (q) {
+      const match = inv.number.toLowerCase().includes(q) ||
+                    inv.clientName.toLowerCase().includes(q) ||
+                    inv.createdBy.toLowerCase().includes(q) ||
+                    inv.taxType.toLowerCase().includes(q) ||
+                    inv.total.toString().includes(q);
+      if (!match) return false;
+    }
+    return true;
+  });
+
+  document.getElementById('totalCountBadge').textContent = `${filtered.length} Total Invoices`;
+
+  // Option 1 & Option 2 (Table View)
+  const tbody = document.getElementById('invoiceTableBody');
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:36px;color:var(--mute)">No invoices matching criteria</td></tr>`;
+  } else {
+    tbody.innerHTML = filtered.map(r => `
+      <tr>
+        <td>
+          <div class="inv-badge">
+            <span>📄 ${r.number}</span>
+            <button class="copy-btn" title="Copy Invoice Number" onclick="copyText('${r.number}')">📋</button>
+          </div>
+        </td>
+        <td>
+          <div style="font-weight:600;color:#1e293b">${r.date}</div>
+          <div style="font-size:11px;color:#94a3b8">${r.date.startsWith('2026-11') ? 'This Month' : 'October 2026'}</div>
+        </td>
+        <td>
+          <div class="client-cell">
+            <div class="client-avatar">${r.clientName.slice(0,2).toUpperCase()}</div>
+            <div>
+              <div class="client-name">${r.clientName}</div>
+              <div class="client-sub">GSTIN: ${r.gstin}</div>
+            </div>
+          </div>
+        </td>
+        <td>
+          ${r.taxType === 'IGST' 
+            ? `<span class="tax-tag interstate">🚚 Out of State (IGST 18%)</span>` 
+            : `<span class="tax-tag in-state">🏛️ In-State (CGST 9% + SGST 9%)</span>`}
+        </td>
+        <td style="text-align:right">
+          <div class="total-amt">₹${r.total.toFixed(2)}</div>
+          <div style="font-size:11px;color:#94a3b8">${r.itemsCount} ${r.itemsCount > 1 ? 'items' : 'item'}</div>
+        </td>
+        <td>
+          <div class="user-pill">
+            <span class="user-dot"></span>
+            <span>${r.createdBy}</span>
+          </div>
+        </td>
+        <td>
+          <div class="action-group">
+            <button class="action-btn primary" title="Quick Drawer View" onclick="openDrawer(${r.id})">
+              <span>👁️</span> View
+            </button>
+            <button class="action-btn" title="Send Email" onclick="alert('Send email modal for ${r.number}')">
+              <span>✉️</span> Mail
+            </button>
+            <button class="action-btn" title="Edit in Split View" onclick="alert('Opening editor for ${r.number}')">
+              <span>✏️</span> Edit
+            </button>
+            <button class="action-btn danger" title="Delete Invoice" onclick="if(confirm('Delete ${r.number}?')) alert('Deleted!')">
+              <span>🗑️</span>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // Option 3 (Card Row View)
+  const cardContainer = document.getElementById('cardRowsView');
+  if (filtered.length === 0) {
+    cardContainer.innerHTML = `<div style="text-align:center;padding:40px;color:var(--mute);background:#fff;border-radius:16px;border:1px solid var(--line)">No invoices found</div>`;
+  } else {
+    cardContainer.innerHTML = filtered.map(r => `
+      <div class="inv-card-row">
+        <div>
+          <div class="inv-badge" style="font-size:13.5px">
+            <span>📄 ${r.number}</span>
+            <button class="copy-btn" onclick="copyText('${r.number}')">📋</button>
+          </div>
+          <div style="font-size:11px;color:#94a3b8;margin-top:4px">By: <strong>${r.createdBy}</strong></div>
+        </div>
+        <div>
+          <div style="font-weight:700;color:#0f172a">${r.date}</div>
+          <div style="font-size:11.5px;color:#64748b">${r.date.startsWith('2026-11') ? '🟢 Recent' : 'Archived'}</div>
+        </div>
+        <div class="client-cell">
+          <div class="client-avatar">${r.clientName.slice(0,2).toUpperCase()}</div>
+          <div>
+            <div class="client-name">${r.clientName}</div>
+            <div class="client-sub">GST: ${r.gstin}</div>
+          </div>
+        </div>
+        <div>
+          ${r.taxType === 'IGST' 
+            ? `<span class="tax-tag interstate">🚚 Interstate (IGST 18%)</span>` 
+            : `<span class="tax-tag in-state">🏛️ In-State (CGST 9% + SGST 9%)</span>`}
+        </div>
+        <div style="text-align:right">
+          <div class="total-amt">₹${r.total.toFixed(2)}</div>
+          <div style="font-size:11px;color:#94a3b8">${r.itemsCount} ${r.itemsCount > 1 ? 'items' : 'item'}</div>
+        </div>
+        <div>
+          <span style="font-size:11.5px;font-weight:700;color:#059669;background:#ecfdf5;padding:3px 8px;border-radius:6px;border:1px solid #a7f3d0">Paid / Final</span>
+        </div>
+        <div>
+          <div class="action-group">
+            <button class="action-btn primary" onclick="openDrawer(${r.id})"><span>👁️</span></button>
+            <button class="action-btn" onclick="alert('Emailing...')"><span>✉️</span></button>
+            <button class="action-btn" onclick="alert('Editing...')"><span>✏️</span></button>
+            <button class="action-btn danger" onclick="if(confirm('Delete ${r.number}?')) alert('Deleted!')"><span>🗑️</span></button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+}
+
+function filterInvoices() {
+  renderInvoices();
+}
+
+function setFilter(filter, el) {
+  activeFilter = filter;
+  document.querySelectorAll('.pill-tab').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  renderInvoices();
+}
+
+function switchDesign(opt) {
+  currentDesign = opt;
+  document.querySelectorAll('.proto-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+
+  const tableCard = document.getElementById('tableCardView');
+  const cardRows = document.getElementById('cardRowsView');
+
+  if (opt === 'opt1') {
+    tableCard.style.display = 'block';
+    tableCard.classList.remove('compact-mode');
+    cardRows.style.display = 'none';
+  } else if (opt === 'opt2') {
+    tableCard.style.display = 'block';
+    tableCard.classList.add('compact-mode');
+    cardRows.style.display = 'none';
+  } else if (opt === 'opt3') {
+    tableCard.style.display = 'none';
+    cardRows.style.display = 'flex';
+  }
+}
+
+function openDrawer(invId) {
+  const inv = sampleInvoices.find(x => x.id === invId);
+  if (!inv) return;
+  currentDrawerInv = inv.number;
+
+  document.getElementById('drawerInvNumber').textContent = inv.number;
+  document.getElementById('drawerContent').innerHTML = `
+    <div style="background:#f8fafc;padding:16px;border-radius:12px;border:1px solid #e2e8f0;margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        <span style="color:var(--mute);font-size:12px">INVOICE DATE</span>
+        <strong style="color:#0f172a">${inv.date}</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        <span style="color:var(--mute);font-size:12px">CLIENT</span>
+        <strong style="color:#0f172a">${inv.clientName}</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        <span style="color:var(--mute);font-size:12px">GSTIN</span>
+        <strong style="font-family:'JetBrains Mono',monospace;color:#0f172a">${inv.gstin}</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:var(--mute);font-size:12px">TAX CATEGORY</span>
+        <span style="font-weight:600;color:${inv.taxType === 'IGST' ? '#b45309' : '#047857'}">${inv.taxType}</span>
+      </div>
+    </div>
+
+    <h4 style="margin:0 0 10px;font-size:13px;text-transform:uppercase;color:var(--mute)">Line Items Summary</h4>
+    <div style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin-bottom:20px">
+      <table style="font-size:12.5px">
+        <thead style="background:#f1f5f9">
+          <tr>
+            <th style="padding:8px 12px">Product</th>
+            <th style="padding:8px 12px;text-align:center">Qty</th>
+            <th style="padding:8px 12px;text-align:right">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding:8px 12px">Industrial Valve Supply</td>
+            <td style="padding:8px 12px;text-align:center">1 Nos</td>
+            <td style="padding:8px 12px;text-align:right;font-family:'JetBrains Mono'">₹${(inv.total / 1.18).toFixed(2)}</td>
+          </tr>
+          <tr style="background:#fafafa">
+            <td colspan="2" style="padding:6px 12px;color:var(--mute);font-size:11.5px">GST (${inv.taxType === 'IGST' ? 'IGST 18%' : 'CGST 9% + SGST 9%'})</td>
+            <td style="padding:6px 12px;text-align:right;font-family:'JetBrains Mono';font-size:11.5px">₹${(inv.total - (inv.total / 1.18)).toFixed(2)}</td>
+          </tr>
+          <tr style="background:#eef2ff;font-weight:700">
+            <td colspan="2" style="padding:8px 12px;color:#3730a3">Grand Total</td>
+            <td style="padding:8px 12px;text-align:right;font-family:'JetBrains Mono';color:#3730a3;font-size:14px">₹${inv.total.toFixed(2)}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="font-size:12px;color:var(--mute);line-height:1.5">
+      Issued by <strong>${inv.createdBy}</strong>. Valid digital record in Amigo Enterprises Accounting System.
+    </div>
+  `;
+
+  document.getElementById('drawerBackdrop').classList.add('open');
+  document.getElementById('drawerPanel').classList.add('open');
+}
+
+function closeDrawer() {
+  document.getElementById('drawerBackdrop').classList.remove('open');
+  document.getElementById('drawerPanel').classList.remove('open');
+}
+
+function copyText(val) {
+  navigator.clipboard.writeText(val);
+  alert('Copied to clipboard: ' + val);
+}
+
+// Initial Render
+renderInvoices();
+</script>
+</body>
+</html>

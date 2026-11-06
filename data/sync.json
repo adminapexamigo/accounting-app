@@ -1,0 +1,176 @@
+{
+  "lastSyncAt": "2026-10-25T09:20:01.599Z",
+  "syncedBy": "admin",
+  "lastEmailedAt": "2026-11-01T13:21:43.834Z",
+  "emailedBy": "Sangram",
+  "history": [
+    {
+      "at": "2026-11-01T13:21:43.834Z",
+      "by": "Sangram",
+      "action": "email",
+      "recipient": "budamale7@gmail.com",
+      "size": 6119
+    },
+    {
+      "at": "2026-10-25T09:20:01.599Z",
+      "by": "admin",
+      "action": "import",
+      "stats": [
+        {
+          "table": "users",
+          "added": 0,
+          "updated": 2,
+          "total": 2
+        },
+        {
+          "table": "clients",
+          "added": 0,
+          "updated": 1,
+          "total": 1
+        },
+        {
+          "table": "products",
+          "added": 0,
+          "updated": 1,
+          "total": 1
+        },
+        {
+          "table": "invoices",
+          "added": 0,
+          "updated": 5,
+          "total": 5
+        },
+        {
+          "table": "purchases",
+          "added": 0,
+          "updated": 0,
+          "total": 0
+        },
+        {
+          "table": "workupdates",
+          "added": 0,
+          "updated": 3,
+          "total": 3
+        },
+        {
+          "table": "logins",
+          "added": 0,
+          "updated": 39,
+          "total": 44
+        },
+        {
+          "table": "docs",
+          "added": 0,
+          "updated": 3,
+          "total": 3
+        },
+        {
+          "table": "sheets",
+          "added": 0,
+          "updated": 0,
+          "total": 0
+        },
+        {
+          "table": "ledgers",
+          "added": 0,
+          "updated": 14,
+          "total": 14
+        },
+        {
+          "table": "vouchers",
+          "added": 0,
+          "updated": 0,
+          "total": 0
+        }
+      ]
+    },
+    {
+      "at": "2026-10-25T05:10:05.980Z",
+      "by": "Sangram",
+      "action": "email",
+      "recipient": "budamale7@gmail.com",
+      "size": 5648
+    },
+    {
+      "at": "2026-10-25T05:07:05.240Z",
+      "by": "admin",
+      "action": "email",
+      "recipient": "budamale7@gmail.com",
+      "size": 5632
+    },
+    {
+      "at": "2026-10-25T05:05:30.733Z",
+      "by": "admin",
+      "action": "import",
+      "stats": [
+        {
+          "table": "users",
+          "added": 0,
+          "updated": 2,
+          "total": 2
+        },
+        {
+          "table": "clients",
+          "added": 0,
+          "updated": 1,
+          "total": 1
+        },
+        {
+          "table": "products",
+          "added": 0,
+          "updated": 1,
+          "total": 1
+        },
+        {
+          "table": "invoices",
+          "added": 0,
+          "updated": 5,
+          "total": 5
+        },
+        {
+          "table": "purchases",
+          "added": 0,
+          "updated": 0,
+          "total": 0
+        },
+        {
+          "table": "workupdates",
+          "added": 0,
+          "updated": 3,
+          "total": 3
+        },
+        {
+          "table": "logins",
+          "added": 0,
+          "updated": 37,
+          "total": 37
+        },
+        {
+          "table": "docs",
+          "added": 0,
+          "updated": 3,
+          "total": 3
+        },
+        {
+          "table": "sheets",
+          "added": 0,
+          "updated": 0,
+          "total": 0
+        },
+        {
+          "table": "ledgers",
+          "added": 0,
+          "updated": 14,
+          "total": 14
+        },
+        {
+          "table": "vouchers",
+          "added": 0,
+          "updated": 0,
+          "total": 0
+        }
+      ]
+    }
+  ],
+  "emailedSize": 6119
+}

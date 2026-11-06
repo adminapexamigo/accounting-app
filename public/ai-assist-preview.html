@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Assistant & Loader Preview — Amigo Accounting</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --ink: #0f172a;
+      --ink-soft: #334155;
+      --mute: #64748b;
+      --pri: #4f46e5;
+      --pri-light: #6366f1;
+      --pri-dark: #3730a3;
+      --pri-bg: #eef2ff;
+      --ai-purple: #7c3aed;
+      --ai-purple-light: #8b5cf6;
+      --ai-purple-bg: #f5f3ff;
+      --ai-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+      --line: #e2e8f0;
+      --danger: #ef4444;
+      --ok: #10b981;
+      --ok-bg: #ecfdf5;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+      --shadow-md: 0 6px 18px -3px rgba(15,23,42,0.08);
+      --shadow-lg: 0 16px 36px -4px rgba(15,23,42,0.12);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.5;
+      padding: 24px;
+    }
+
+    /* Top Banner */
+    .banner {
+      background: linear-gradient(90deg, #1e1b4b 0%, #312e81 100%);
+      color: #fff;
+      padding: 18px 24px;
+      border-radius: var(--radius-lg);
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: var(--shadow-md);
+    }
+    .banner h2 { font-size: 19px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .banner p { font-size: 13px; color: #cbd5e1; margin-top: 4px; }
+    .badge-prototype {
+      background: rgba(255,255,255,0.18);
+      padding: 5px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      border: 1px solid rgba(255,255,255,0.25);
+    }
+
+    /* Tabs Navigation */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid var(--line);
+      padding-bottom: 8px;
+      overflow-x: auto;
+    }
+    .tab-btn {
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+      color: var(--mute);
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .tab-btn:hover { color: var(--pri); background: #f1f5f9; }
+    .tab-btn.active {
+      color: var(--pri);
+      background: var(--pri-bg);
+      border-bottom: 2px solid var(--pri);
+    }
+    .tab-btn.featured {
+      background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+      color: var(--ai-purple);
+      border: 1px solid #ddd6fe;
+    }
+    .tab-btn.featured.active {
+      background: var(--ai-gradient);
+      color: #fff;
+    }
+
+    /* Main Container & Grid */
+    .container { max-width: 1080px; margin: 0 auto; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 24px;
+    }
+    .card-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-sub { font-size: 13px; color: var(--mute); margin-bottom: 20px; }
+
+    /* Form & Input Elements */
+    .form-group {
+      margin-bottom: 20px;
+      position: relative;
+    }
+    .label-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    label { font-size: 13px; font-weight: 600; color: var(--ink-soft); }
+
+    /* The AI Button */
+    .ai-btn-trigger {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+      color: var(--ai-purple);
+      border: 1px solid #ddd6fe;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(124, 58, 237, 0.1);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .ai-btn-trigger:hover {
+      background: var(--ai-gradient);
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.28);
+      transform: translateY(-1px);
+    }
+
+    /* Textarea & Inputs */
+    textarea, input[type="text"], select {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--ink);
+      background: #fff;
+      transition: border 0.2s ease, box-shadow 0.2s ease;
+      line-height: 1.6;
+    }
+    textarea:focus, input[type="text"]:focus, select:focus {
+      outline: none;
+      border-color: var(--pri);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    }
+    textarea { min-height: 100px; resize: vertical; }
+
+    /* Sample Preset Chips */
+    .sample-presets {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+    .preset-chip {
+      font-size: 11px;
+      background: #f1f5f9;
+      color: #475569;
+      padding: 3px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 1px dashed #cbd5e1;
+      transition: all 0.15s;
+    }
+    .preset-chip:hover {
+      background: #e2e8f0;
+      color: var(--ink);
+    }
+
+    /* AI Dropdown Menu */
+    .ai-menu-popover {
+      position: absolute;
+      right: 0;
+      top: 32px;
+      width: 280px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      padding: 6px;
+      z-index: 100;
+      display: none;
+      animation: popIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.95) translateY(-6px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .ai-menu-header {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--mute);
+      padding: 6px 10px 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #f1f5f9;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .ai-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink-soft);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .ai-menu-item:hover {
+      background: var(--ai-purple-bg);
+      color: var(--ai-purple);
+      font-weight: 600;
+    }
+    .ai-menu-item .icon { font-size: 16px; width: 20px; text-align: center; }
+
+    /* ==================== LOADER DESIGN 1: SHIMMER MODAL ==================== */
+    .ai-preview-modal-bg {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      backdrop-filter: blur(4px);
+      z-index: 999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .ai-preview-box {
+      background: #fff;
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 720px;
+      box-shadow: 0 25px 60px -15px rgba(0,0,0,0.35);
+      border: 1px solid #e2e8f0;
+      overflow: hidden;
+      animation: popIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .ai-preview-header {
+      background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #ddd6fe;
+    }
+    .ai-preview-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ai-purple);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ai-powered-by {
+      font-size: 11px;
+      background: #fff;
+      color: #6d28d9;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-weight: 600;
+      border: 1px solid #ddd6fe;
+    }
+    .ai-preview-body { padding: 20px; }
+    
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .compare-col {
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+    }
+    .compare-col.ai-col {
+      background: #faf5ff;
+      border-color: #d8b4fe;
+    }
+    .compare-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--mute);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    .compare-label.ai-lbl { color: var(--ai-purple); display: flex; align-items: center; justify-content: space-between; }
+    .compare-text {
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: var(--ink);
+      white-space: pre-wrap;
+      word-break: break-word;
+      flex: 1;
+    }
+
+    /* Live Loading Shimmer Animation */
+    .ai-shimmer-loader-box {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+      padding: 8px 0;
+    }
+    .shimmer-line {
+      height: 14px;
+      border-radius: 6px;
+      background: linear-gradient(90deg, #ede9fe 25%, #ddd6fe 50%, #ede9fe 75%);
+      background-size: 200% 100%;
+      animation: shimmerWave 1.4s infinite;
+    }
+    @keyframes shimmerWave {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    .ai-loading-step-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: #f5f3ff;
+      border: 1px solid #c4b5fd;
+      color: #6d28d9;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .ai-orb-pulse {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #7c3aed;
+      box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.7);
+      animation: pulseOrb 1.3s infinite;
+    }
+    @keyframes pulseOrb {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.7); }
+      70% { transform: scale(1.15); box-shadow: 0 0 0 10px rgba(124, 58, 237, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(124, 58, 237, 0); }
+    }
+
+    .ai-preview-footer {
+      padding: 14px 20px;
+      background: #f8fafc;
+      border-top: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    .btn {
+      padding: 9px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+    }
+    .btn-secondary { background: #fff; border-color: var(--line); color: var(--ink-soft); }
+    .btn-secondary:hover { background: #f1f5f9; }
+    .btn-ai-apply {
+      background: var(--ai-gradient);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(124, 58, 237, 0.35);
+    }
+    .btn-ai-apply:hover { opacity: 0.95; transform: translateY(-1px); }
+    .btn-insert {
+      background: #eef2ff;
+      border-color: #c7d2fe;
+      color: var(--pri);
+    }
+    .btn-insert:hover { background: #e0e7ff; }
+
+    /* ==================== LOADER DESIGN 2: FLOATING GLOW CARD ==================== */
+    .ai-ring-loader-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      backdrop-filter: blur(5px);
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .ai-ring-card {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 32px 36px;
+      text-align: center;
+      max-width: 380px;
+      width: 100%;
+      box-shadow: 0 25px 60px -15px rgba(0,0,0,0.35), 0 0 0 1px rgba(0,0,0,0.06);
+      animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .ai-glow-spinner {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 18px;
+      border-radius: 50%;
+      border: 4px solid #ede9fe;
+      border-top-color: #7c3aed;
+      border-right-color: #ec4899;
+      animation: spin 0.85s cubic-bezier(0.68, -0.2, 0.27, 1.2) infinite;
+      box-shadow: 0 0 24px rgba(124, 58, 237, 0.25);
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Undo Toast */
+    .undo-toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e293b;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 999px;
+      font-size: 13px;
+      display: none;
+      align-items: center;
+      gap: 12px;
+      box-shadow: var(--shadow-lg);
+      z-index: 1000;
+    }
+    .undo-toast button {
+      background: var(--pri-light);
+      border: none;
+      color: #fff;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Tab content hiding */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Showcase Comparison Grid */
+    .showcase-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-top: 16px;
+    }
+    .showcase-card {
+      border: 2px solid #e2e8f0;
+      border-radius: var(--radius-md);
+      padding: 20px;
+      background: #f8fafc;
+      transition: all 0.2s ease;
+    }
+    .showcase-card.highlight {
+      border-color: #7c3aed;
+      background: #faf5ff;
+    }
+    .showcase-badge {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 6px;
+      display: inline-block;
+      margin-bottom: 8px;
+      letter-spacing: 0.5px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Top Explanatory Banner -->
+    <div class="banner">
+      <div>
+        <h2>✨ AI Assistant &amp; Loader Preview</h2>
+        <p>Review the animated AI loaders before finalizing the implementation in your app.</p>
+      </div>
+      <div class="badge-prototype">LOADER REVIEW</div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs">
+      <button class="tab-btn featured active" onclick="switchTab('loader-review')">
+        🚀 Review Loader Designs (Click Here)
+      </button>
+      <button class="tab-btn" onclick="switchTab('workupdate')">
+        📋 Work Update Form
+      </button>
+      <button class="tab-btn" onclick="switchTab('mail')">
+        ✉️ Mail Drafting Modal
+      </button>
+      <button class="tab-btn" onclick="switchTab('pipo')">
+        📄 PI &amp; PO Documents
+      </button>
+    </div>
+
+    <!-- ==================== TAB 0: LOADER REVIEW ==================== -->
+    <div id="tab-loader-review" class="tab-content active">
+      <div class="card">
+        <div class="card-title">✨ Choose Your Preferred AI Loader Design</div>
+        <div class="card-sub">When enhancing or translating text, LLM generation takes 1 to 2.5 seconds. Below are 2 modern loader designs for you to test and choose:</div>
+
+        <div class="showcase-grid">
+          <!-- Option 1 -->
+          <div class="showcase-card highlight">
+            <span class="showcase-badge" style="background:#7c3aed;color:#fff">RECOMMENDED &bull; DESIGN 1</span>
+            <h3 style="margin-bottom:6px;color:#1e1b4b">Side-by-Side Shimmer Modal with Step Progress</h3>
+            <p style="font-size:13px;color:var(--mute);margin-bottom:14px;line-height:1.6">
+              Opens the dialog <b>instantly</b> on click. Shows your draft on the left, and an animated AI glowing shimmer with live step updates on the right (<em>"Analyzing draft..." &rarr; "Translating to Marathi..."</em>), then smoothly reveals the result.
+            </p>
+            <ul style="font-size:12.5px;color:#475569;margin-bottom:18px;padding-left:18px;line-height:1.8">
+              <li>✅ Immediate user feedback (0 blank waiting time)</li>
+              <li>✅ Shows original draft confirmed on screen</li>
+              <li>✅ Smooth transition straight into Replace / Copy</li>
+            </ul>
+            <button class="btn btn-ai-apply" onclick="demoLoaderDesign1()" style="width:100%;justify-content:center;padding:12px">
+              ▶️ Test Design 1 (Side-by-Side Shimmer)
+            </button>
+          </div>
+
+          <!-- Option 2 -->
+          <div class="showcase-card">
+            <span class="showcase-badge" style="background:#e2e8f0;color:#334155">ALTERNATIVE &bull; DESIGN 2</span>
+            <h3 style="margin-bottom:6px;color:#1e1b4b">Floating Glowing Orb Card</h3>
+            <p style="font-size:13px;color:var(--mute);margin-bottom:14px;line-height:1.6">
+              Shows a centered floating card with a high-speed gradient rotating glowing ring and an action progress bar. Once finished, opens the result comparison modal.
+            </p>
+            <ul style="font-size:12.5px;color:#475569;margin-bottom:18px;padding-left:18px;line-height:1.8">
+              <li>✅ Compact, focused visual animation</li>
+              <li>✅ Displays clear progress indicator</li>
+              <li>✅ Disappears automatically once done</li>
+            </ul>
+            <button class="btn btn-secondary" onclick="demoLoaderDesign2()" style="width:100%;justify-content:center;padding:12px;border-color:#cbd5e1">
+              ▶️ Test Design 2 (Floating Glow Card)
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== TAB 1: WORK UPDATE ==================== -->
+    <div id="tab-workupdate" class="tab-content">
+      <div class="card">
+        <div class="card-title">📝 Daily Employee Work Update</div>
+        <div class="card-sub">Test the loader directly with real work update text below:</div>
+
+        <div class="form-group">
+          <div class="label-row">
+            <label for="wuWork">What work did you do today? *</label>
+            <div style="position: relative;">
+              <button type="button" class="ai-btn-trigger" onclick="toggleMenu('menu-wu-1')">
+                <span class="ai-sparkle">✨</span> AI Assist <span style="font-size: 9px;">▼</span>
+              </button>
+              <div id="menu-wu-1" class="ai-menu-popover">
+                <div class="ai-menu-header">AI Actions <span>Fast AI</span></div>
+                <div class="ai-menu-item" onclick="triggerAI('wuWork', 'polish')">
+                  <span class="icon">👔</span> Make Professional (English)
+                </div>
+                <div class="ai-menu-item" onclick="triggerAI('wuWork', 'to_marathi')">
+                  <span class="icon">🇮🇳</span> Translate to Marathi (मराठीत)
+                </div>
+                <div class="ai-menu-item" onclick="triggerAI('wuWork', 'to_hindi')">
+                  <span class="icon">🇮🇳</span> Translate to Hindi (हिंदी में)
+                </div>
+                <div class="ai-menu-item" onclick="triggerAI('wuWork', 'to_english')">
+                  <span class="icon">🇬🇧</span> Translate to English
+                </div>
+                <div class="ai-menu-item" onclick="triggerAI('wuWork', 'bullets')">
+                  <span class="icon">📌</span> Convert to Executive Bullets
+                </div>
+              </div>
+            </div>
+          </div>
+          <textarea id="wuWork">aaj Kirloskar plant madhe sensor wiring ani motor fitting complete keli. panel calibration baki ahe udya complete hoil.</textarea>
+          <div class="sample-presets">
+            <span style="font-size: 11px; color: var(--mute);">Try sample:</span>
+            <span class="preset-chip" onclick="loadSample('wuWork', 'marathi_raw')">Sample: Marathi Hinglish</span>
+            <span class="preset-chip" onclick="loadSample('wuWork', 'hindi_raw')">Sample: Hindi Notes</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div class="label-row">
+            <label for="wuPending">Pending / blockers (optional)</label>
+            <div style="position: relative;">
+              <button type="button" class="ai-btn-trigger" onclick="toggleMenu('menu-wu-2')">
+                <span class="ai-sparkle">✨</span> AI Assist <span style="font-size: 9px;">▼</span>
+              </button>
+              <div id="menu-wu-2" class="ai-menu-popover">
+                <div class="ai-menu-header">AI Actions <span>Fast AI</span></div>
+                <div class="ai-menu-item" onclick="triggerAI('wuPending', 'polish')">
+                  <span class="icon">👔</span> Make Professional
+                </div>
+                <div class="ai-menu-item" onclick="triggerAI('wuPending', 'to_marathi')">
+                  <span class="icon">🇮🇳</span> Translate to Marathi
+                </div>
+              </div>
+            </div>
+          </div>
+          <textarea id="wuPending">Udya sakali final testing karaychi ahe client presence madhe.</textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== TAB 2: MAIL DRAFTING ==================== -->
+    <div id="tab-mail" class="tab-content">
+      <div class="card">
+        <div class="card-title">✉️ Mail Drafting Modal</div>
+        <div class="form-group">
+          <div class="label-row">
+            <label for="mailSubject">Subject *</label>
+            <button type="button" class="ai-btn-trigger" onclick="triggerAI('mailSubject', 'subject_formal')">
+              <span class="ai-sparkle">✨</span> AI Subject
+            </button>
+          </div>
+          <input type="text" id="mailSubject" value="urgent pi attached send payment fast">
+        </div>
+        <div class="form-group">
+          <div class="label-row">
+            <label for="mailBody">Message / Body *</label>
+            <div style="position: relative;">
+              <button type="button" class="ai-btn-trigger" onclick="toggleMenu('menu-mail')">
+                <span class="ai-sparkle">✨</span> AI Assist <span style="font-size: 9px;">▼</span>
+              </button>
+              <div id="menu-mail" class="ai-menu-popover">
+                <div class="ai-menu-item" onclick="triggerAI('mailBody', 'mail_formal')">
+                  <span class="icon">👔</span> Polished Business Email
+                </div>
+                <div class="ai-menu-item" onclick="triggerAI('mailBody', 'mail_marathi')">
+                  <span class="icon">🇮🇳</span> Translate to Marathi (कार्यालयीन मराठी)
+                </div>
+              </div>
+            </div>
+          </div>
+          <textarea id="mailBody" rows="6">Sir, please find attached PI for control panel order. Send 30 percent advance so we can start manufacturing.</textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== TAB 3: PI & PO ==================== -->
+    <div id="tab-pipo" class="tab-content">
+      <div class="card">
+        <div class="card-title">📄 PI &amp; PO Terms</div>
+        <div class="form-group">
+          <div class="label-row">
+            <label for="piTerms">Terms &amp; conditions</label>
+            <button type="button" class="ai-btn-trigger" onclick="triggerAI('piTerms', 'terms_formal')">
+              <span class="ai-sparkle">✨</span> AI Standardize Terms
+            </button>
+          </div>
+          <textarea id="piTerms" rows="5">Payment: 30% advance with PO, 70% before dispatch.
+Delivery: 2 weeks from advance date.
+Taxes: GST 18% extra.</textarea>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ==================== DESIGN 1 MODAL (WITH SHIMMER) ==================== -->
+  <div id="aiModal" class="ai-preview-modal-bg">
+    <div class="ai-preview-box">
+      <div class="ai-preview-header">
+        <div class="ai-preview-title">
+          <span class="ai-sparkle">✨</span> <span id="modalActionTitle">AI Suggestion</span>
+        </div>
+        <div class="ai-powered-by">⚡ AI Powered</div>
+      </div>
+      <div class="ai-preview-body">
+        <div class="compare-grid">
+          <!-- Left: Original -->
+          <div class="compare-col">
+            <div class="compare-label">Original Text</div>
+            <div class="compare-text" id="origTextPreview"></div>
+          </div>
+
+          <!-- Right: AI Result or Loader -->
+          <div class="compare-col ai-col">
+            <div class="compare-label ai-lbl">
+              <span>✨ AI Refinement / Translation</span>
+              <span id="aiLiveStatusTag" style="font-size:10.5px;color:#7c3aed;text-transform:none"></span>
+            </div>
+
+            <!-- Animated Shimmer Loader Container -->
+            <div id="aiShimmerLoader" class="ai-shimmer-loader-box">
+              <div class="ai-loading-step-pill">
+                <span class="ai-orb-pulse"></span>
+                <span id="aiStepText">Analyzing draft text…</span>
+              </div>
+              <div class="shimmer-line" style="width: 100%;"></div>
+              <div class="shimmer-line" style="width: 88%;"></div>
+              <div class="shimmer-line" style="width: 94%;"></div>
+              <div class="shimmer-line" style="width: 70%;"></div>
+            </div>
+
+            <!-- Actual Result Content (shown once ready) -->
+            <div class="compare-text" id="aiTextPreview" style="display:none"></div>
+          </div>
+        </div>
+      </div>
+      <div class="ai-preview-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Discard</button>
+        <button type="button" class="btn btn-secondary" id="btnCopy" onclick="copyAIText()" style="display:none">📋 Copy</button>
+        <button type="button" class="btn btn-insert" id="btnInsert" onclick="insertBelow()" style="display:none">➕ Insert Below</button>
+        <button type="button" class="btn btn-ai-apply" id="btnApply" onclick="applyReplace()" style="display:none">✅ Replace Original</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== DESIGN 2 MODAL (FLOATING GLOW CARD) ==================== -->
+  <div id="aiRingModal" class="ai-ring-loader-modal">
+    <div class="ai-ring-card">
+      <div class="ai-glow-spinner"></div>
+      <h3 style="font-size:17px;font-weight:700;color:#1e1b4b;margin-bottom:6px">✨ AI Assistant is Processing</h3>
+      <p id="ringCardSubtitle" style="font-size:13px;color:var(--mute);margin-bottom:18px">Translating draft into official Marathi...</p>
+      <div style="background:#f1f5f9;height:6px;border-radius:999px;overflow:hidden;margin-bottom:18px">
+        <div id="ringProgressBar" style="width:30%;height:100%;background:var(--ai-gradient);transition:width 0.6s ease"></div>
+      </div>
+      <button class="btn btn-secondary" onclick="closeRingModal()" style="font-size:12px;padding:6px 14px">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Undo Toast -->
+  <div id="undoToast" class="undo-toast">
+    <span>Text replaced with AI suggestion.</span>
+    <button onclick="undoReplace()">Undo</button>
+  </div>
+
+  <script>
+    let activeTargetId = null;
+    let previousText = '';
+    let currentAiResult = '';
+    let loadTimer = null;
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.getElementById('tab-' + tabId).classList.add('active');
+      event.currentTarget.classList.add('active');
+    }
+
+    function toggleMenu(menuId) {
+      const menu = document.getElementById(menuId);
+      const isVisible = menu.style.display === 'block';
+      closeAllMenus();
+      if (!isVisible) menu.style.display = 'block';
+    }
+
+    function closeAllMenus() {
+      document.querySelectorAll('.ai-menu-popover').forEach(m => m.style.display = 'none');
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.ai-btn-trigger') && !e.target.closest('.ai-menu-popover')) {
+        closeAllMenus();
+      }
+    });
+
+    // Sample trigger using Design 1
+    function triggerAI(targetId, action) {
+      closeAllMenus();
+      const el = document.getElementById(targetId);
+      const rawText = el ? el.value.trim() : '';
+
+      if (!rawText) {
+        alert('Please enter some text in the field first!');
+        return;
+      }
+
+      activeTargetId = targetId;
+      previousText = el.value;
+
+      runLoaderDesign1(action, rawText);
+    }
+
+    // ====== RUNNER: DESIGN 1 (SIDE-BY-SIDE SHIMMER WITH LIVE STEPS) ======
+    function runLoaderDesign1(action, text) {
+      const titles = {
+        polish: '👔 Professional Polish',
+        to_marathi: '🇮🇳 Translate to Marathi (मराठीत)',
+        to_hindi: '🇮🇳 Translate to Hindi (हिंदी में)',
+        to_english: '🇬🇧 English Translation',
+        bullets: '📌 Structured Executive Bullets',
+        mail_formal: '✉️ Formal Business Email',
+        mail_marathi: '🇮🇳 Business Email in Marathi',
+        subject_formal: '👔 Formal Subject Line',
+        terms_formal: '⚖️ Standard Legal Terms'
+      };
+
+      document.getElementById('modalActionTitle').textContent = titles[action] || 'AI Suggestion';
+      document.getElementById('origTextPreview').textContent = text;
+      
+      // Reset UI to loading state
+      const shimmer = document.getElementById('aiShimmerLoader');
+      const textPreview = document.getElementById('aiTextPreview');
+      const stepText = document.getElementById('aiStepText');
+      const statusTag = document.getElementById('aiLiveStatusTag');
+      const btnApply = document.getElementById('btnApply');
+      const btnInsert = document.getElementById('btnInsert');
+      const btnCopy = document.getElementById('btnCopy');
+
+      shimmer.style.display = 'flex';
+      textPreview.style.display = 'none';
+      btnApply.style.display = 'none';
+      btnInsert.style.display = 'none';
+      btnCopy.style.display = 'none';
+      statusTag.textContent = 'Generating…';
+
+      document.getElementById('aiModal').style.display = 'flex';
+
+      // Step progress simulation
+      stepText.textContent = 'Analyzing input text & terminology…';
+      
+      setTimeout(() => {
+        if (action.includes('marathi')) stepText.textContent = 'Translating into respectful official Marathi…';
+        else if (action.includes('hindi')) stepText.textContent = 'Translating into formal business Hindi…';
+        else stepText.textContent = 'Refining tone & corporate sentence structure…';
+      }, 700);
+
+      setTimeout(() => {
+        stepText.textContent = 'Polishing grammar & finalizing output…';
+      }, 1400);
+
+      // Result reveal at 2.1s
+      setTimeout(() => {
+        const result = generateMockResponse(action, text);
+        currentAiResult = result;
+        textPreview.textContent = result;
+
+        shimmer.style.display = 'none';
+        textPreview.style.display = 'block';
+        statusTag.textContent = 'Ready';
+        btnApply.style.display = 'inline-flex';
+        btnInsert.style.display = 'inline-flex';
+        btnCopy.style.display = 'inline-flex';
+      }, 2100);
+    }
+
+    function demoLoaderDesign1() {
+      const sample = "aaj customer kade panel wiring check keli ani sensory calibration complete zala. udya final testing ahe.";
+      runLoaderDesign1('to_marathi', sample);
+    }
+
+    // ====== RUNNER: DESIGN 2 (FLOATING GLOW CARD) ======
+    function demoLoaderDesign2() {
+      const modal = document.getElementById('aiRingModal');
+      const sub = document.getElementById('ringCardSubtitle');
+      const bar = document.getElementById('ringProgressBar');
+
+      modal.style.display = 'flex';
+      bar.style.width = '20%';
+      sub.textContent = 'Reading draft and checking grammar...';
+
+      setTimeout(() => {
+        bar.style.width = '65%';
+        sub.textContent = 'Translating into official business Marathi...';
+      }, 800);
+
+      setTimeout(() => {
+        bar.style.width = '95%';
+        sub.textContent = 'Finalizing text structure...';
+      }, 1600);
+
+      setTimeout(() => {
+        modal.style.display = 'none';
+        // Open result
+        runLoaderDesign1('to_marathi', 'Sample text translated with Design 2');
+      }, 2300);
+    }
+
+    function closeRingModal() {
+      document.getElementById('aiRingModal').style.display = 'none';
+    }
+
+    function closeModal() {
+      document.getElementById('aiModal').style.display = 'none';
+    }
+
+    function applyReplace() {
+      if (activeTargetId && currentAiResult) {
+        const el = document.getElementById(activeTargetId);
+        previousText = el.value;
+        el.value = currentAiResult;
+        closeModal();
+        showUndoToast();
+      }
+    }
+
+    function insertBelow() {
+      if (activeTargetId && currentAiResult) {
+        const el = document.getElementById(activeTargetId);
+        previousText = el.value;
+        el.value = el.value + '\n\n' + currentAiResult;
+        closeModal();
+        showUndoToast();
+      }
+    }
+
+    function copyAIText() {
+      if (currentAiResult) {
+        navigator.clipboard.writeText(currentAiResult);
+        alert('Copied AI text to clipboard!');
+      }
+    }
+
+    function showUndoToast() {
+      const toast = document.getElementById('undoToast');
+      toast.style.display = 'flex';
+      setTimeout(() => { toast.style.display = 'none'; }, 6000);
+    }
+
+    function undoReplace() {
+      if (activeTargetId) {
+        document.getElementById(activeTargetId).value = previousText;
+        document.getElementById('undoToast').style.display = 'none';
+      }
+    }
+
+    function generateMockResponse(action, text) {
+      if (action.includes('marathi')) {
+        return "आज ग्राहकाच्या ठिकाणी पॅनल वायरिंगची तपासणी यशस्वीरीत्या पूर्ण करण्यात आली तसेच सेन्सर कॅलिब्रेशनचे काम पूर्ण झाले आहे. उद्या अंतिम चाचणी नियोजित आहे.";
+      }
+      if (action.includes('hindi')) {
+        return "आज क्लाइंट की साइट पर पैनल वायरिंग की जांच सफलतापूर्वक पूरी कर ली गई है और सेंसर कैलिब्रेशन का काम भी पूरा हो गया है। अंतिम टेस्टिंग कल सुबह की जाएगी।";
+      }
+      if (action === 'bullets') {
+        return "• Completed panel wiring inspection on-site.\n• Successfully finalized sensory calibration.\n• Scheduled final system testing for tomorrow.";
+      }
+      return "Successfully completed on-site control panel wiring inspection and sensor calibration. Final system trial and sign-off are scheduled for tomorrow.";
+    }
+  </script>
+</body>
+</html>

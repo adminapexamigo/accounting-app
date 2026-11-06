@@ -1,0 +1,1701 @@
+{
+  "2026-11-01": {
+    "8b61855ec159": {
+      "userId": "8b61855ec159",
+      "username": "admin",
+      "fullName": "Kuldeep",
+      "loginTime": "2026-11-01T12:33:54.218Z",
+      "lastSeenAt": "2026-11-01T18:29:56.125Z",
+      "lastPingTime": 1793557796123,
+      "status": "active",
+      "activeMinutes": 85.4044,
+      "idleMinutes": 86.50004999999997,
+      "offlineAlertSent": false,
+      "actions": [],
+      "timeline": [
+        {
+          "t": "06:03 pm",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "06:04 pm",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "06:04 pm",
+          "status": "active",
+          "view": "monitoring"
+        },
+        {
+          "t": "06:08 pm",
+          "status": "active",
+          "view": "logins"
+        },
+        {
+          "t": "06:08 pm",
+          "status": "active",
+          "view": "users"
+        },
+        {
+          "t": "06:08 pm",
+          "status": "active",
+          "view": "monitoring"
+        },
+        {
+          "t": "06:08 pm",
+          "status": "active",
+          "view": "users"
+        },
+        {
+          "t": "06:14 pm",
+          "status": "idle",
+          "view": "users"
+        },
+        {
+          "t": "06:29 pm",
+          "status": "active",
+          "view": "users"
+        },
+        {
+          "t": "06:30 pm",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "06:35 pm",
+          "status": "idle",
+          "view": "dash"
+        },
+        {
+          "t": "06:36 pm",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "06:43 pm",
+          "status": "active",
+          "view": "mail"
+        },
+        {
+          "t": "06:43 pm",
+          "status": "active",
+          "view": "settings"
+        },
+        {
+          "t": "06:43 pm",
+          "status": "active",
+          "view": "users"
+        },
+        {
+          "t": "06:45 pm",
+          "status": "active",
+          "view": "settings"
+        },
+        {
+          "t": "06:45 pm",
+          "status": "active",
+          "view": "monitoring"
+        },
+        {
+          "t": "06:46 pm",
+          "status": "active",
+          "view": "mail"
+        },
+        {
+          "t": "06:46 pm",
+          "status": "active",
+          "view": "settings"
+        },
+        {
+          "t": "06:46 pm",
+          "status": "active",
+          "view": "users"
+        },
+        {
+          "t": "06:46 pm",
+          "status": "active",
+          "view": "logins"
+        },
+        {
+          "t": "06:46 pm",
+          "status": "active",
+          "view": "settings"
+        },
+        {
+          "t": "06:47 pm",
+          "status": "active",
+          "view": "sync"
+        },
+        {
+          "t": "06:47 pm",
+          "status": "active",
+          "view": "users"
+        },
+        {
+          "t": "06:47 pm",
+          "status": "active",
+          "view": "monitoring"
+        },
+        {
+          "t": "06:47 pm",
+          "status": "active",
+          "view": "users"
+        },
+        {
+          "t": "06:49 pm",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "06:49 pm",
+          "status": "active",
+          "view": "users"
+        },
+        {
+          "t": "06:52 pm",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "06:52 pm",
+          "status": "active",
+          "view": "settings"
+        },
+        {
+          "t": "06:52 pm",
+          "status": "active",
+          "view": "mail"
+        },
+        {
+          "t": "06:53 pm",
+          "status": "active",
+          "view": "logins"
+        },
+        {
+          "t": "06:53 pm",
+          "status": "active",
+          "view": "users"
+        },
+        {
+          "t": "06:53 pm",
+          "status": "active",
+          "view": "mail"
+        },
+        {
+          "t": "06:54 pm",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "06:54 pm",
+          "status": "active",
+          "view": "mail"
+        },
+        {
+          "t": "06:54 pm",
+          "status": "active",
+          "view": "monitoring"
+        },
+        {
+          "t": "06:55 pm",
+          "status": "active",
+          "view": "users"
+        },
+        {
+          "t": "06:55 pm",
+          "status": "active",
+          "view": "settings"
+        },
+        {
+          "t": "06:55 pm",
+          "status": "active",
+          "view": "mail"
+        },
+        {
+          "t": "06:55 pm",
+          "status": "active",
+          "view": "monitoring"
+        },
+        {
+          "t": "06:56 pm",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "06:56 pm",
+          "status": "active",
+          "view": "quotation"
+        },
+        {
+          "t": "06:56 pm",
+          "status": "active",
+          "view": "pi"
+        },
+        {
+          "t": "06:56 pm",
+          "status": "active",
+          "view": "po"
+        },
+        {
+          "t": "06:56 pm",
+          "status": "active",
+          "view": "purchases"
+        },
+        {
+          "t": "06:56 pm",
+          "status": "active",
+          "view": "sheets"
+        },
+        {
+          "t": "06:56 pm",
+          "status": "active",
+          "view": "tally"
+        },
+        {
+          "t": "06:56 pm",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "09:51 pm",
+          "status": "active",
+          "view": "users"
+        },
+        {
+          "t": "09:56 pm",
+          "status": "idle",
+          "view": "users"
+        },
+        {
+          "t": "10:00 pm",
+          "status": "active",
+          "view": "users"
+        },
+        {
+          "t": "10:00 pm",
+          "status": "active",
+          "view": "settings"
+        },
+        {
+          "t": "10:00 pm",
+          "status": "active",
+          "view": "sync"
+        },
+        {
+          "t": "10:00 pm",
+          "status": "active",
+          "view": "monitoring"
+        },
+        {
+          "t": "10:00 pm",
+          "status": "active",
+          "view": "users"
+        },
+        {
+          "t": "10:00 pm",
+          "status": "active",
+          "view": "settings"
+        },
+        {
+          "t": "10:01 pm",
+          "status": "active",
+          "view": "monitoring"
+        },
+        {
+          "t": "10:01 pm",
+          "status": "active",
+          "view": "mail"
+        },
+        {
+          "t": "10:06 pm",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "10:06 pm",
+          "status": "active",
+          "view": "users"
+        },
+        {
+          "t": "10:06 pm",
+          "status": "active",
+          "view": "clients"
+        },
+        {
+          "t": "10:06 pm",
+          "status": "active",
+          "view": "products"
+        },
+        {
+          "t": "10:06 pm",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "10:06 pm",
+          "status": "active",
+          "view": "clients"
+        },
+        {
+          "t": "10:06 pm",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "10:06 pm",
+          "status": "active",
+          "view": "quotation"
+        },
+        {
+          "t": "10:06 pm",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "10:08 pm",
+          "status": "active",
+          "view": "weeklybackup"
+        },
+        {
+          "t": "10:08 pm",
+          "status": "active",
+          "view": "support"
+        },
+        {
+          "t": "10:09 pm",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "10:10 pm",
+          "status": "active",
+          "view": "settings"
+        },
+        {
+          "t": "10:10 pm",
+          "status": "active",
+          "view": "logins"
+        },
+        {
+          "t": "10:10 pm",
+          "status": "active",
+          "view": "mail"
+        },
+        {
+          "t": "10:10 pm",
+          "status": "active",
+          "view": "users"
+        },
+        {
+          "t": "10:10 pm",
+          "status": "active",
+          "view": "monitoring"
+        },
+        {
+          "t": "10:11 pm",
+          "status": "active",
+          "view": "settings"
+        },
+        {
+          "t": "10:11 pm",
+          "status": "active",
+          "view": "logins"
+        },
+        {
+          "t": "10:11 pm",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "10:12 pm",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "10:12 pm",
+          "status": "active",
+          "view": "users"
+        },
+        {
+          "t": "10:12 pm",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "10:12 pm",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "10:13 pm",
+          "status": "active",
+          "view": "sync"
+        },
+        {
+          "t": "10:13 pm",
+          "status": "active",
+          "view": "monitoring"
+        },
+        {
+          "t": "10:13 pm",
+          "status": "active",
+          "view": "settings"
+        },
+        {
+          "t": "10:13 pm",
+          "status": "active",
+          "view": "logins"
+        },
+        {
+          "t": "10:13 pm",
+          "status": "active",
+          "view": "mail"
+        },
+        {
+          "t": "10:13 pm",
+          "status": "active",
+          "view": "users"
+        },
+        {
+          "t": "10:13 pm",
+          "status": "active",
+          "view": "workupdates"
+        },
+        {
+          "t": "10:13 pm",
+          "status": "active",
+          "view": "monitoring"
+        },
+        {
+          "t": "10:14 pm",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "10:17 pm",
+          "status": "active",
+          "view": "users"
+        },
+        {
+          "t": "10:17 pm",
+          "status": "active",
+          "view": "settings"
+        },
+        {
+          "t": "10:17 pm",
+          "status": "active",
+          "view": "logins"
+        },
+        {
+          "t": "10:19 pm",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "10:19 pm",
+          "status": "active",
+          "view": "users"
+        },
+        {
+          "t": "10:19 pm",
+          "status": "active",
+          "view": "monitoring"
+        },
+        {
+          "t": "10:19 pm",
+          "status": "active",
+          "view": "settings"
+        },
+        {
+          "t": "10:19 pm",
+          "status": "active",
+          "view": "users"
+        },
+        {
+          "t": "10:19 pm",
+          "status": "active",
+          "view": "settings"
+        },
+        {
+          "t": "10:20 pm",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "10:20 pm",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "10:20 pm",
+          "status": "active",
+          "view": "quotation"
+        },
+        {
+          "t": "10:21 pm",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "10:25 pm",
+          "status": "active",
+          "view": "sync"
+        },
+        {
+          "t": "10:25 pm",
+          "status": "active",
+          "view": "monitoring"
+        },
+        {
+          "t": "10:26 pm",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "10:28 pm",
+          "status": "active",
+          "view": "quotation"
+        },
+        {
+          "t": "10:28 pm",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "10:32 pm",
+          "status": "idle",
+          "view": "invoices"
+        },
+        {
+          "t": "11:06 pm",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "11:06 pm",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "11:10 pm",
+          "status": "idle",
+          "view": "dash"
+        },
+        {
+          "t": "11:13 pm",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "11:13 pm",
+          "status": "active",
+          "view": "clients"
+        },
+        {
+          "t": "11:14 pm",
+          "status": "active",
+          "view": "products"
+        },
+        {
+          "t": "11:17 pm",
+          "status": "idle",
+          "view": "products"
+        },
+        {
+          "t": "11:19 pm",
+          "status": "active",
+          "view": "products"
+        },
+        {
+          "t": "11:19 pm",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "11:23 pm",
+          "status": "idle",
+          "view": "dash"
+        },
+        {
+          "t": "11:34 pm",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "11:37 pm",
+          "status": "idle",
+          "view": "dash"
+        },
+        {
+          "t": "11:40 pm",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "11:40 pm",
+          "status": "active",
+          "view": "quotation"
+        },
+        {
+          "t": "11:40 pm",
+          "status": "active",
+          "view": "tally"
+        },
+        {
+          "t": "11:40 pm",
+          "status": "active",
+          "view": "products"
+        },
+        {
+          "t": "11:40 pm",
+          "status": "active",
+          "view": "workupdates"
+        },
+        {
+          "t": "11:40 pm",
+          "status": "active",
+          "view": "users"
+        },
+        {
+          "t": "11:40 pm",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "11:41 pm",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "11:44 pm",
+          "status": "idle",
+          "view": "invoices"
+        },
+        {
+          "t": "11:49 pm",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "11:52 pm",
+          "status": "idle",
+          "view": "invoices"
+        },
+        {
+          "t": "11:59 pm",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "11:59 pm",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "11:59 pm",
+          "status": "active",
+          "view": "invoices"
+        }
+      ]
+    },
+    "ff9deb24622c": {
+      "userId": "ff9deb24622c",
+      "username": "Sangram",
+      "fullName": "Sangram",
+      "loginTime": "2026-11-01T13:20:45.995Z",
+      "lastSeenAt": "2026-11-01T13:21:59.656Z",
+      "lastPingTime": 1793539319655,
+      "status": "active",
+      "activeMinutes": 1.1533,
+      "idleMinutes": 0,
+      "offlineAlertSent": false,
+      "actions": [],
+      "timeline": [
+        {
+          "t": "06:50 pm",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "06:51 pm",
+          "status": "active",
+          "view": "support"
+        },
+        {
+          "t": "06:51 pm",
+          "status": "active",
+          "view": "weeklybackup"
+        },
+        {
+          "t": "06:51 pm",
+          "status": "active",
+          "view": "workupdates"
+        },
+        {
+          "t": "06:51 pm",
+          "status": "active",
+          "view": "support"
+        }
+      ]
+    }
+  },
+  "2026-11-02": {
+    "8b61855ec159": {
+      "userId": "8b61855ec159",
+      "username": "admin",
+      "fullName": "Kuldeep",
+      "loginTime": "2026-11-01T18:30:26.196Z",
+      "lastSeenAt": "2026-11-01T19:23:55.678Z",
+      "lastPingTime": 1793561035669,
+      "status": "active",
+      "activeMinutes": 36.56151666666666,
+      "idleMinutes": 15.101033333333334,
+      "offlineAlertSent": false,
+      "actions": [],
+      "timeline": [
+        {
+          "t": "12:00 am",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "12:01 am",
+          "status": "active",
+          "view": "purchases"
+        },
+        {
+          "t": "12:02 am",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "12:02 am",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "12:07 am",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "12:07 am",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "12:08 am",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "12:08 am",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "12:08 am",
+          "status": "active",
+          "view": "quotation"
+        },
+        {
+          "t": "12:09 am",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "12:09 am",
+          "status": "active",
+          "view": "quotation"
+        },
+        {
+          "t": "12:09 am",
+          "status": "active",
+          "view": "pi"
+        },
+        {
+          "t": "12:09 am",
+          "status": "active",
+          "view": "po"
+        },
+        {
+          "t": "12:09 am",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "12:09 am",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "12:09 am",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "12:11 am",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "12:11 am",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "12:11 am",
+          "status": "active",
+          "view": "quotation"
+        },
+        {
+          "t": "12:11 am",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "12:15 am",
+          "status": "idle",
+          "view": "invoices"
+        },
+        {
+          "t": "12:21 am",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "12:21 am",
+          "status": "active",
+          "view": "quotation"
+        },
+        {
+          "t": "12:21 am",
+          "status": "active",
+          "view": "pi"
+        },
+        {
+          "t": "12:21 am",
+          "status": "active",
+          "view": "po"
+        },
+        {
+          "t": "12:22 am",
+          "status": "active",
+          "view": "tally"
+        },
+        {
+          "t": "12:22 am",
+          "status": "active",
+          "view": "sheets"
+        },
+        {
+          "t": "12:22 am",
+          "status": "active",
+          "view": "purchases"
+        },
+        {
+          "t": "12:22 am",
+          "status": "active",
+          "view": "products"
+        },
+        {
+          "t": "12:22 am",
+          "status": "active",
+          "view": "clients"
+        },
+        {
+          "t": "12:22 am",
+          "status": "active",
+          "view": "products"
+        },
+        {
+          "t": "12:22 am",
+          "status": "active",
+          "view": "clients"
+        },
+        {
+          "t": "12:22 am",
+          "status": "active",
+          "view": "products"
+        },
+        {
+          "t": "12:23 am",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "12:26 am",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "12:26 am",
+          "status": "active",
+          "view": "quotation"
+        },
+        {
+          "t": "12:28 am",
+          "status": "active",
+          "view": "clients"
+        },
+        {
+          "t": "12:28 am",
+          "status": "active",
+          "view": "products"
+        },
+        {
+          "t": "12:28 am",
+          "status": "active",
+          "view": "workupdates"
+        },
+        {
+          "t": "12:28 am",
+          "status": "active",
+          "view": "tally"
+        },
+        {
+          "t": "12:28 am",
+          "status": "active",
+          "view": "sheets"
+        },
+        {
+          "t": "12:28 am",
+          "status": "active",
+          "view": "purchases"
+        },
+        {
+          "t": "12:29 am",
+          "status": "active",
+          "view": "workupdates"
+        },
+        {
+          "t": "12:29 am",
+          "status": "active",
+          "view": "weeklybackup"
+        },
+        {
+          "t": "12:29 am",
+          "status": "active",
+          "view": "support"
+        },
+        {
+          "t": "12:29 am",
+          "status": "active",
+          "view": "workupdates"
+        },
+        {
+          "t": "12:29 am",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "12:32 am",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "12:32 am",
+          "status": "active",
+          "view": "users"
+        },
+        {
+          "t": "12:36 am",
+          "status": "idle",
+          "view": "users"
+        },
+        {
+          "t": "12:45 am",
+          "status": "active",
+          "view": "users"
+        },
+        {
+          "t": "12:45 am",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "12:45 am",
+          "status": "active",
+          "view": "products"
+        },
+        {
+          "t": "12:45 am",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "12:45 am",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "12:45 am",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "12:48 am",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "12:48 am",
+          "status": "active",
+          "view": "sync"
+        },
+        {
+          "t": "12:48 am",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "12:48 am",
+          "status": "active",
+          "view": "purchases"
+        },
+        {
+          "t": "12:48 am",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "12:48 am",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "12:49 am",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "12:49 am",
+          "status": "active",
+          "view": "products"
+        }
+      ]
+    }
+  },
+  "2026-11-03": {
+    "8b61855ec159": {
+      "userId": "8b61855ec159",
+      "username": "admin",
+      "fullName": "Kuldeep",
+      "loginTime": "2026-11-03T03:58:19.377Z",
+      "lastSeenAt": "2026-11-03T06:04:45.765Z",
+      "lastPingTime": 1793685885761,
+      "status": "active",
+      "activeMinutes": 76.5529833333333,
+      "idleMinutes": 26.821183333333334,
+      "offlineAlertSent": false,
+      "actions": [],
+      "timeline": [
+        {
+          "t": "09:28 am",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "09:32 am",
+          "status": "idle",
+          "view": "dash"
+        },
+        {
+          "t": "09:33 am",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "09:33 am",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "09:37 am",
+          "status": "idle",
+          "view": "invoices"
+        },
+        {
+          "t": "09:37 am",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "09:38 am",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "09:46 am",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "09:51 am",
+          "status": "idle",
+          "view": "invoices"
+        },
+        {
+          "t": "10:00 am",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "10:01 am",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "10:01 am",
+          "status": "active",
+          "view": "logins"
+        },
+        {
+          "t": "10:01 am",
+          "status": "active",
+          "view": "users"
+        },
+        {
+          "t": "10:01 am",
+          "status": "active",
+          "view": "settings"
+        },
+        {
+          "t": "10:02 am",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "10:05 am",
+          "status": "active",
+          "view": "logins"
+        },
+        {
+          "t": "10:05 am",
+          "status": "active",
+          "view": "sync"
+        },
+        {
+          "t": "10:05 am",
+          "status": "active",
+          "view": "logins"
+        },
+        {
+          "t": "10:05 am",
+          "status": "active",
+          "view": "users"
+        },
+        {
+          "t": "10:06 am",
+          "status": "active",
+          "view": "mail"
+        },
+        {
+          "t": "10:06 am",
+          "status": "active",
+          "view": "logins"
+        },
+        {
+          "t": "10:08 am",
+          "status": "active",
+          "view": "sync"
+        },
+        {
+          "t": "10:08 am",
+          "status": "active",
+          "view": "users"
+        },
+        {
+          "t": "10:08 am",
+          "status": "active",
+          "view": "monitoring"
+        },
+        {
+          "t": "10:08 am",
+          "status": "active",
+          "view": "settings"
+        },
+        {
+          "t": "10:08 am",
+          "status": "active",
+          "view": "mail"
+        },
+        {
+          "t": "10:08 am",
+          "status": "active",
+          "view": "logins"
+        },
+        {
+          "t": "10:08 am",
+          "status": "active",
+          "view": "mail"
+        },
+        {
+          "t": "10:08 am",
+          "status": "active",
+          "view": "settings"
+        },
+        {
+          "t": "10:08 am",
+          "status": "active",
+          "view": "sync"
+        },
+        {
+          "t": "10:08 am",
+          "status": "active",
+          "view": "monitoring"
+        },
+        {
+          "t": "10:08 am",
+          "status": "active",
+          "view": "settings"
+        },
+        {
+          "t": "10:08 am",
+          "status": "active",
+          "view": "mail"
+        },
+        {
+          "t": "10:08 am",
+          "status": "active",
+          "view": "logins"
+        },
+        {
+          "t": "10:09 am",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "10:09 am",
+          "status": "active",
+          "view": "ai"
+        },
+        {
+          "t": "10:10 am",
+          "status": "active",
+          "view": "quotation"
+        },
+        {
+          "t": "10:30 am",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "10:30 am",
+          "status": "active",
+          "view": "ai"
+        },
+        {
+          "t": "10:34 am",
+          "status": "idle",
+          "view": "ai"
+        },
+        {
+          "t": "10:36 am",
+          "status": "active",
+          "view": "ai"
+        },
+        {
+          "t": "10:41 am",
+          "status": "idle",
+          "view": "ai"
+        },
+        {
+          "t": "10:44 am",
+          "status": "active",
+          "view": "ai"
+        },
+        {
+          "t": "10:45 am",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "10:46 am",
+          "status": "active",
+          "view": "ai"
+        },
+        {
+          "t": "10:46 am",
+          "status": "active",
+          "view": "quotation"
+        },
+        {
+          "t": "10:46 am",
+          "status": "active",
+          "view": "ai"
+        },
+        {
+          "t": "10:51 am",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "10:51 am",
+          "status": "active",
+          "view": "ai"
+        },
+        {
+          "t": "10:51 am",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "10:55 am",
+          "status": "active",
+          "view": "quotation"
+        },
+        {
+          "t": "10:55 am",
+          "status": "active",
+          "view": "ai"
+        },
+        {
+          "t": "10:56 am",
+          "status": "active",
+          "view": "quotation"
+        },
+        {
+          "t": "10:58 am",
+          "status": "active",
+          "view": "pi"
+        },
+        {
+          "t": "10:58 am",
+          "status": "active",
+          "view": "po"
+        },
+        {
+          "t": "10:59 am",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "10:59 am",
+          "status": "active",
+          "view": "ai"
+        },
+        {
+          "t": "10:59 am",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "10:59 am",
+          "status": "active",
+          "view": "quotation"
+        },
+        {
+          "t": "11:01 am",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "11:01 am",
+          "status": "active",
+          "view": "quotation"
+        },
+        {
+          "t": "11:02 am",
+          "status": "active",
+          "view": "pi"
+        },
+        {
+          "t": "11:02 am",
+          "status": "active",
+          "view": "workupdates"
+        },
+        {
+          "t": "11:02 am",
+          "status": "active",
+          "view": "support"
+        },
+        {
+          "t": "11:02 am",
+          "status": "active",
+          "view": "weeklybackup"
+        },
+        {
+          "t": "11:02 am",
+          "status": "active",
+          "view": "support"
+        },
+        {
+          "t": "11:02 am",
+          "status": "active",
+          "view": "workupdates"
+        },
+        {
+          "t": "11:02 am",
+          "status": "active",
+          "view": "quotation"
+        },
+        {
+          "t": "11:02 am",
+          "status": "active",
+          "view": "pi"
+        },
+        {
+          "t": "11:07 am",
+          "status": "idle",
+          "view": "pi"
+        },
+        {
+          "t": "11:16 am",
+          "status": "active",
+          "view": "pi"
+        },
+        {
+          "t": "11:16 am",
+          "status": "active",
+          "view": "workupdates"
+        },
+        {
+          "t": "11:16 am",
+          "status": "active",
+          "view": "weeklybackup"
+        },
+        {
+          "t": "11:16 am",
+          "status": "active",
+          "view": "support"
+        },
+        {
+          "t": "11:16 am",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "11:16 am",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "11:17 am",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "11:17 am",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "11:17 am",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "11:21 am",
+          "status": "active",
+          "view": "workupdates"
+        },
+        {
+          "t": "11:21 am",
+          "status": "active",
+          "view": "tally"
+        },
+        {
+          "t": "11:21 am",
+          "status": "active",
+          "view": "sheets"
+        },
+        {
+          "t": "11:21 am",
+          "status": "active",
+          "view": "purchases"
+        },
+        {
+          "t": "11:21 am",
+          "status": "active",
+          "view": "sheets"
+        },
+        {
+          "t": "11:21 am",
+          "status": "active",
+          "view": "quotation"
+        },
+        {
+          "t": "11:21 am",
+          "status": "active",
+          "view": "pi"
+        },
+        {
+          "t": "11:21 am",
+          "status": "active",
+          "view": "po"
+        },
+        {
+          "t": "11:25 am",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "11:25 am",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "11:27 am",
+          "status": "active",
+          "view": "logins"
+        },
+        {
+          "t": "11:27 am",
+          "status": "active",
+          "view": "mail"
+        },
+        {
+          "t": "11:27 am",
+          "status": "active",
+          "view": "settings"
+        },
+        {
+          "t": "11:27 am",
+          "status": "active",
+          "view": "monitoring"
+        },
+        {
+          "t": "11:28 am",
+          "status": "active",
+          "view": "ai"
+        },
+        {
+          "t": "11:28 am",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "11:28 am",
+          "status": "active",
+          "view": "invoices"
+        },
+        {
+          "t": "11:28 am",
+          "status": "active",
+          "view": "quotation"
+        },
+        {
+          "t": "11:28 am",
+          "status": "active",
+          "view": "pi"
+        },
+        {
+          "t": "11:28 am",
+          "status": "active",
+          "view": "po"
+        },
+        {
+          "t": "11:28 am",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "11:29 am",
+          "status": "active",
+          "view": "pi"
+        },
+        {
+          "t": "11:29 am",
+          "status": "active",
+          "view": "po"
+        },
+        {
+          "t": "11:29 am",
+          "status": "active",
+          "view": "purchases"
+        },
+        {
+          "t": "11:29 am",
+          "status": "active",
+          "view": "sheets"
+        },
+        {
+          "t": "11:29 am",
+          "status": "active",
+          "view": "tally"
+        },
+        {
+          "t": "11:29 am",
+          "status": "active",
+          "view": "purchases"
+        },
+        {
+          "t": "11:32 am",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "11:32 am",
+          "status": "active",
+          "view": "quotation"
+        },
+        {
+          "t": "11:32 am",
+          "status": "active",
+          "view": "pi"
+        },
+        {
+          "t": "11:32 am",
+          "status": "active",
+          "view": "po"
+        },
+        {
+          "t": "11:32 am",
+          "status": "active",
+          "view": "ai"
+        },
+        {
+          "t": "11:32 am",
+          "status": "active",
+          "view": "users"
+        },
+        {
+          "t": "11:32 am",
+          "status": "active",
+          "view": "ai"
+        },
+        {
+          "t": "11:33 am",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "11:33 am",
+          "status": "active",
+          "view": "tally"
+        },
+        {
+          "t": "11:33 am",
+          "status": "active",
+          "view": "dash"
+        },
+        {
+          "t": "11:34 am",
+          "status": "active",
+          "view": "workupdates"
+        },
+        {
+          "t": "11:34 am",
+          "status": "active",
+          "view": "weeklybackup"
+        },
+        {
+          "t": "11:34 am",
+          "status": "active",
+          "view": "support"
+        },
+        {
+          "t": "11:34 am",
+          "status": "active",
+          "view": "weeklybackup"
+        }
+      ]
+    },
+    "ff9deb24622c_no_login_alert": {
+      "sentAt": "2026-11-03T05:30:13.412Z"
+    }
+  }
+}

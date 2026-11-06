@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "/api/index.js" }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/check-inactivity",
+      "schedule": "0 4-13 * * 1-6"
+    }
+  ]
+}

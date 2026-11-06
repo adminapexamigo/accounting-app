@@ -1,0 +1,15 @@
+id,name,group,openingBalance,balanceType,contact,phone,gstin,address,createdBy,createdAt
+a86832059dc5,Cash,Cash-in-Hand,0,Dr,,,,,system,2026-10-25T03:58:58.721Z
+a248d4295f0a,Bank Account (State Bank of India),Bank Accounts,0,Dr,,,,,system,2026-10-25T03:58:58.735Z
+09872221b00a,Sales Account,Sales Accounts,0,Cr,,,,,system,2026-10-25T03:58:58.735Z
+9955d995f65e,Purchase Account,Purchase Accounts,0,Dr,,,,,system,2026-10-25T03:58:58.735Z
+8df0b42c9fae,Capital Account,Capital Account,0,Cr,,,,,system,2026-10-25T03:58:58.735Z
+3f59085ed9de,Sundry Debtors,Sundry Debtors,0,Dr,,,,,system,2026-10-25T03:58:58.735Z
+b4d00882d561,Sundry Creditors,Sundry Creditors,0,Cr,,,,,system,2026-10-25T03:58:58.735Z
+b466761cd015,CGST (Duties & Taxes),Duties & Taxes,0,Cr,,,,,system,2026-10-25T03:58:58.735Z
+3ea78d7b11b5,SGST (Duties & Taxes),Duties & Taxes,0,Cr,,,,,system,2026-10-25T03:58:58.735Z
+415bb94f3ccf,IGST (Duties & Taxes),Duties & Taxes,0,Cr,,,,,system,2026-10-25T03:58:58.735Z
+6d7b2a7b79db,Freight & Site Work Expenses,Direct Expenses,0,Dr,,,,,system,2026-10-25T03:58:58.735Z
+69dfaba1b3d7,Office Rent & Utilities,Indirect Expenses,0,Dr,,,,,system,2026-10-25T03:58:58.735Z
+031ac1fe9e2c,Staff Salaries,Indirect Expenses,0,Dr,,,,,system,2026-10-25T03:58:58.735Z
+adf4ec5b9790,First,Cash-in-Hand,25550,Dr,Kuldeep,73506 98586,,,admin,2026-10-25T04:11:37.609Z

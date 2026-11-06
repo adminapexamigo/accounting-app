@@ -1,0 +1,21 @@
+{
+  "name": "startup-accounting",
+  "version": "1.0.0",
+  "description": "Amigo Accounting & Invoicing App with Supabase RDBMS and Vercel Serverless",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "migrate:supabase": "node scripts/migrate-to-supabase.js",
+    "generate:seed": "node scripts/generate-sql-seed.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.48.1",
+    "dotenv": "^16.4.7",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.23.1"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "UNLICENSED"
+}

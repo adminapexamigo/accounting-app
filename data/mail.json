@@ -1,0 +1,10 @@
+{
+  "smtpHost": "smtp.gmail.com",
+  "smtpPort": 465,
+  "smtpSecure": true,
+  "smtpUser": "budamale7@gmail.com",
+  "smtpPass": "",
+  "mailTo": "budamale7@gmail.com",
+  "alertTime": "17:30",
+  "otpAdmin": true
+}

@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cool Animated Financial Dashboard - Amigo Accounts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f8fafc;
+  --card:#ffffff;
+  --ink:#0f172a;
+  --ink-soft:#334155;
+  --mute:#64748b;
+  --pri:#4f46e5;
+  --pri-light:#6366f1;
+  --pri-dark:#3730a3;
+  --pri-bg:#eef2ff;
+  --line:#e2e8f0;
+  --danger:#ef4444;
+  --ok:#10b981;
+  --warn:#f59e0b;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font:13.5px/1.5 'Plus Jakarta Sans',system-ui,-apple-system,sans-serif;
+  background-color:var(--bg);
+  background-image:radial-gradient(#cbd5e1 0.75px,transparent 0.75px);
+  background-size:24px 24px;
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+  padding-bottom:90px;
+  overflow-x:hidden;
+}
+
+/* Master Switcher Bar */
+.proto-nav{
+  background:rgba(11,19,41,0.92);
+  backdrop-filter:blur(16px);
+  color:#fff;
+  padding:12px 28px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  box-shadow:0 10px 30px rgba(0,0,0,0.3);
+  position:sticky;
+  top:0;
+  z-index:999;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  flex-wrap:wrap;
+  gap:12px;
+}
+.proto-title{
+  font-weight:800;
+  font-size:15px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  letter-spacing:-0.3px;
+}
+.live-badge-glow{
+  background:rgba(16,185,129,0.15);
+  border:1px solid rgba(16,185,129,0.35);
+  color:#34d399;
+  padding:3px 10px;
+  border-radius:20px;
+  font-size:11px;
+  font-weight:700;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  box-shadow:0 0 12px rgba(16,185,129,0.2);
+}
+.live-badge-glow::before{
+  content:'';
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#10b981;
+  box-shadow:0 0 8px #10b981;
+  animation:pulseGlow 2s infinite;
+}
+@keyframes pulseGlow{
+  0%,100%{transform:scale(1);opacity:1}
+  50%{transform:scale(1.4);opacity:0.4}
+}
+.proto-tabs{
+  display:flex;
+  background:rgba(255,255,255,0.06);
+  padding:3px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,0.1);
+  gap:4px;
+}
+.proto-tab{
+  background:transparent;
+  border:0;
+  color:#cbd5e1;
+  padding:7px 16px;
+  font-size:12.5px;
+  font-weight:700;
+  border-radius:9px;
+  cursor:pointer;
+  transition:all 0.2s cubic-bezier(0.16,1,0.3,1);
+  font-family:inherit;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.proto-tab.active{
+  background:linear-gradient(135deg,#4f46e5,#6366f1);
+  color:#ffffff;
+  box-shadow:0 4px 14px rgba(79,70,229,0.5);
+}
+.proto-tab:hover:not(.active){
+  background:rgba(255,255,255,0.12);
+  color:#fff;
+}
+
+.container{
+  max-width:1440px;
+  margin:24px auto;
+  padding:0 24px;
+}
+
+/* ========================================================= */
+/* === TEMPLATE 1: CYBER-FINTECH EXECUTIVE HUD (HERO GLOW) === */
+/* ========================================================= */
+.hud-hero{
+  background:linear-gradient(135deg,#060b17 0%,#0f172a 45%,#1e1b4b 100%);
+  border-radius:24px;
+  padding:32px 36px;
+  color:#ffffff;
+  position:relative;
+  overflow:hidden;
+  box-shadow:0 20px 40px -10px rgba(15,23,42,0.3), 0 0 0 1px rgba(255,255,255,0.08);
+  margin-bottom:28px;
+  animation:heroFadeIn 0.5s ease-out;
+}
+@keyframes heroFadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* Ambient Glow Orbs */
+.hud-orb-1{
+  position:absolute;
+  top:-60px;
+  right:-60px;
+  width:320px;
+  height:320px;
+  background:radial-gradient(circle,rgba(99,102,241,0.3) 0%,transparent 70%);
+  filter:blur(30px);
+  pointer-events:none;
+  animation:floatSlow 8s ease-in-out infinite alternate;
+}
+.hud-orb-2{
+  position:absolute;
+  bottom:-40px;
+  left:20%;
+  width:260px;
+  height:260px;
+  background:radial-gradient(circle,rgba(14,165,233,0.2) 0%,transparent 70%);
+  filter:blur(40px);
+  pointer-events:none;
+  animation:floatAlt 10s ease-in-out infinite alternate;
+}
+@keyframes floatSlow{0%{transform:translate(0,0)}100%{transform:translate(-20px,-20px)}}
+@keyframes floatAlt{0%{transform:translate(0,0)}100%{transform:translate(30px,-15px)}}
+
+.hud-hero-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:16px;
+  position:relative;
+  z-index:2;
+}
+.hud-user-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:12px;
+}
+.hud-avatar{
+  width:46px;
+  height:46px;
+  border-radius:14px;
+  background:linear-gradient(135deg,#6366f1,#38bdf8);
+  color:#fff;
+  font-weight:900;
+  font-size:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 0 20px rgba(99,102,241,0.5);
+  border:2px solid rgba(255,255,255,0.2);
+}
+.hud-hero-title{
+  font-size:24px;
+  font-weight:900;
+  margin:0;
+  letter-spacing:-0.5px;
+  color:#fff;
+}
+.hud-hero-sub{
+  font-size:12.5px;
+  color:#94a3b8;
+  margin-top:2px;
+}
+
+/* Big Central Metric Showcase */
+.hud-balance-banner{
+  margin:28px 0 24px;
+  position:relative;
+  z-index:2;
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:16px;
+}
+.hud-balance-label{
+  font-size:12px;
+  font-weight:800;
+  color:#a5b4fc;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.hud-balance-num{
+  font-size:52px;
+  font-weight:900;
+  font-family:'JetBrains Mono',monospace;
+  letter-spacing:-2px;
+  line-height:1;
+  margin-top:6px;
+  background:linear-gradient(180deg,#ffffff 0%,#e0e7ff 100%);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  text-shadow:0 4px 20px rgba(0,0,0,0.4);
+}
+.hud-chip-group{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.hud-chip{
+  background:rgba(255,255,255,0.07);
+  backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,0.12);
+  color:#e2e8f0;
+  padding:6px 14px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:600;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  transition:all 0.15s;
+}
+.hud-chip:hover{
+  background:rgba(255,255,255,0.14);
+  border-color:rgba(255,255,255,0.25);
+  transform:translateY(-1px);
+}
+
+/* 4 Quick KPI Glass Tiles */
+.hud-kpi-row{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+  gap:14px;
+  position:relative;
+  z-index:2;
+  padding-top:20px;
+  border-top:1px solid rgba(255,255,255,0.1);
+}
+.hud-glass-kpi{
+  background:rgba(255,255,255,0.04);
+  backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,0.09);
+  border-radius:16px;
+  padding:16px 18px;
+  transition:all 0.25s cubic-bezier(0.16,1,0.3,1);
+}
+.hud-glass-kpi:hover{
+  background:rgba(255,255,255,0.08);
+  border-color:rgba(255,255,255,0.2);
+  transform:translateY(-3px);
+  box-shadow:0 8px 25px rgba(0,0,0,0.3);
+}
+.hud-glass-lbl{
+  font-size:11px;
+  font-weight:700;
+  color:#94a3b8;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+}
+.hud-glass-val{
+  font-size:24px;
+  font-weight:800;
+  font-family:'JetBrains Mono',monospace;
+  color:#ffffff;
+  margin-top:4px;
+  line-height:1.1;
+}
+.hud-glass-sub{
+  font-size:11.5px;
+  margin-top:6px;
+  display:flex;
+  align-items:center;
+  gap:4px;
+}
+
+/* ========================================================= */
+/* === MAIN SECTION: 2-COLUMN COMMAND WORKSPACE === */
+/* ========================================================= */
+.workspace-grid{
+  display:grid;
+  grid-template-columns:2.1fr 1fr;
+  gap:24px;
+  margin-bottom:28px;
+}
+@media(max-width:1150px){
+  .workspace-grid{grid-template-columns:1fr}
+}
+
+/* Section Header */
+.section-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:14px;
+}
+.section-title{
+  font-size:13px;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:0.8px;
+  color:#0f172a;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.section-title::before{
+  content:'';
+  width:4px;
+  height:14px;
+  background:#4f46e5;
+  border-radius:2px;
+}
+
+/* Animated Neon Entity Tiles */
+.entity-cards-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+  gap:14px;
+}
+.neon-tile{
+  background:#ffffff;
+  border:1px solid #e2e8f0;
+  border-radius:18px;
+  padding:18px 20px;
+  box-shadow:0 2px 6px rgba(15,23,42,0.03);
+  cursor:pointer;
+  position:relative;
+  overflow:hidden;
+  transition:all 0.28s cubic-bezier(0.16,1,0.3,1);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.neon-tile::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:radial-gradient(circle at top right,rgba(99,102,241,0.08) 0%,transparent 65%);
+  opacity:0;
+  transition:opacity 0.25s ease;
+  pointer-events:none;
+}
+.neon-tile:hover{
+  transform:translateY(-4px);
+  border-color:#818cf8;
+  box-shadow:0 12px 28px -6px rgba(79,70,229,0.18), 0 0 0 1px rgba(99,102,241,0.25);
+}
+.neon-tile:hover::before{
+  opacity:1;
+}
+.neon-tile .tile-info{
+  z-index:2;
+}
+.neon-tile .tile-val{
+  font-size:26px;
+  font-weight:900;
+  font-family:'JetBrains Mono',monospace;
+  color:#0f172a;
+  line-height:1;
+  letter-spacing:-0.5px;
+  transition:transform 0.2s ease;
+}
+.neon-tile:hover .tile-val{
+  transform:scale(1.06);
+  color:#4338ca;
+}
+.neon-tile .tile-lbl{
+  font-size:12px;
+  color:#64748b;
+  font-weight:700;
+  margin-top:4px;
+}
+.neon-tile .tile-icon-box{
+  width:44px;
+  height:44px;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:20px;
+  z-index:2;
+  transition:all 0.25s cubic-bezier(0.16,1,0.3,1);
+}
+.neon-tile:hover .tile-icon-box{
+  transform:scale(1.12) rotate(4deg);
+}
+
+/* Specific Accent Colors */
+.tile-invoices .tile-icon-box{background:#dcfce7;color:#15803d}
+.tile-quotes .tile-icon-box{background:#e0f2fe;color:#0369a1}
+.tile-pi .tile-icon-box{background:#ede9fe;color:#6d28d9}
+.tile-po .tile-icon-box{background:#ffedd5;color:#c2410c}
+.tile-ledgers .tile-icon-box{background:#ccfbf1;color:#0f766e}
+.tile-clients .tile-icon-box{background:#e0e7ff;color:#4338ca}
+.tile-products .tile-icon-box{background:#fef3c7;color:#b45309}
+.tile-users .tile-icon-box{background:#f1f5f9;color:#334155}
+.tile-sheets .tile-icon-box{background:#d1fae5;color:#047857}
+.tile-purchases .tile-icon-box{background:#fee2e2;color:#b91c1c}
+.tile-vouchers .tile-icon-box{background:#f3e8ff;color:#7e22ce}
+
+/* Right Panel Cards */
+.side-card{
+  background:#ffffff;
+  border:1px solid #e2e8f0;
+  border-radius:20px;
+  padding:20px;
+  box-shadow:0 2px 8px rgba(15,23,42,0.03);
+  margin-bottom:20px;
+}
+
+/* Animated Progress Bars */
+.stat-bar-track{
+  height:8px;
+  background:#f1f5f9;
+  border-radius:6px;
+  overflow:hidden;
+  margin:6px 0 12px;
+}
+.stat-bar-fill{
+  height:100%;
+  border-radius:6px;
+  width:0%;
+  transition:width 1s cubic-bezier(0.16,1,0.3,1);
+}
+
+/* Quick Action Glow Buttons */
+.quick-action-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.act-btn{
+  background:#f8fafc;
+  border:1px solid #e2e8f0;
+  border-radius:12px;
+  padding:12px 14px;
+  color:#1e293b;
+  font-weight:700;
+  font-size:12.5px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  cursor:pointer;
+  transition:all 0.2s cubic-bezier(0.16,1,0.3,1);
+  font-family:inherit;
+}
+.act-btn:hover{
+  background:#ffffff;
+  border-color:#6366f1;
+  color:#4338ca;
+  box-shadow:0 4px 14px rgba(99,102,241,0.15);
+  transform:translateY(-2px);
+}
+</style>
+</head>
+<body>
+
+<!-- TOP PROTOTYPE SWITCHER -->
+<div class="proto-nav">
+  <div class="proto-title">
+    <span style="font-size:20px">✨</span>
+    <span>Animated Financial Dashboard Options</span>
+    <span class="live-badge-glow">Live Animation Engine</span>
+  </div>
+  <div class="proto-tabs">
+    <button class="proto-tab active" onclick="switchStyle('cyber')">🚀 Style 1: Cyber-Fintech Executive HUD</button>
+    <button class="proto-tab" onclick="switchStyle('aurora')">🌈 Style 2: Aurora Glassmorphic Cards</button>
+    <button class="proto-tab" onclick="switchStyle('linear')">⚡ Style 3: Linear Minimalist Command</button>
+  </div>
+</div>
+
+<div class="container" id="dashApp">
+  <!-- Dynamic dashboard rendered here -->
+</div>
+
+<script>
+const data = {
+  user: { name: 'Kuldeep', role: 'Accountant Admin', avatar: 'K' },
+  salesThisMonth: 230.00,
+  totalSales: 698.00,
+  totalPurchases: 0.00,
+  netBalance: 698.00,
+  counts: {
+    clients: 1,
+    products: 1,
+    invoices: 9,
+    quotation: 1,
+    pi: 1,
+    po: 2,
+    sheets: 0,
+    purchases: 0,
+    vouchers: 0,
+    ledgers: 14,
+    users: 2
+  }
+};
+
+let activeStyle = 'cyber';
+
+function inr(n) {
+  return '₹' + (+n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function switchStyle(style) {
+  activeStyle = style;
+  document.querySelectorAll('.proto-tab').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  renderDashboard();
+  animateNumbers();
+}
+
+function renderDashboard() {
+  const c = document.getElementById('dashApp');
+  if (activeStyle === 'cyber') {
+    c.innerHTML = renderCyberHUD();
+  } else if (activeStyle === 'aurora') {
+    c.innerHTML = renderAuroraStyle();
+  } else if (activeStyle === 'linear') {
+    c.innerHTML = renderLinearStyle();
+  }
+  setTimeout(animateNumbers, 50);
+}
+
+// =========================================================
+// STYLE 1: CYBER-FINTECH EXECUTIVE HUD (HERO GLOW + ANIMATED TILES)
+// =========================================================
+function renderCyberHUD() {
+  return `
+    <!-- Top Futuristic Hero Command Header -->
+    <div class="hud-hero">
+      <div class="hud-orb-1"></div>
+      <div class="hud-orb-2"></div>
+
+      <div class="hud-hero-top">
+        <div class="hud-user-pill">
+          <div class="hud-avatar">${data.user.avatar}</div>
+          <div>
+            <h1 class="hud-hero-title">Financial Command &amp; Overview</h1>
+            <div class="hud-hero-sub">
+              Welcome back, <b>${data.user.name}</b> &nbsp;&bull;&nbsp; Role: <span style="background:rgba(99,102,241,0.25);border:1px solid rgba(99,102,241,0.4);color:#c7d2fe;padding:2px 8px;border-radius:6px;font-weight:700">${data.user.role}</span> &nbsp;&bull;&nbsp; FY 2026-27
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="hud-chip" onclick="alert('Exporting Financial Report...')">
+            <span>📊</span> Export Financials
+          </button>
+          <button class="hud-chip" style="background:#4f46e5;border-color:#6366f1;color:#fff" onclick="alert('Open New Invoice')">
+            <span>+</span> Quick Invoice
+          </button>
+        </div>
+      </div>
+
+      <!-- Giant Animated Counter Balance -->
+      <div class="hud-balance-banner">
+        <div>
+          <div class="hud-balance-label">
+            <span>💎</span> NET OPERATING CASH BALANCE
+          </div>
+          <div class="hud-balance-num" data-counter="${data.netBalance}">${inr(data.netBalance)}</div>
+          <div style="font-size:12.5px;color:#cbd5e1;margin-top:4px">
+            Clean operating margin with <b>0 outstanding purchases</b> and fully compliant GST records.
+          </div>
+        </div>
+
+        <div class="hud-chip-group">
+          <div class="hud-chip" style="background:rgba(16,185,129,0.15);border-color:rgba(16,185,129,0.3);color:#6ee7b7">
+            <span>🛡️</span> 100% Solvency
+          </div>
+          <div class="hud-chip" style="background:rgba(56,189,248,0.15);border-color:rgba(56,189,248,0.3);color:#7dd3fc">
+            <span>🏛️</span> 14 Tally Ledgers Synced
+          </div>
+          <div class="hud-chip" style="background:rgba(168,85,247,0.15);border-color:rgba(168,85,247,0.3);color:#d8b4fe">
+            <span>⚡</span> Real-Time GST Calculator
+          </div>
+        </div>
+      </div>
+
+      <!-- 4 Glowing KPI Metric Tiles -->
+      <div class="hud-kpi-row">
+        <div class="hud-glass-kpi">
+          <div class="hud-glass-lbl">Sales This Month</div>
+          <div class="hud-glass-val" style="color:#93c5fd" data-counter="${data.salesThisMonth}">${inr(data.salesThisMonth)}</div>
+          <div class="hud-glass-sub" style="color:#60a5fa">
+            <span>↑ Active</span> across November
+          </div>
+        </div>
+
+        <div class="hud-glass-kpi">
+          <div class="hud-glass-lbl">Total Gross Invoiced</div>
+          <div class="hud-glass-val" style="color:#6ee7b7" data-counter="${data.totalSales}">${inr(data.totalSales)}</div>
+          <div class="hud-glass-sub" style="color:#34d399">
+            <span>● 9 Final Invoices</span>
+          </div>
+        </div>
+
+        <div class="hud-glass-kpi">
+          <div class="hud-glass-lbl">Total Registered Purchases</div>
+          <div class="hud-glass-val" style="color:#fde047" data-counter="${data.totalPurchases}">${inr(data.totalPurchases)}</div>
+          <div class="hud-glass-sub" style="color:#cbd5e1">
+            <span>Zero recorded expenses</span>
+          </div>
+        </div>
+
+        <div class="hud-glass-kpi">
+          <div class="hud-glass-lbl">Active Tally Ledgers</div>
+          <div class="hud-glass-val" style="color:#c4b5fd" data-counter-int="${data.counts.ledgers}">${data.counts.ledgers}</div>
+          <div class="hud-glass-sub" style="color:#a78bfa">
+            <span>✓ Complete master audit</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN INTERACTIVE WORKSPACE: 2 COLUMNS -->
+    <div class="workspace-grid">
+      <!-- LEFT: ANIMATED NEON SYSTEM TILES -->
+      <div>
+        <div class="section-head">
+          <div class="section-title">System Entity Directories &amp; Active Ledgers</div>
+          <span style="font-size:12px;color:var(--mute)">Hover for interactive elevation</span>
+        </div>
+
+        <div class="entity-cards-grid">
+          <!-- Tax Invoices -->
+          <div class="neon-tile tile-invoices" onclick="alert('Navigate to Tax Invoices')">
+            <div class="tile-info">
+              <div class="tile-val" data-counter-int="${data.counts.invoices}">${data.counts.invoices}</div>
+              <div class="tile-lbl">Tax Invoices</div>
+            </div>
+            <div class="tile-icon-box">🧾</div>
+          </div>
+
+          <!-- Clients -->
+          <div class="neon-tile tile-clients" onclick="alert('Navigate to Clients')">
+            <div class="tile-info">
+              <div class="tile-val" data-counter-int="${data.counts.clients}">${data.counts.clients}</div>
+              <div class="tile-lbl">Clients / Parties</div>
+            </div>
+            <div class="tile-icon-box">👥</div>
+          </div>
+
+          <!-- Quotations -->
+          <div class="neon-tile tile-quotes" onclick="alert('Navigate to Quotations')">
+            <div class="tile-info">
+              <div class="tile-val" data-counter-int="${data.counts.quotation}">${data.counts.quotation}</div>
+              <div class="tile-lbl">Quotations</div>
+            </div>
+            <div class="tile-icon-box">📑</div>
+          </div>
+
+          <!-- Proforma Invoices -->
+          <div class="neon-tile tile-pi" onclick="alert('Navigate to Proforma Invoices')">
+            <div class="tile-info">
+              <div class="tile-val" data-counter-int="${data.counts.pi}">${data.counts.pi}</div>
+              <div class="tile-lbl">Proforma Invoices</div>
+            </div>
+            <div class="tile-icon-box">📋</div>
+          </div>
+
+          <!-- Purchase Orders -->
+          <div class="neon-tile tile-po" onclick="alert('Navigate to Purchase Orders')">
+            <div class="tile-info">
+              <div class="tile-val" data-counter-int="${data.counts.po}">${data.counts.po}</div>
+              <div class="tile-lbl">Purchase Orders</div>
+            </div>
+            <div class="tile-icon-box">📦</div>
+          </div>
+
+          <!-- Tally Ledgers -->
+          <div class="neon-tile tile-ledgers" onclick="alert('Navigate to Tally Ledgers')">
+            <div class="tile-info">
+              <div class="tile-val" data-counter-int="${data.counts.ledgers}">${data.counts.ledgers}</div>
+              <div class="tile-lbl">Tally Ledgers</div>
+            </div>
+            <div class="tile-icon-box">🏛️</div>
+          </div>
+
+          <!-- Products & Services -->
+          <div class="neon-tile tile-products" onclick="alert('Navigate to Products')">
+            <div class="tile-info">
+              <div class="tile-val" data-counter-int="${data.counts.products}">${data.counts.products}</div>
+              <div class="tile-lbl">Products &amp; Items</div>
+            </div>
+            <div class="tile-icon-box">🏷️</div>
+          </div>
+
+          <!-- User Accounts -->
+          <div class="neon-tile tile-users" onclick="alert('Navigate to Users')">
+            <div class="tile-info">
+              <div class="tile-val" data-counter-int="${data.counts.users}">${data.counts.users}</div>
+              <div class="tile-lbl">User Accounts</div>
+            </div>
+            <div class="tile-icon-box">👤</div>
+          </div>
+
+          <!-- Excel & Word Docs -->
+          <div class="neon-tile tile-sheets" onclick="alert('Navigate to Sheets')">
+            <div class="tile-info">
+              <div class="tile-val" data-counter-int="${data.counts.sheets}">${data.counts.sheets}</div>
+              <div class="tile-lbl">Excel &amp; Word Docs</div>
+            </div>
+            <div class="tile-icon-box">📗</div>
+          </div>
+
+          <!-- Purchases Register -->
+          <div class="neon-tile tile-purchases" onclick="alert('Navigate to Purchases')">
+            <div class="tile-info">
+              <div class="tile-val" data-counter-int="${data.counts.purchases}">${data.counts.purchases}</div>
+              <div class="tile-lbl">Purchases Register</div>
+            </div>
+            <div class="tile-icon-box">🛒</div>
+          </div>
+
+          <!-- Tally Vouchers -->
+          <div class="neon-tile tile-vouchers" onclick="alert('Navigate to Tally Vouchers')">
+            <div class="tile-info">
+              <div class="tile-val" data-counter-int="${data.counts.vouchers}">${data.counts.vouchers}</div>
+              <div class="tile-lbl">Tally Vouchers</div>
+            </div>
+            <div class="tile-icon-box">🧮</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: QUICK ACTIONS & LIVE AUDIT WIDGETS -->
+      <div>
+        <div class="section-head">
+          <div class="section-title">Quick Actions</div>
+        </div>
+
+        <div class="side-card">
+          <div style="font-size:12px;color:var(--mute);margin-bottom:12px;font-weight:600">
+            Instant 1-Click Document Launchpad
+          </div>
+          <div class="quick-action-grid">
+            <button class="act-btn" onclick="alert('Create Invoice')">
+              <span>🧾</span> New Invoice
+            </button>
+            <button class="act-btn" onclick="alert('Create Quotation')">
+              <span>📑</span> New Quote
+            </button>
+            <button class="act-btn" onclick="alert('Create PI')">
+              <span>📋</span> New PI
+            </button>
+            <button class="act-btn" onclick="alert('Create PO')">
+              <span>📦</span> New PO
+            </button>
+          </div>
+        </div>
+
+        <!-- Visual GST Health Widget -->
+        <div class="side-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <div style="font-weight:800;font-size:13px;color:#0f172a">Tax Distribution &amp; Audit</div>
+            <span style="font-size:11px;font-weight:700;color:#059669;background:#ecfdf5;padding:2px 8px;border-radius:10px">Compliant</span>
+          </div>
+
+          <div style="font-size:12px;display:flex;justify-content:space-between;color:#475569">
+            <span>In-State (CGST + SGST 9%)</span>
+            <strong>₹172.50 (75%)</strong>
+          </div>
+          <div class="stat-bar-track">
+            <div class="stat-bar-fill" style="background:#10b981;width:75%"></div>
+          </div>
+
+          <div style="font-size:12px;display:flex;justify-content:space-between;color:#475569">
+            <span>Interstate (IGST 18%)</span>
+            <strong>₹57.50 (25%)</strong>
+          </div>
+          <div class="stat-bar-track">
+            <div class="stat-bar-fill" style="background:#f59e0b;width:25%"></div>
+          </div>
+
+          <div style="font-size:11.5px;color:var(--mute);margin-top:10px;line-height:1.4">
+            Total active tax ledger entries match local and interstate customer GSTIN filings.
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// =========================================================
+// STYLE 2: AURORA GLASSMORPHIC CARDS
+// =========================================================
+function renderAuroraStyle() {
+  return `
+    <div style="background:linear-gradient(135deg,#eef2ff 0%,#f0fdf4 50%,#fef3c7 100%);padding:28px 32px;border-radius:24px;border:1px solid #c7d2fe;margin-bottom:24px;box-shadow:0 10px 30px rgba(79,70,229,0.08)">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+        <div>
+          <span style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#4338ca">Aurora Glassmorphic Suite</span>
+          <h1 style="margin:2px 0 0;font-size:26px;font-weight:900;color:#0f172a">Financial Overview &amp; Commercial Pipeline</h1>
+        </div>
+        <button class="btn" onclick="alert('Quick Document')">+ New Transaction</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:24px">
+        <div style="background:rgba(255,255,255,0.7);backdrop-filter:blur(10px);border:1px solid #fff;border-radius:18px;padding:20px;box-shadow:0 4px 14px rgba(0,0,0,0.04)">
+          <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase">Sales This Month</div>
+          <div style="font-size:28px;font-weight:900;font-family:'JetBrains Mono';color:#0f172a;margin-top:4px" data-counter="${data.salesThisMonth}">${inr(data.salesThisMonth)}</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.7);backdrop-filter:blur(10px);border:1px solid #fff;border-radius:18px;padding:20px;box-shadow:0 4px 14px rgba(0,0,0,0.04)">
+          <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase">Total Invoiced Sales</div>
+          <div style="font-size:28px;font-weight:900;font-family:'JetBrains Mono';color:#059669;margin-top:4px" data-counter="${data.totalSales}">${inr(data.totalSales)}</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.7);backdrop-filter:blur(10px);border:1px solid #fff;border-radius:18px;padding:20px;box-shadow:0 4px 14px rgba(0,0,0,0.04)">
+          <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase">Total Purchases</div>
+          <div style="font-size:28px;font-weight:900;font-family:'JetBrains Mono';color:#d97706;margin-top:4px" data-counter="${data.totalPurchases}">${inr(data.totalPurchases)}</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.7);backdrop-filter:blur(10px);border:1px solid #fff;border-radius:18px;padding:20px;box-shadow:0 4px 14px rgba(0,0,0,0.04)">
+          <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase">Net Cash Margin</div>
+          <div style="font-size:28px;font-weight:900;font-family:'JetBrains Mono';color:#4338ca;margin-top:4px" data-counter="${data.netBalance}">${inr(data.netBalance)}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Entity Grid -->
+    <div class="entity-cards-grid">
+      ${Object.entries(data.counts).map(([k, v]) => `
+        <div class="neon-tile" onclick="alert('Navigate to ${k}')">
+          <div class="tile-info">
+            <div class="tile-val" data-counter-int="${v}">${v}</div>
+            <div class="tile-lbl" style="text-transform:capitalize">${k}</div>
+          </div>
+          <div class="tile-icon-box" style="background:#eef2ff;color:#4f46e5">📁</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// =========================================================
+// STYLE 3: LINEAR MINIMALIST COMMAND
+// =========================================================
+function renderLinearStyle() {
+  return `
+    <div style="background:#0f172a;border-radius:20px;padding:24px 30px;color:#fff;margin-bottom:24px;border:1px solid #1e293b">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <h1 style="margin:0;font-size:22px;font-weight:800">Financial Ledger Engine &bull; Fast Command</h1>
+          <div style="font-size:12px;color:#94a3b8;margin-top:3px">Linear design philosophy with high information density</div>
+        </div>
+        <div style="font-family:'JetBrains Mono';font-size:22px;font-weight:800;color:#38bdf8" data-counter="${data.netBalance}">${inr(data.netBalance)}</div>
+      </div>
+    </div>
+
+    <div class="entity-cards-grid">
+      ${Object.entries(data.counts).map(([k, v]) => `
+        <div class="neon-tile" style="border-radius:12px;padding:14px 16px" onclick="alert('Navigate to ${k}')">
+          <div class="tile-info">
+            <div class="tile-val" style="font-size:22px" data-counter-int="${v}">${v}</div>
+            <div class="tile-lbl" style="text-transform:capitalize;font-size:11.5px">${k}</div>
+          </div>
+          <div class="tile-icon-box" style="width:36px;height:36px;border-radius:10px;font-size:16px;background:#f8fafc">⚡</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// Animated Numbers Engine
+function animateNumbers() {
+  document.querySelectorAll('[data-counter]').forEach(el => {
+    const target = parseFloat(el.getAttribute('data-counter')) || 0;
+    let start = 0;
+    const duration = 800;
+    const startTime = performance.now();
+    function tick(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      const current = start + (target - start) * ease;
+      el.textContent = inr(current);
+      if (progress < 1) requestAnimationFrame(tick);
+      else el.textContent = inr(target);
+    }
+    requestAnimationFrame(tick);
+  });
+
+  document.querySelectorAll('[data-counter-int]').forEach(el => {
+    const target = parseInt(el.getAttribute('data-counter-int'), 10) || 0;
+    if (target === 0) { el.textContent = '0'; return; }
+    let start = 0;
+    const duration = 600;
+    const startTime = performance.now();
+    function tick(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const current = Math.round(start + (target - start) * progress);
+      el.textContent = current;
+      if (progress < 1) requestAnimationFrame(tick);
+      else el.textContent = target;
+    }
+    requestAnimationFrame(tick);
+  });
+}
+
+// Initial Boot
+renderDashboard();
+</script>
+</body>
+</html>

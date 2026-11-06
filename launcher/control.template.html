@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Amigo Enterprises – App Control</title>
+<style>
+:root{--bg:#f4f6fb;--ink:#1c2333;--mute:#6b7488;--ok:#2b8a3e;--bad:#d6336c;--pri:#3b5bdb}
+@media(prefers-color-scheme:dark){:root{--bg:#141826;--ink:#eef1fb;--mute:#9aa4bd}.card{background:#1d2335!important}}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,Segoe UI,Roboto,sans-serif}
+.card{background:#fff;border-radius:18px;padding:34px;width:min(440px,92vw);box-shadow:0 6px 30px rgba(20,30,60,.12);text-align:center}
+h1{margin:0 0 4px;font-size:22px}.sub{color:var(--mute);margin:0 0 22px}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:7px 16px;border-radius:99px;font-weight:600;background:#eceff6;color:var(--mute)}
+.pill i{width:10px;height:10px;border-radius:50%;background:currentColor}.pill.on{background:#e6f6ea;color:var(--ok)}.pill.off{background:#ffe9f0;color:var(--bad)}
+.row{display:flex;gap:12px;margin:24px 0 14px}button{flex:1;font:inherit;font-weight:700;padding:14px;border:0;border-radius:12px;cursor:pointer;color:#fff}
+#go{background:var(--ok)}#st{background:var(--bad)}button:disabled{opacity:.35;cursor:not-allowed}
+a.open{display:none;margin-top:6px;padding:12px;border-radius:12px;background:var(--pri);color:#fff;text-decoration:none;font-weight:600}
+#msg{min-height:22px;color:var(--mute);font-size:14px;margin-top:12px}small{display:block;margin-top:18px;color:var(--mute)}
+</style></head><body><div class="card">
+<h1>Amigo Enterprises</h1><p class="sub">Accounts app control</p>
+<span class="pill" id="pill"><i></i><span id="ptxt">Checking…</span></span>
+<div class="row"><button id="go" disabled>▶ Start</button><button id="st" disabled>■ Stop</button></div>
+<a class="open" id="open" target="_blank" rel="noopener"></a>
+<div id="msg"></div>
+<small>Start runs the server and maps <b>__DOMAIN__</b> on this PC. Stop shuts both down.</small>
+</div>
+<script>
+const API='http://127.0.0.1:__PORT__',TOKEN='__TOKEN__',$=s=>document.querySelector(s);let busy=false;
+async function call(path,method='GET'){const r=await fetch(API+path,{method,headers:{'x-token':TOKEN}});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Request failed');return d}
+function show(s){const p=$('#pill');p.className='pill '+(s.running?'on':'');$('#ptxt').textContent=s.running?'Running':'Stopped';
+ $('#go').disabled=busy||s.running;$('#st').disabled=busy||!s.running;const o=$('#open');if(s.running&&s.url){o.style.display='block';o.href=s.url;o.textContent='Open '+s.url}else o.style.display='none'}
+function offline(){const p=$('#pill');p.className='pill off';$('#ptxt').textContent='Helper not running';$('#go').disabled=$('#st').disabled=true;$('#open').style.display='none';
+ $('#msg').textContent='The background helper is not running. Restart the PC, or run launcher\\install.bat again.'}
+async function poll(){if(busy)return;try{show(await call('/status'));if($('#msg').textContent.startsWith('The background'))$('#msg').textContent=''}catch(e){offline()}}
+async function act(kind){busy=true;$('#go').disabled=$('#st').disabled=true;$('#msg').textContent=kind=='start'?'Starting… (about 5–10 seconds)':'Stopping…';
+ try{const s=await call('/'+kind,'POST');busy=false;show(s);$('#msg').textContent=kind=='start'?'Started. Opening the app…':'Stopped. Server and domain are off.';if(kind=='start'&&s.url)window.open(s.url,'_blank')}
+ catch(e){busy=false;$('#msg').textContent='⚠ '+e.message;poll()}}
+$('#go').onclick=()=>act('start');$('#st').onclick=()=>{if(confirm('Stop the accounts app? Everyone using it will be disconnected.'))act('stop')};
+poll();setInterval(poll,3000);
+</script></body></html>

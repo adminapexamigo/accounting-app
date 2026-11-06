@@ -1,0 +1,1586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quotation, PI & PO UI Redesign Preview - Amigo Accounting</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{
+  --bg:#f8fafc;
+  --card:#ffffff;
+  --ink:#0f172a;
+  --ink-soft:#334155;
+  --mute:#64748b;
+  --pri:#4f46e5;
+  --pri-light:#6366f1;
+  --pri-dark:#3730a3;
+  --pri-bg:#eef2ff;
+  --line:#e2e8f0;
+  --danger:#ef4444;
+  --danger-bg:#fef2f2;
+  --ok:#10b981;
+  --ok-bg:#ecfdf5;
+  --warn:#f59e0b;
+  --warn-bg:#fffbeb;
+  --radius-sm:8px;
+  --radius-md:12px;
+  --radius-lg:16px;
+  --radius-xl:20px;
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.04),0 1px 2px rgba(0,0,0,0.02);
+  --shadow-md:0 6px 16px -2px rgba(15,23,42,0.06),0 2px 6px -1px rgba(15,23,42,0.04);
+  --shadow-lg:0 16px 32px -4px rgba(15,23,42,0.08),0 6px 12px -2px rgba(15,23,42,0.03);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font:13.5px/1.5 'Plus Jakarta Sans',system-ui,-apple-system,sans-serif;
+  background-color:var(--bg);
+  background-image:radial-gradient(#cbd5e1 0.75px,transparent 0.75px);
+  background-size:24px 24px;
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+  padding-bottom:80px;
+}
+
+/* Master Prototype Navigation Bar */
+.proto-nav{
+  background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 100%);
+  color:#fff;
+  padding:12px 24px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  box-shadow:0 4px 20px rgba(0,0,0,0.25);
+  position:sticky;
+  top:0;
+  z-index:900;
+  backdrop-filter:blur(8px);
+  flex-wrap:wrap;
+  gap:12px;
+}
+.proto-brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.proto-title{
+  font-weight:800;
+  font-size:15px;
+  letter-spacing:-0.2px;
+}
+.proto-tag{
+  background:rgba(255,255,255,0.15);
+  border:1px solid rgba(255,255,255,0.25);
+  padding:2px 8px;
+  border-radius:12px;
+  font-size:11px;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+}
+.proto-controls{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  flex-wrap:wrap;
+}
+.doc-pill-group, .view-mode-group{
+  display:flex;
+  background:rgba(255,255,255,0.08);
+  padding:3px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,0.12);
+}
+.proto-tab{
+  background:transparent;
+  border:0;
+  color:#cbd5e1;
+  padding:6px 14px;
+  font-size:12.5px;
+  font-weight:600;
+  border-radius:7px;
+  cursor:pointer;
+  transition:all 0.15s ease;
+  font-family:inherit;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.proto-tab.active{
+  background:#4f46e5;
+  color:#ffffff;
+  box-shadow:0 2px 8px rgba(79,70,229,0.5);
+}
+.proto-tab:hover:not(.active){
+  background:rgba(255,255,255,0.12);
+  color:#fff;
+}
+
+/* Page Container */
+.container{
+  max-width:1440px;
+  margin:20px auto;
+  padding:0 20px;
+}
+
+/* Common Buttons */
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  background:linear-gradient(135deg,var(--pri),var(--pri-light));
+  color:#ffffff;
+  border:0;
+  padding:8px 16px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:600;
+  font-size:13px;
+  box-shadow:0 2px 6px rgba(79,70,229,0.25);
+  transition:all 0.15s ease;
+  font-family:inherit;
+}
+.btn:hover{
+  background:linear-gradient(135deg,var(--pri-dark),var(--pri));
+  box-shadow:0 4px 12px rgba(79,70,229,0.35);
+  transform:translateY(-1px);
+}
+.btn.ghost{
+  background:#ffffff;
+  color:#475569;
+  border:1px solid #cbd5e1;
+  box-shadow:var(--shadow-sm);
+}
+.btn.ghost:hover{
+  background:#f8fafc;
+  border-color:#94a3b8;
+  color:#1e293b;
+}
+.btn.red{
+  background:var(--danger-bg);
+  color:var(--danger);
+  border:1px solid rgba(239,68,68,0.2);
+  box-shadow:none;
+}
+.btn.red:hover{
+  background:#fee2e2;
+  color:#b91c1c;
+}
+.btn.sm{
+  padding:4px 9px;
+  font-size:11.5px;
+  border-radius:6px;
+}
+
+/* Card Styling */
+.card{
+  background:var(--card);
+  border-radius:var(--radius-md);
+  padding:18px 20px;
+  border:1px solid var(--line);
+  box-shadow:var(--shadow-sm);
+  margin-bottom:16px;
+}
+
+/* ========================================================= */
+/* === VIEW 1: COMPACT REGISTER (OPTION 2) STYLES === */
+/* ========================================================= */
+.inv-kpi-row{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+  gap:12px;
+  margin-bottom:16px;
+}
+.inv-kpi-card{
+  background:#ffffff;
+  border:1px solid var(--line);
+  border-radius:var(--radius-md);
+  padding:12px 16px;
+  box-shadow:var(--shadow-sm);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  transition:all 0.15s ease;
+}
+.inv-kpi-card:hover{
+  border-color:#cbd5e1;
+  transform:translateY(-1px);
+}
+.inv-kpi-val{
+  font-size:20px;
+  font-weight:800;
+  font-family:'JetBrains Mono',monospace;
+  color:var(--ink);
+  line-height:1.2;
+}
+.inv-kpi-lbl{
+  font-size:11px;
+  color:var(--mute);
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  margin-top:3px;
+}
+.inv-kpi-icon{
+  width:38px;
+  height:38px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:18px;
+  flex-shrink:0;
+}
+.inv-toolbar{
+  background:#ffffff;
+  border:1px solid var(--line);
+  border-radius:var(--radius-md);
+  padding:10px 14px;
+  margin-bottom:14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:12px;
+}
+.inv-search-wrap{
+  position:relative;
+  flex:1;
+  min-width:240px;
+  max-width:380px;
+}
+.inv-search-wrap span{
+  position:absolute;
+  left:10px;
+  top:50%;
+  transform:translateY(-50%);
+  color:#94a3b8;
+  font-size:13px;
+  pointer-events:none;
+}
+.inv-search-input{
+  width:100%;
+  padding:7px 10px 7px 32px;
+  border:1.5px solid #e2e8f0;
+  border-radius:8px;
+  font-size:13px;
+  font-family:inherit;
+  background:#f8fafc;
+  transition:all 0.15s ease;
+}
+.inv-search-input:focus{
+  outline:none;
+  background:#fff;
+  border-color:#6366f1;
+  box-shadow:0 0 0 3px rgba(99,102,241,0.12);
+}
+.inv-filter-group{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  overflow-x:auto;
+}
+.inv-filter-pill{
+  padding:5px 11px;
+  border-radius:16px;
+  font-size:12px;
+  font-weight:600;
+  border:1px solid #e2e8f0;
+  background:#f8fafc;
+  color:#64748b;
+  cursor:pointer;
+  transition:all 0.15s ease;
+  white-space:nowrap;
+}
+.inv-filter-pill.active{
+  background:#eef2ff;
+  border-color:#c7d2fe;
+  color:#4338ca;
+  box-shadow:0 1px 2px rgba(67,56,202,0.06);
+}
+.inv-filter-pill:hover:not(.active){
+  background:#f1f5f9;
+  color:#334155;
+}
+.inv-table-compact{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
+}
+.inv-table-compact thead th{
+  background:#f8fafc;
+  color:#475569;
+  font-size:11px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  padding:9px 14px;
+  border-bottom:1px solid var(--line);
+  white-space:nowrap;
+  text-align:left;
+}
+.inv-table-compact thead th.n{text-align:right}
+.inv-table-compact tbody td{
+  padding:9px 14px;
+  border-bottom:1px solid #f1f5f9;
+  vertical-align:middle;
+  color:#334155;
+}
+.inv-table-compact tbody td.n{text-align:right}
+.inv-table-compact tbody tr:hover{
+  background-color:#f8faff;
+}
+.inv-num-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:12px;
+  font-weight:700;
+  background:#f1f5f9;
+  padding:2px 7px;
+  border-radius:6px;
+  border:1px solid #e2e8f0;
+  color:#1e293b;
+  user-select:none;
+}
+.inv-num-pill .copy-icon{
+  background:none;
+  border:none;
+  color:#94a3b8;
+  cursor:pointer;
+  padding:0;
+  font-size:11px;
+  line-height:1;
+}
+.inv-num-pill .copy-icon:hover{
+  color:#4f46e5;
+}
+.inv-client-box{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.inv-client-avatar{
+  width:26px;
+  height:26px;
+  border-radius:6px;
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+  font-size:11px;
+  flex-shrink:0;
+}
+.inv-tax-tag{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  font-size:11.5px;
+  padding:2px 7px;
+  border-radius:6px;
+  font-weight:600;
+  white-space:nowrap;
+}
+.inv-tax-tag.instate{
+  background:#ecfdf5;
+  color:#065f46;
+  border:1px solid #a7f3d0;
+}
+.inv-tax-tag.igst{
+  background:#fffbeb;
+  color:#92400e;
+  border:1px solid #fde68a;
+}
+.inv-user-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  font-size:11.5px;
+  color:#475569;
+  background:#f8fafc;
+  padding:2px 7px;
+  border-radius:10px;
+  border:1px solid #e2e8f0;
+}
+
+/* ========================================================= */
+/* === VIEW 2: SPLIT-VIEW BUILDER WORKSPACE STYLES === */
+/* ========================================================= */
+.split-builder-layout{
+  display:grid;
+  grid-template-columns:1.15fr 1fr;
+  gap:22px;
+  align-items:start;
+}
+@media(max-width:1250px){
+  .split-builder-layout{grid-template-columns:1fr}
+}
+.split-form-col{
+  min-width:0;
+}
+.split-form-col .card{
+  padding:18px 20px;
+  margin-bottom:14px;
+}
+.form-section-title{
+  font-size:11.5px;
+  font-weight:700;
+  color:var(--mute);
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  margin-bottom:12px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.grid-2{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+  gap:12px;
+}
+.grid-3{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:10px;
+}
+label{
+  display:block;
+  font-size:11.5px;
+  color:var(--mute);
+  margin-bottom:4px;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:0.03em;
+}
+input,select,textarea{
+  width:100%;
+  font-family:inherit;
+  font-size:13px;
+  padding:8px 10px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:#fff;
+  color:var(--ink);
+  transition:all 0.15s ease;
+}
+input:focus,select:focus,textarea:focus{
+  outline:none;
+  border-color:#6366f1;
+  box-shadow:0 0 0 3px rgba(99,102,241,0.12);
+}
+
+/* Dynamic Line Items Table */
+.builder-items-table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:12.5px;
+  margin-top:6px;
+}
+.builder-items-table th{
+  background:#f8fafc;
+  color:var(--mute);
+  font-size:11px;
+  font-weight:700;
+  text-transform:uppercase;
+  padding:8px 8px;
+  border-bottom:1px solid var(--line);
+  text-align:left;
+}
+.builder-items-table th.n{text-align:right}
+.builder-items-table td{
+  padding:6px 6px;
+  border-bottom:1px solid #f1f5f9;
+  vertical-align:middle;
+}
+.builder-items-table td.n{text-align:right}
+.builder-items-table input,.builder-items-table textarea{
+  padding:5px 8px;
+  font-size:12.5px;
+}
+
+/* Right Sticky Live Preview Column */
+.split-preview-col{
+  position:sticky;
+  top:70px;
+  background:#0f172a;
+  border:1px solid #334155;
+  border-radius:12px;
+  padding:12px 14px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.25);
+  min-width:0;
+}
+.split-preview-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:10px;
+  color:#cbd5e1;
+  font-size:11.5px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+}
+.split-preview-header .live-badge{
+  background:#10b981;
+  color:#ffffff;
+  padding:2px 7px;
+  border-radius:4px;
+  font-size:10px;
+  font-weight:700;
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+}
+.split-preview-header .live-badge::before{
+  content:'';
+  width:6px;
+  height:6px;
+  background:#fff;
+  border-radius:50%;
+  display:inline-block;
+  animation:pulseDot 1.5s infinite;
+}
+@keyframes pulseDot{0%,100%{opacity:1}50%{opacity:0.3}}
+.split-preview-sheet{
+  background:#ffffff;
+  border-radius:6px;
+  padding:16px;
+  box-shadow:0 4px 16px rgba(0,0,0,0.35);
+  max-height:calc(100vh - 130px);
+  overflow-y:auto;
+}
+
+/* ========================================================= */
+/* === DOCUMENT PRINT / RENDER ENGINE CSS (DCSS) === */
+/* ========================================================= */
+.dd{font-family:'Times New Roman',Times,serif;color:#000;font-size:11.5px;line-height:1.25}
+.dd table{border-collapse:collapse;width:100%}
+.dd td,.dd th{padding:0;vertical-align:top;text-align:left;font-weight:normal;font-size:11.5px;color:#000}
+.dd .b{font-weight:bold}
+.dd .c{text-align:center}
+.dd .r{text-align:right}
+.dd .ttl{text-align:center;margin:2px 0 10px;line-height:1.1}
+.dd .pph{border:1px solid #000}
+.dd .pph td.h{padding:5px 6px;border-left:1px solid #000;height:160px}
+.dd .pph td.f{border-left:0}
+.dd .cbox{border:1px solid #000;padding:2px 6px;margin-top:16px;font-size:11px;line-height:1.3}
+.dd .itm{border:1.5px solid #000;margin-top:12px}
+.dd .itm th{border:1px solid #000;padding:4px 5px;font-size:11.5px}
+.dd .itm td{border-left:1px solid #000;border-right:1px solid #000;padding:6px 5px;font-size:11px}
+.dd .itm td.c{text-align:center}
+.dd .itm tr.sp td{border-bottom:1px solid #000;padding:0}
+.dd .itm td.tl{border-top:1px solid #000;border-bottom:1px solid #000;padding:5px 5px;font-size:12px}
+.dd .itm td.bp{padding-left:12px}
+.dd.pi .itm td.ds{font-weight:bold}
+.dd.po .itm td.ds{font-size:12px}
+.dd .box{border:1px solid #000;border-top:0}
+.dd .bk{font:10px Arial,Helvetica,sans-serif;padding:8px 6px}
+.dd .bk p{margin:0 0 6px;font-size:10px}
+.dd .bt{text-align:center;font-weight:bold;font-size:11px;margin:4px 0 10px}
+.dd .qh{border:1px solid #bdd7ee;padding:5px 6px;font-size:11px;line-height:1.3}
+.dd .rl{border-top:1.5px solid #c0392b;margin:6px 0 8px}
+.dd .qt{text-align:center;color:#1a1aff;font-weight:bold;font-size:22px;margin:2px 0 12px}
+.dd .qd td{font-size:12px;padding:0 30px 4px 0}
+.dd .qd td.f{padding:0}
+.dd .qn{margin:0 0 10px 14px;font-size:12px}
+.dd .qi{border:1px solid #000;margin-top:8px}
+.dd .qi th{border:1px solid #000;padding:3px 5px;font-size:12px}
+.dd .qi td{border:1px solid #000;padding:6px 5px;font-size:11px;font-weight:bold}
+.dd .qtc{font:bold 13px Arial,Helvetica,sans-serif;margin:18px 0 12px 4px}
+.dd .qtm{font-size:11.5px;margin:0 0 6px 4px}
+.dd .qy{margin:28px 0 10px 14px;font-size:12px}
+.dd .qs{margin-left:14px;font-size:12px;line-height:1.25}
+</style>
+</head>
+<body>
+
+<!-- PROTOTYPE NAVIGATION BAR -->
+<div class="proto-nav">
+  <div class="proto-brand">
+    <span style="font-size:20px">💎</span>
+    <div>
+      <div class="proto-title">Amigo Document Suite Redesign</div>
+      <div style="font-size:11px;color:#94a3b8">Interactive Prototype &bull; Quotation, PI &amp; PO</div>
+    </div>
+    <span class="proto-tag">Live Sample</span>
+  </div>
+
+  <div class="proto-controls">
+    <!-- Document Selector -->
+    <div style="display:flex;align-items:center;gap:6px">
+      <span style="font-size:11.5px;color:#cbd5e1;font-weight:600">Document:</span>
+      <div class="doc-pill-group">
+        <button class="proto-tab active" onclick="setDocType('quotation')">📑 Quotation</button>
+        <button class="proto-tab" onclick="setDocType('pi')">📄 Proforma Invoice (PI)</button>
+        <button class="proto-tab" onclick="setDocType('po')">📦 Purchase Order (PO)</button>
+      </div>
+    </div>
+
+    <!-- Mode Selector -->
+    <div style="display:flex;align-items:center;gap:6px">
+      <span style="font-size:11.5px;color:#cbd5e1;font-weight:600">Screen:</span>
+      <div class="view-mode-group">
+        <button class="proto-tab active" id="tabListView" onclick="setViewMode('list')">📋 Register (List)</button>
+        <button class="proto-tab" id="tabCreateView" onclick="setViewMode('create')">✏️ Split-View Builder</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container" id="mainContainer">
+  <!-- Dynamic content will render here -->
+</div>
+
+<script>
+// Authentic Company Profile
+const co = {
+  name: "AMIGO ENTERPRISES",
+  address: "S.NO.6/17 FLAT NO 401 CHOVISAWADI Pimpri Chinchwad, Pune, Maharashtra, 412105",
+  gstin: "27ACBFA5336L1ZB",
+  pan: "ACBFA5336L",
+  contactPhone: "08605069145",
+  contactEmail: "kuldeep.amigo@gmail.com",
+  docAddress: "office No. 401, Baban Villa, S\nNo. 6/17, Chovisawadi\nPune - 412105 Maharashtra\nIndia",
+  bankName: "HDFC",
+  bankBranch: "Chovisawadi, Charoli BK, Pune-412105 Maharashtra.",
+  bankAcc: "50200081185029",
+  bankIfsc: "HDFC0009467",
+  quoteHeader: "Office No:- 401, Baban Villa, Sno-6/17, Chovisawadi, Haveli Pune, Pimpri Chinchwad (M Corp.) 412105\nGmail : kuldeep.amigo@gmail.com\nMo No. 08605069145",
+  quoteTerms: "Price :-Ex work Pune .\nPacking :- Charges 2%\nDuties Taxes :- GST @ 18% extra\nPayment Terms :- 30% Advance with PO and 70% Against PI readiness of material\nDelivery :- 2-3weeks\nFreight :- To Pay Basis\nValidity :- This offer is valid for 15 days from date of quotation.\nService engineer and workers Loading & boarding is in customer scope.",
+  quoteSign: "Kuldeep Ranbawale\n08605069145\nAmigo Enterprises,Pune\nkuldeep.amigo@gmail.com",
+  poPayment: "100% Against PI"
+};
+
+// Document Configs
+const DOC_META = {
+  quotation: {
+    name: 'Quotation',
+    plural: 'Quotations',
+    partyLabel: 'Customer',
+    prefix: 'AE/26-27/',
+    icon: '📑'
+  },
+  pi: {
+    name: 'Proforma Invoice',
+    plural: 'Proforma Invoices',
+    partyLabel: 'Customer',
+    prefix: 'AEPI-26-27-',
+    icon: '📄'
+  },
+  po: {
+    name: 'Purchase Order',
+    plural: 'Purchase Orders',
+    partyLabel: 'Vendor',
+    prefix: 'AE/PO/26-27/',
+    icon: '📦'
+  }
+};
+
+// Realistic Sample Datasets
+const sampleDocs = {
+  quotation: [
+    { id: 'q1', type: 'quotation', number: 'AE/26-27/04', date: '2026-11-01', party: 'Tata Motors Ltd', total: 185000.00, createdBy: 'admin', itemsCount: 3, ref: 'TML/ENQ/2026/89', sub: 'Supply of Industrial Pneumatic Control Valves' },
+    { id: 'q2', type: 'quotation', number: 'AE/26-27/03', date: '2026-10-27', party: 'ABC Corporation', total: 45200.00, createdBy: 'Sangram', itemsCount: 1, ref: 'ABC/Q/55', sub: 'Maintenance & Valve Servicing' },
+    { id: 'q3', type: 'quotation', number: 'AE/26-27/02', date: '2026-10-22', party: 'Bajaj Auto Ltd', total: 98750.00, createdBy: 'admin', itemsCount: 2, ref: 'BAL/PUNE/782', sub: 'High Pressure Flanged Valves' },
+    { id: 'q4', type: 'quotation', number: 'AE/26-27/01', date: '2026-10-15', party: 'Bharat Forge Ltd', total: 320000.00, createdBy: 'admin', itemsCount: 5, ref: 'BFL/RFQ/09', sub: 'Complete Plant Valve Overhaul Package' }
+  ],
+  pi: [
+    { id: 'pi1', type: 'pi', number: 'AEPI-26-27-003', date: '2026-11-01', party: 'Thermax India Ltd', total: 142000.00, createdBy: 'admin', taxType: 'CGST+SGST', itemsCount: 2, poNo: 'PO-THX-998', poDate: '2026-10-28' },
+    { id: 'pi2', type: 'pi', number: 'AEPI-26-27-002', date: '2026-10-29', party: 'Kirloskar Brothers', total: 67500.00, createdBy: 'Sangram', taxType: 'IGST', itemsCount: 1, poNo: 'KB-2026-PO-12', poDate: '2026-10-26' },
+    { id: 'pi3', type: 'pi', number: 'AEPI-26-27-001', date: '2026-10-19', party: 'ABC Corporation', total: 29500.00, createdBy: 'admin', taxType: 'CGST+SGST', itemsCount: 1, poNo: 'ABC/PUR/44', poDate: '2026-10-18' }
+  ],
+  po: [
+    { id: 'po1', type: 'po', number: 'AE/PO/26-27/02', date: '2026-11-01', party: 'Steel Tubes & Fittings Ltd', total: 84500.00, createdBy: 'admin', taxType: 'CGST+SGST', itemsCount: 4, payment: '100% Against PI' },
+    { id: 'po2', type: 'po', number: 'AE/PO/26-27/01', date: '2026-10-19', party: 'Apex Fasteners & Flanges', total: 5396.06, createdBy: 'admin', taxType: 'IGST', itemsCount: 2, payment: '100% Against PI' }
+  ]
+};
+
+const sampleClients = [
+  { id: 1, name: 'Tata Motors Ltd', address: 'Pimpri Works, Pune - 411018', gstin: '27AAACT2727Q1ZW', contact: 'Mr. Rajesh Kulkarni', phone: '9822012345' },
+  { id: 2, name: 'ABC Corporation', address: 'Plot 45, Bhosari MIDC, Pune - 411026', gstin: '27AABCU9603R1ZM', contact: 'Mr. Sharma', phone: '9822099881' },
+  { id: 3, name: 'Thermax India Ltd', address: 'Thermax House, Chinchwad, Pune - 411019', gstin: '27AAACT0822F1ZK', contact: 'Ms. Sunita Patil', phone: '9822456789' },
+  { id: 4, name: 'Steel Tubes & Fittings Ltd', address: 'Industrial Area Phase 2, Chakan, Pune', gstin: '27AAACS4412M1Z5', contact: 'Mr. Vinod Jain', phone: '9822114477' }
+];
+
+let curDocType = 'quotation';
+let curViewMode = 'list';
+let curSearch = '';
+let curFilter = 'all';
+
+// State for the Active Builder
+let builderState = null;
+
+function setDocType(t) {
+  curDocType = t;
+  document.querySelectorAll('.doc-pill-group .proto-tab').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  curSearch = '';
+  curFilter = 'all';
+  initBuilderState();
+  renderApp();
+}
+
+function setViewMode(m) {
+  curViewMode = m;
+  document.getElementById('tabListView').classList.toggle('active', m === 'list');
+  document.getElementById('tabCreateView').classList.toggle('active', m === 'create');
+  renderApp();
+}
+
+function initBuilderState() {
+  const meta = DOC_META[curDocType];
+  const list = sampleDocs[curDocType];
+  const nextNum = meta.prefix + String(list.length + 1).padStart(2, '0');
+  
+  if (curDocType === 'quotation') {
+    builderState = {
+      type: 'quotation',
+      number: nextNum,
+      date: '2026-11-02',
+      partyId: '1',
+      toName: 'Tata Motors Ltd',
+      attn: 'Mr. Rajesh Kulkarni (Purchase Dept)',
+      ref: 'TML/ENQ/NOV-2026/01',
+      subject: 'Quotation for Heavy Duty Forged Ball Valves',
+      intro: 'We thank you for your esteemed inquiry. We are pleased to submit our most competitive commercial offer as below:',
+      terms: co.quoteTerms,
+      sign: co.quoteSign,
+      items: [
+        { desc: '2" Full Bore SS-304 Ball Valve Class 150', qty: 4, rate: 12500, amount: 50000 },
+        { desc: '1" Screwed End High Pressure Needle Valve', qty: 10, rate: 3500, amount: 35000 }
+      ]
+    };
+  } else if (curDocType === 'pi') {
+    builderState = {
+      type: 'pi',
+      number: nextNum,
+      date: '2026-11-02',
+      partyId: '3',
+      toName: 'Thermax India Ltd',
+      toAddress: 'Thermax House, Chinchwad, Pune - 411019',
+      toGstin: '27AAACT0822F1ZK',
+      toContact: 'Ms. Sunita Patil',
+      toPhone: '9822456789',
+      poNo: 'PO-THX-NOV-102',
+      poDate: '2026-11-01',
+      payment: '100% Against PI',
+      taxType: 'CGST+SGST',
+      taxRate: 18,
+      items: [
+        { desc: 'Industrial Steam Trap Valve 25NB Flanged #300', qty: 2, uom: 'Nos', rate: 24000, disc: 0, pf: 500, delivery: 'Within 2 Weeks', amount: 48500 }
+      ]
+    };
+  } else if (curDocType === 'po') {
+    builderState = {
+      type: 'po',
+      number: nextNum,
+      date: '2026-11-02',
+      partyId: '4',
+      toName: 'Steel Tubes & Fittings Ltd',
+      toAddress: 'Industrial Area Phase 2, Chakan, Pune',
+      toGstin: '27AAACS4412M1Z5',
+      toContact: 'Mr. Vinod Jain',
+      toPhone: '9822114477',
+      payment: '100% Against PI',
+      taxType: 'CGST+SGST',
+      taxRate: 18,
+      items: [
+        { desc: 'Seamless Stainless Steel Pipe 50NB Sch 40 Grade 316', qty: 10, uom: 'Mtr', rate: 3200, disc: 0, pf: 200, delivery: 'As earliest as possible', amount: 32200 }
+      ]
+    };
+  }
+}
+
+function inr(n) {
+  return '₹' + (+n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function renderApp() {
+  const c = document.getElementById('mainContainer');
+  if (curViewMode === 'list') {
+    c.innerHTML = renderListView();
+  } else {
+    c.innerHTML = renderSplitBuilderView();
+    renderBuilderRows();
+    updateLiveDocument();
+  }
+}
+
+// =========================================================
+// RENDER: LIST VIEW (Option 2 High-Density Register)
+// =========================================================
+function renderListView() {
+  const meta = DOC_META[curDocType];
+  const list = sampleDocs[curDocType];
+
+  const totalSum = list.reduce((s, x) => s + (+x.total || 0), 0);
+  const novCount = list.filter(x => x.date.startsWith('2026-11')).length;
+  const octCount = list.filter(x => x.date.startsWith('2026-10')).length;
+
+  const q = curSearch.toLowerCase().trim();
+  const filtered = list.filter(r => {
+    if (curFilter === 'recent' && !r.date.startsWith('2026-11')) return false;
+    if (curFilter === 'high' && r.total < 50000) return false;
+    if (q) {
+      const txt = (r.number + ' ' + r.party + ' ' + (r.createdBy||'') + ' ' + r.total).toLowerCase();
+      if (!txt.includes(q)) return false;
+    }
+    return true;
+  });
+
+  return `
+    <!-- Top Title & Global Actions -->
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <h1 style="margin:0;font-size:22px;font-weight:800;color:#0f172a">${meta.plural}</h1>
+        <span style="background:#eef2ff;color:#4338ca;font-size:12px;font-weight:700;padding:3px 10px;border-radius:14px;border:1px solid #c7d2fe">${list.length} Total</span>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn ghost" onclick="exportExcel()">📊 Export Excel</button>
+        <button class="btn" onclick="setViewMode('create')">+ New ${meta.name.toLowerCase()}</button>
+      </div>
+    </div>
+
+    <!-- KPI Summary Row -->
+    <div class="inv-kpi-row">
+      <div class="inv-kpi-card">
+        <div>
+          <div class="inv-kpi-val">${inr(totalSum)}</div>
+          <div class="inv-kpi-lbl">Total ${meta.name} Value</div>
+        </div>
+        <div class="inv-kpi-icon" style="background:#e0e7ff;color:#4338ca">₹</div>
+      </div>
+      <div class="inv-kpi-card">
+        <div>
+          <div class="inv-kpi-val">${list.length}</div>
+          <div class="inv-kpi-lbl">${meta.plural} Issued</div>
+        </div>
+        <div class="inv-kpi-icon" style="background:#dbeafe;color:#1e40af">${meta.icon}</div>
+      </div>
+      <div class="inv-kpi-card">
+        <div>
+          <div class="inv-kpi-val">${novCount} <span style="font-size:12px;font-weight:600;color:#059669">(Active)</span></div>
+          <div class="inv-kpi-lbl">This Month (Nov)</div>
+        </div>
+        <div class="inv-kpi-icon" style="background:#ecfdf5;color:#047857">📅</div>
+      </div>
+      <div class="inv-kpi-card">
+        <div>
+          <div class="inv-kpi-val">${octCount}</div>
+          <div class="inv-kpi-lbl">Last Month (Oct)</div>
+        </div>
+        <div class="inv-kpi-icon" style="background:#fffbeb;color:#b45309">📁</div>
+      </div>
+    </div>
+
+    <!-- Search & Filter Toolbar -->
+    <div class="inv-toolbar">
+      <div class="inv-search-wrap">
+        <span>🔍</span>
+        <input type="text" class="inv-search-input" placeholder="Search number, ${meta.partyLabel.toLowerCase()}, user..." value="${curSearch}" onkeyup="onSearchChange(this.value)">
+      </div>
+      <div class="inv-filter-group">
+        <button class="inv-filter-pill ${curFilter==='all'?'active':''}" onclick="setDocFilter('all')">All (${list.length})</button>
+        <button class="inv-filter-pill ${curFilter==='recent'?'active':''}" onclick="setDocFilter('recent')">This Month (${novCount})</button>
+        <button class="inv-filter-pill ${curFilter==='high'?'active':''}" onclick="setDocFilter('high')">High Value &gt; ₹50k</button>
+      </div>
+    </div>
+
+    <!-- High-Density Compact Table -->
+    <div class="card" style="overflow:auto;padding:0;margin-bottom:20px">
+      <table class="inv-table-compact">
+        <thead>
+          <tr>
+            <th>Number</th>
+            <th>Date</th>
+            <th>${meta.partyLabel}</th>
+            ${curDocType !== 'quotation' ? '<th>Tax Type</th>' : '<th>Subject / Ref</th>'}
+            <th class="n">Total Value</th>
+            <th>By</th>
+            <th class="n">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filtered.length ? filtered.map(r => `
+            <tr>
+              <td>
+                <div class="inv-num-pill" style="cursor:pointer" onclick="openDocPreview('${r.id}')" title="Click to preview">
+                  <span>${meta.icon} ${r.number}</span>
+                  <button type="button" class="copy-icon" title="Copy Number" onclick="event.stopPropagation();copyVal('${r.number}')">📋</button>
+                </div>
+              </td>
+              <td>
+                <div style="font-weight:600;color:#1e293b">${r.date}</div>
+                <div style="font-size:11px;color:var(--mute)">${r.date.startsWith('2026-11') ? 'This Month' : 'October'}</div>
+              </td>
+              <td>
+                <div class="inv-client-box">
+                  <div class="inv-client-avatar">${r.party.slice(0,2).toUpperCase()}</div>
+                  <div>
+                    <div style="font-weight:700;color:#0f172a">${r.party}</div>
+                    ${r.itemsCount ? `<div style="font-size:11px;color:var(--mute)">${r.itemsCount} ${r.itemsCount>1?'items':'item'}</div>` : ''}
+                  </div>
+                </div>
+              </td>
+              <td>
+                ${curDocType === 'quotation' 
+                  ? `<div style="font-size:12px;font-weight:600;color:#1e293b;max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.sub || '—'}</div>`
+                  : (r.taxType === 'IGST' 
+                      ? `<span class="inv-tax-tag igst">🚚 Out of State (IGST)</span>` 
+                      : `<span class="inv-tax-tag instate">🏛️ In-State (CGST+SGST)</span>`)
+                }
+              </td>
+              <td class="n" style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13.5px;color:#0f172a">
+                ${inr(r.total)}
+              </td>
+              <td>
+                <div class="inv-user-pill">
+                  <span style="width:6px;height:6px;border-radius:50%;background:#10b981;display:inline-block"></span>
+                  <span>${r.createdBy}</span>
+                </div>
+              </td>
+              <td class="n" style="white-space:nowrap">
+                <button class="btn ghost sm" onclick="openDocPreview('${r.id}')">View / Download</button>
+                <button class="btn ghost sm" onclick="alert('Email modal for ${r.number}')">✉️ Mail</button>
+                <button class="btn ghost sm" onclick="duplicateDoc('${r.id}')">Copy</button>
+                <button class="btn ghost sm" onclick="editDoc('${r.id}')">Edit</button>
+                <button class="btn red sm" onclick="deleteDoc('${r.id}')">Delete</button>
+              </td>
+            </tr>
+          `).join('') : `<tr><td colspan="7" style="text-align:center;padding:36px;color:var(--mute)">No ${meta.plural.toLowerCase()} matching search criteria</td></tr>`}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+// =========================================================
+// RENDER: SPLIT-VIEW BUILDER WORKSPACE
+// =========================================================
+function renderSplitBuilderView() {
+  const meta = DOC_META[curDocType];
+  const isQ = curDocType === 'quotation';
+  const isPI = curDocType === 'pi';
+  const isPO = curDocType === 'po';
+
+  return `
+    <!-- Top Action Bar -->
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px">
+      <div>
+        <h1 style="margin:0 0 4px;font-size:22px;font-weight:800;color:#0f172a">New ${meta.name}</h1>
+        <div style="font-size:12.5px;color:var(--mute)">Split-View Workspace &bull; Fast Data Entry on Left &bull; Real-Time Live Document on Right</div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn ghost" onclick="setViewMode('list')">Cancel</button>
+        <button class="btn" onclick="saveNewDoc()">Save &amp; Generate ${meta.name}</button>
+      </div>
+    </div>
+
+    <div class="split-builder-layout">
+      <!-- LEFT FORM COLUMN -->
+      <div class="split-form-col">
+        <!-- 1. Metadata & Party Card -->
+        <div class="card">
+          <div class="form-section-title">1. ${meta.partyLabel} &amp; Document Metadata</div>
+          <div class="grid-2">
+            <div>
+              <label>Select ${meta.partyLabel} (Autofill)</label>
+              <select onchange="onSelectParty(this.value)">
+                ${sampleClients.map(c => `<option value="${c.id}" ${builderState.toName===c.name?'selected':''}>${c.name}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label>${meta.name} Number *</label>
+              <input type="text" value="${builderState.number}" oninput="builderState.number=this.value;updateLiveDocument()">
+            </div>
+            <div>
+              <label>Date *</label>
+              <input type="date" value="${builderState.date}" oninput="builderState.date=this.value;updateLiveDocument()">
+            </div>
+            <div>
+              <label>${isQ ? 'To (M/s) *' : (isPO ? 'Vendor Name *' : 'Customer Name *')}</label>
+              <input type="text" value="${builderState.toName}" oninput="builderState.toName=this.value;updateLiveDocument()">
+            </div>
+          </div>
+
+          <!-- Document Specific Fields -->
+          ${isQ ? `
+            <div style="margin-top:12px" class="grid-3">
+              <div>
+                <label>Kind Attend (Attn)</label>
+                <input type="text" value="${builderState.attn||''}" placeholder="e.g. Mr. Rajesh Kulkarni" oninput="builderState.attn=this.value;updateLiveDocument()">
+              </div>
+              <div>
+                <label>Your Reference</label>
+                <input type="text" value="${builderState.ref||''}" placeholder="e.g. TML/RFQ/NOV/01" oninput="builderState.ref=this.value;updateLiveDocument()">
+              </div>
+              <div>
+                <label>Subject</label>
+                <input type="text" value="${builderState.subject||''}" placeholder="e.g. Supply of Industrial Valves" oninput="builderState.subject=this.value;updateLiveDocument()">
+              </div>
+            </div>
+            <div style="margin-top:10px">
+              <label>Opening Paragraph</label>
+              <textarea rows="2" oninput="builderState.intro=this.value;updateLiveDocument()">${builderState.intro||''}</textarea>
+            </div>
+          ` : `
+            <div style="margin-top:12px" class="grid-2">
+              <div>
+                <label>Address</label>
+                <textarea rows="2" oninput="builderState.toAddress=this.value;updateLiveDocument()">${builderState.toAddress||''}</textarea>
+              </div>
+              <div>
+                <div class="grid-2">
+                  <div>
+                    <label>GSTIN</label>
+                    <input type="text" value="${builderState.toGstin||''}" oninput="builderState.toGstin=this.value;updateLiveDocument()">
+                  </div>
+                  <div>
+                    <label>Contact Person</label>
+                    <input type="text" value="${builderState.toContact||''}" oninput="builderState.toContact=this.value;updateLiveDocument()">
+                  </div>
+                </div>
+                <div class="grid-2" style="margin-top:8px">
+                  <div>
+                    <label>Contact Number / Phone</label>
+                    <input type="text" value="${builderState.toPhone||''}" oninput="builderState.toPhone=this.value;updateLiveDocument()">
+                  </div>
+                  <div>
+                    <label>${isPI ? 'Your PO No.' : 'Payment Terms'}</label>
+                    <input type="text" value="${isPI ? (builderState.poNo||'') : (builderState.payment||'')}" oninput="${isPI ? 'builderState.poNo=this.value' : 'builderState.payment=this.value'};updateLiveDocument()">
+                  </div>
+                </div>
+              </div>
+            </div>
+          `}
+        </div>
+
+        <!-- 2. Dynamic Line Items Card -->
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div class="form-section-title" style="margin-bottom:0">2. Itemized Material &amp; Services</div>
+            <button class="btn ghost sm" onclick="addBuilderRow()">+ Add Line</button>
+          </div>
+          <table class="builder-items-table">
+            <thead>
+              <tr>
+                <th style="width:40%">Description</th>
+                <th style="width:12%">Qty</th>
+                ${!isQ ? '<th style="width:10%">UOM</th>' : ''}
+                <th style="width:18%" class="n">Rate (₹)</th>
+                ${!isQ ? '<th style="width:10%">Disc%</th><th style="width:10%">P&amp;F</th>' : ''}
+                <th style="width:18%" class="n">Amount (₹)</th>
+                <th style="width:5%"></th>
+              </tr>
+            </thead>
+            <tbody id="builderItemsBody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 3. Tax, Calculations & Terms -->
+        <div class="card">
+          <div class="form-section-title">3. Calculations &amp; Terms</div>
+          ${!isQ ? `
+            <div class="grid-2" style="max-width:440px;margin-bottom:14px">
+              <div>
+                <label>Tax Category</label>
+                <select onchange="builderState.taxType=this.value;calcBuilder();updateLiveDocument()">
+                  <option value="CGST+SGST" ${builderState.taxType==='CGST+SGST'?'selected':''}>In-State (CGST 9% + SGST 9%)</option>
+                  <option value="IGST" ${builderState.taxType==='IGST'?'selected':''}>Interstate (IGST 18%)</option>
+                  <option value="NONE" ${builderState.taxType==='NONE'?'selected':''}>No Tax (0%)</option>
+                </select>
+              </div>
+              <div>
+                <label>Tax Rate %</label>
+                <input type="number" value="${builderState.taxRate||18}" min="0" max="28" oninput="builderState.taxRate=+this.value||0;calcBuilder();updateLiveDocument()">
+              </div>
+            </div>
+          ` : `
+            <div class="grid-2">
+              <div>
+                <label>Terms &amp; Conditions (Auto-Numbered)</label>
+                <textarea rows="5" oninput="builderState.terms=this.value;updateLiveDocument()">${builderState.terms||''}</textarea>
+              </div>
+              <div>
+                <label>Signature Block</label>
+                <textarea rows="5" oninput="builderState.sign=this.value;updateLiveDocument()">${builderState.sign||''}</textarea>
+              </div>
+            </div>
+          `}
+          
+          <div style="background:#f8fafc;padding:12px 16px;border-radius:10px;border:1px solid #e2e8f0;display:flex;justify-content:flex-end">
+            <div style="text-align:right" id="builderTotalsBox">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT STICKY LIVE PREVIEW COLUMN -->
+      <div class="split-preview-col">
+        <div class="split-preview-header">
+          <span>Live Document Preview</span>
+          <span class="live-badge">Live Sync</span>
+        </div>
+        <div class="split-preview-sheet" id="liveSheetContainer">
+          <!-- Real-time formatted document renders here -->
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderBuilderRows() {
+  const tbody = document.getElementById('builderItemsBody');
+  if (!tbody) return;
+  const isQ = curDocType === 'quotation';
+
+  tbody.innerHTML = builderState.items.map((row, idx) => `
+    <tr>
+      <td>
+        <textarea rows="1" style="min-width:180px" oninput="builderState.items[${idx}].desc=this.value;updateLiveDocument()">${row.desc||''}</textarea>
+      </td>
+      <td>
+        <input type="number" min="1" value="${row.qty||1}" style="width:60px" oninput="builderState.items[${idx}].qty=+this.value||0;calcBuilder();updateLiveDocument()">
+      </td>
+      ${!isQ ? `
+        <td>
+          <input type="text" value="${row.uom||'Nos'}" style="width:55px" oninput="builderState.items[${idx}].uom=this.value;updateLiveDocument()">
+        </td>
+      ` : ''}
+      <td class="n">
+        <input type="number" step="0.01" value="${row.rate||0}" style="width:90px;text-align:right" oninput="builderState.items[${idx}].rate=+this.value||0;calcBuilder();updateLiveDocument()">
+      </td>
+      ${!isQ ? `
+        <td>
+          <input type="number" value="${row.disc||0}" style="width:50px" oninput="builderState.items[${idx}].disc=+this.value||0;calcBuilder();updateLiveDocument()">
+        </td>
+        <td>
+          <input type="number" value="${row.pf||0}" style="width:55px" oninput="builderState.items[${idx}].pf=+this.value||0;calcBuilder();updateLiveDocument()">
+        </td>
+      ` : ''}
+      <td class="n" style="font-family:'JetBrains Mono',monospace;font-weight:700" id="itemAmt_${idx}">
+        ₹${(row.amount||0).toFixed(2)}
+      </td>
+      <td style="text-align:center">
+        <button type="button" class="btn red sm" style="padding:2px 6px" onclick="removeBuilderRow(${idx})">✕</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function addBuilderRow() {
+  builderState.items.push({
+    desc: 'New Industrial Item Description',
+    qty: 1,
+    uom: 'Nos',
+    rate: 1000,
+    disc: 0,
+    pf: 0,
+    delivery: 'As earliest',
+    amount: 1000
+  });
+  calcBuilder();
+  renderBuilderRows();
+  updateLiveDocument();
+}
+
+function removeBuilderRow(idx) {
+  if (builderState.items.length <= 1) {
+    alert('At least one line item is required.');
+    return;
+  }
+  builderState.items.splice(idx, 1);
+  calcBuilder();
+  renderBuilderRows();
+  updateLiveDocument();
+}
+
+function calcBuilder() {
+  let subtotal = 0;
+  builderState.items.forEach((it, idx) => {
+    const qty = +it.qty || 0;
+    const rate = +it.rate || 0;
+    const disc = +it.disc || 0;
+    const pf = +it.pf || 0;
+    const amt = (qty * rate * (1 - disc / 100)) + pf;
+    it.amount = amt;
+    subtotal += amt;
+    const el = document.getElementById(`itemAmt_${idx}`);
+    if (el) el.textContent = `₹${amt.toFixed(2)}`;
+  });
+
+  builderState.subtotal = subtotal;
+  let taxAmt = 0;
+  if (curDocType !== 'quotation' && builderState.taxType !== 'NONE') {
+    taxAmt = subtotal * (builderState.taxRate || 18) / 100;
+  }
+  builderState.taxAmount = taxAmt;
+  builderState.payable = subtotal + taxAmt;
+  builderState.total = builderState.payable;
+
+  const box = document.getElementById('builderTotalsBox');
+  if (box) {
+    if (curDocType === 'quotation') {
+      box.innerHTML = `
+        <div style="font-size:12px;color:var(--mute)">Subtotal: <strong>${inr(subtotal)}</strong></div>
+        <div style="font-size:16px;font-weight:800;color:#0f172a;margin-top:2px">Grand Total: ${inr(subtotal)}</div>
+      `;
+    } else {
+      box.innerHTML = `
+        <div style="font-size:12px;color:var(--mute)">Subtotal: <strong>${inr(subtotal)}</strong></div>
+        <div style="font-size:12px;color:var(--mute);margin:2px 0">Tax (${builderState.taxType}): <strong>${inr(taxAmt)}</strong></div>
+        <div style="font-size:16px;font-weight:800;color:#4338ca;margin-top:4px">Payable Amount: ${inr(builderState.payable)}</div>
+      `;
+    }
+  }
+}
+
+function updateLiveDocument() {
+  calcBuilder();
+  const container = document.getElementById('liveSheetContainer');
+  if (!container) return;
+
+  if (curDocType === 'quotation') {
+    container.innerHTML = generateLiveQuotationHTML(builderState);
+  } else if (curDocType === 'pi') {
+    container.innerHTML = generateLivePpHTML(builderState, 'pi');
+  } else if (curDocType === 'po') {
+    container.innerHTML = generateLivePpHTML(builderState, 'po');
+  }
+}
+
+// =========================================================
+// DOCUMENT HTML GENERATORS (Authentic DCSS Letterhead)
+// =========================================================
+function generateLiveQuotationHTML(d) {
+  const nl = s => (s||'').replace(/\n/g, '<br>');
+  const rows = d.items.map((x, i) => `
+    <tr>
+      <td class="c">${String(i + 1).padStart(2, '0')}</td>
+      <td>${nl(x.desc)}</td>
+      <td class="c">${x.qty}</td>
+      <td class="r">${(+x.rate||0).toFixed(2)}</td>
+      <td class="r">${(+x.amount||0).toFixed(2)}</td>
+    </tr>
+  `).join('');
+
+  const terms = String(d.terms || '').split('\n').filter(x => x.trim()).map((t, i) => `
+    <div class="qtm">${i + 1})&nbsp;&nbsp;${t}</div>
+  `).join('');
+
+  const sg = String(d.sign || '').split('\n').map((l, i) => i < 3 ? `<b>${l}</b>` : l).join('<br>');
+
+  return `
+    <div class="dd qq">
+      <!-- Header -->
+      <table>
+        <tr>
+          <td style="width:25%"><div style="font-size:24px;font-weight:bold;color:#4338ca">AMIGO</div></td>
+          <td><div class="qh">${nl(co.quoteHeader)}</div></td>
+        </tr>
+      </table>
+      <div class="rl"></div>
+
+      <div class="qt">QUOTATION</div>
+
+      <table class="qd">
+        <tr>
+          <td class="f">To,</td>
+          <td class="r">Date – &nbsp;${d.date}</td>
+        </tr>
+      </table>
+      <div style="height:6px"></div>
+      <table class="qd">
+        <tr>
+          <td class="f" style="padding-left:14px">M/s <b>${d.toName}</b></td>
+          <td class="r" style="font-size:11.5px">Quotation No. – ${d.number}</td>
+        </tr>
+      </table>
+      <div style="height:8px"></div>
+      ${d.attn ? `<div class="qn">Kind Attend – <b>${d.attn}</b></div>` : ''}
+      ${d.ref ? `<div class="qn">Ref.- ${d.ref}</div>` : ''}
+      ${d.subject ? `<div class="qn">Sub.- <b>${d.subject}</b></div>` : ''}
+      <div class="qn">Dear sir,</div>
+      <div class="qn" style="margin:0 0 12px 0;text-indent:24px;text-align:justify">${d.intro || ''}</div>
+
+      <!-- Items Table -->
+      <table class="qi">
+        <thead>
+          <tr>
+            <th style="width:9%">Sr. No.</th>
+            <th>Description</th>
+            <th style="width:8%">Qty</th>
+            <th style="width:18%" class="r">Rate/Unit</th>
+            <th style="width:18%" class="r">Total (₹)</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+          <tr style="height:32px;background:#f8f9fa">
+            <td colspan="4" class="r" style="font-weight:bold">TOTAL (₹)</td>
+            <td class="r" style="font-weight:bold">${(+d.subtotal||0).toFixed(2)}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Terms & Signature -->
+      <div class="qtc">Terms &amp; Conditions</div>
+      ${terms}
+
+      <div class="qy">Your Faithfully,</div>
+      <div class="qs">${sg}</div>
+    </div>
+  `;
+}
+
+function generateLivePpHTML(d, type) {
+  const isPI = type === 'pi';
+  const nl = s => (s||'').replace(/\n/g, '<br>');
+  const it = d.items;
+  const tax = d.taxType === 'NONE' ? '' : (d.taxType === 'IGST' ? `IGST ${d.taxRate}%` : `CGST ${d.taxRate/2}% + SGST ${d.taxRate/2}%`);
+
+  const left = `
+    <table>
+      <tr>
+        <td style="width:32%"><div style="font-size:22px;font-weight:bold;color:#1e40af">AMIGO</div></td>
+        <td style="padding-left:8px;font:bold 10px Arial,sans-serif;line-height:1.3">${co.name}<br><span style="font-weight:normal">${nl(co.docAddress)}</span></td>
+      </tr>
+    </table>
+    <div class="cbox">${isPI ? 'Contact Person: ' : 'Buyers contact '}${co.contactPhone}<br>Buyer Email: ${co.contactEmail}</div>
+  `;
+
+  const mid = isPI ? `
+    <b>To,</b><br>
+    <b style="font-size:12px">${d.toName}</b><br>
+    <b>${nl(d.toAddress||'')}</b><br><br>
+    ${d.toGstin ? `<b>GSTIN : </b>${d.toGstin}<br>` : ''}
+    ${d.toContact ? `<b>Contact person : </b>${d.toContact}<br>` : ''}
+    ${d.toPhone ? `<b>Phone : </b>${d.toPhone}` : ''}
+  ` : `
+    <div style="font-size:12px">To,<br><b>&nbsp;&nbsp;${d.toName}</b><br>${nl(d.toAddress||'')}<br><br>
+    ${d.toGstin ? `GST- ${d.toGstin}<br>` : ''}
+    ${d.toContact ? `Contact Person - ${d.toContact}<br>` : ''}
+    ${d.toPhone ? `Contact number - ${d.toPhone}` : ''}</div>
+  `;
+
+  const right = isPI ? `
+    Proforma Invoice No.<br><b>${d.number}</b><br><br>
+    Date : ${d.date}<br><br>
+    You’re Pur. Order No.<br><b>${d.poNo||'—'}</b><br>
+    Date: ${d.poDate||'—'}
+  ` : `
+    <b>Po No. P.O: ${d.number}</b><br><br>
+    <b>Date: ${d.date}</b>
+  `;
+
+  const body = it.map((x, i) => `
+    <tr>
+      <td class="c">${String(i + 1).padStart(2, '0')}</td>
+      <td class="ds">${nl(x.desc)}</td>
+      <td class="c b">${x.qty}</td>
+      <td class="c b">${x.uom||'Nos'}</td>
+      <td class="c b">${(+x.rate||0).toFixed(2)}</td>
+      <td class="c">${x.disc||0}%</td>
+      <td class="c">${x.pf||0}</td>
+      <td class="b bp r">${(+x.amount||0).toFixed(2)}</td>
+      <td class="c">${x.delivery||'As earliest'}</td>
+    </tr>
+  `).join('');
+
+  return `
+    <div class="dd ${type}">
+      <div class="ttl" style="${isPI ? 'font:bold 22px Times New Roman;color:#2e74b5;text-decoration:underline' : 'font:bold 22px Arial;color:#5b9bd5'}">
+        ${isPI ? 'PROFORMA INVOICE' : 'PURCHASE ORDER'}
+      </div>
+
+      <table class="pph">
+        <tr>
+          <td class="h f" style="width:40%">${left}</td>
+          <td class="h" style="width:34%">${mid}</td>
+          <td class="h" style="width:26%">${right}</td>
+        </tr>
+      </table>
+
+      <div style="height:14px"></div>
+
+      <table class="itm">
+        <thead>
+          <tr>
+            <th style="width:6%">SR.</th>
+            <th style="width:30%">Description</th>
+            <th style="width:8%">Qty</th>
+            <th style="width:8%">UOM</th>
+            <th style="width:11%">Unit Price</th>
+            <th style="width:6%">Disc</th>
+            <th style="width:6%">P&amp;F</th>
+            <th style="width:13%" class="r">Base Price</th>
+            <th style="width:12%">Delivery</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${body}
+          <tr style="background:#fafafa">
+            <td colspan="2" class="tl"></td>
+            <td colspan="5" class="tl b">SUBTOTAL</td>
+            <td class="tl b bp r">${(+d.subtotal||0).toFixed(2)}</td>
+            <td class="tl"></td>
+          </tr>
+          ${tax ? `
+            <tr style="background:#fafafa">
+              <td colspan="2" class="tl"></td>
+              <td colspan="5" class="tl b">Tax Rate Input (${tax})</td>
+              <td class="tl b bp r">${(+d.taxAmount||0).toFixed(2)}</td>
+              <td class="tl"></td>
+            </tr>
+          ` : ''}
+          <tr style="background:#eef2ff;font-weight:bold">
+            <td colspan="2" class="tl"></td>
+            <td colspan="5" class="tl b" style="color:#1e40af">PAYABLE AMOUNT (INR)</td>
+            <td class="tl b bp r" style="color:#1e40af;font-size:13px">${(+d.payable||0).toFixed(2)}</td>
+            <td class="tl"></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Footer Details -->
+      ${isPI ? `
+        <table class="box">
+          <tr>
+            <td class="bk">
+              <div class="bt">BANK DETAILS</div>
+              <p>Bank: <b>${co.bankName}</b> &nbsp;&bull;&nbsp; Branch: <b>${co.bankBranch}</b></p>
+              <p>A/c. No: <b>${co.bankAcc}</b> &nbsp;&bull;&nbsp; IFSC Code: <b>${co.bankIfsc}</b></p>
+              <p>PAN NO: <b>${co.pan}</b> &nbsp;&bull;&nbsp; GST No: <b>${co.gstin}</b></p>
+            </td>
+          </tr>
+        </table>
+      ` : `
+        <table class="box">
+          <tr>
+            <td style="padding:6px;font:bold 11px Arial,sans-serif">PAYMENT TERMS: ${d.payment||'100% Against PI'}</td>
+          </tr>
+        </table>
+        <table class="box">
+          <tr>
+            <td style="padding:6px;font-size:11px">
+              Our Tax Details: PAN Number - <b>${co.pan}</b> &bull; GST Number - <b>${co.gstin}</b>
+            </td>
+          </tr>
+        </table>
+      `}
+    </div>
+  `;
+}
+
+// Event Handlers
+function onSearchChange(val) {
+  curSearch = val;
+  renderApp();
+}
+
+function setDocFilter(f) {
+  curFilter = f;
+  renderApp();
+}
+
+function onSelectParty(id) {
+  const p = sampleClients.find(x => x.id == id);
+  if (!p) return;
+  builderState.partyId = id;
+  builderState.toName = p.name;
+  builderState.toAddress = p.address;
+  builderState.toGstin = p.gstin;
+  builderState.toContact = p.contact;
+  builderState.toPhone = p.phone;
+  if (curDocType === 'quotation') {
+    builderState.attn = p.contact;
+  }
+  renderApp();
+  renderBuilderRows();
+}
+
+function copyVal(v) {
+  navigator.clipboard?.writeText(v);
+  alert('Copied ' + v + ' to clipboard');
+}
+
+function openDocPreview(id) {
+  const list = sampleDocs[curDocType];
+  const item = list.find(x => x.id === id);
+  if (!item) return;
+  alert(`Viewing full document ${item.number} for ${item.party} (Total: ${inr(item.total)})`);
+}
+
+function duplicateDoc(id) {
+  const list = sampleDocs[curDocType];
+  const item = list.find(x => x.id === id);
+  if (!item) return;
+  alert(`Duplicated ${item.number}. Pre-filled in Split-View Builder!`);
+  setViewMode('create');
+}
+
+function editDoc(id) {
+  alert(`Opening document in Split-View Builder for editing`);
+  setViewMode('create');
+}
+
+function deleteDoc(id) {
+  if (confirm('Delete this record permanently?')) {
+    sampleDocs[curDocType] = sampleDocs[curDocType].filter(x => x.id !== id);
+    renderApp();
+  }
+}
+
+function saveNewDoc() {
+  const meta = DOC_META[curDocType];
+  sampleDocs[curDocType].unshift({
+    id: 'new_' + Date.now(),
+    type: curDocType,
+    number: builderState.number,
+    date: builderState.date,
+    party: builderState.toName,
+    total: builderState.total,
+    createdBy: 'admin',
+    itemsCount: builderState.items.length,
+    taxType: builderState.taxType,
+    sub: builderState.subject
+  });
+  alert(`✅ ${meta.name} ${builderState.number} saved successfully!`);
+  setViewMode('list');
+}
+
+function exportExcel() {
+  const list = sampleDocs[curDocType];
+  const meta = DOC_META[curDocType];
+  const data = list.map(r => ({
+    'Number': r.number,
+    'Date': r.date,
+    [meta.partyLabel]: r.party,
+    'Total Amount': r.total,
+    'Created By': r.createdBy
+  }));
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, meta.plural);
+  XLSX.writeFile(wb, `${meta.plural}_Register.xlsx`);
+}
+
+// Initial Boot
+initBuilderState();
+renderApp();
+if (curViewMode === 'create') renderBuilderRows();
+</script>
+</body>
+</html>
