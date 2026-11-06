@@ -2439,7 +2439,165 @@ body.mobile-sidebar-open {
   from { opacity: 0; transform: scale(0.92); }
   to { opacity: 1; transform: scale(1); }
 }
+
+/* === Global High-Performance Database & Click Loaders === */
+.global-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3.5px;
+  width: 0%;
+  background: linear-gradient(90deg, #0284c7 0%, #38bdf8 30%, #818cf8 70%, #06b6d4 100%);
+  background-size: 200% 100%;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.95), 0 0 20px rgba(129, 140, 248, 0.7);
+  z-index: 99999;
+  opacity: 0;
+  pointer-events: none;
+  transition: width 0.2s ease, opacity 0.25s ease;
+  animation: progressShimmer 1.5s infinite linear;
+}
+@keyframes progressShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.db-loading-badge {
+  position: fixed;
+  top: 14px;
+  right: 18px;
+  background: rgba(12, 19, 36, 0.94);
+  border: 1px solid rgba(56, 189, 248, 0.38);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 0 20px rgba(56, 189, 248, 0.25);
+  color: #e0f2fe;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 99px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 10001;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-8px) scale(0.95);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.db-loading-badge.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+.db-loading-spinner {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid rgba(56, 189, 248, 0.25);
+  border-top-color: #38bdf8;
+  animation: otpSpin 0.75s linear infinite;
+}
+@media(max-width: 850px) {
+  .db-loading-badge {
+    top: 62px;
+    right: 12px;
+    font-size: 10.5px;
+    padding: 5px 11px;
+  }
+}
+
+.view-loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 380px;
+  padding: 40px 16px;
+  animation: otpFadeIn 0.2s ease;
+}
+.view-loading-card {
+  background: rgba(12, 19, 36, 0.92);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 20px;
+  padding: 34px 28px;
+  text-align: center;
+  width: 360px;
+  max-width: 90vw;
+  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.55), 0 0 30px rgba(56, 189, 248, 0.14);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+.view-loading-spinner-wrap {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.view-spinner-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid rgba(56, 189, 248, 0.15);
+  border-top-color: #38bdf8;
+  border-right-color: #818cf8;
+  animation: otpSpin 0.85s linear infinite;
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.35);
+}
+.view-spinner-icon {
+  font-size: 24px;
+  animation: otpIconFloat 2s ease-in-out infinite;
+}
+.view-loading-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 6px;
+  letter-spacing: -0.01em;
+}
+.view-loading-sub {
+  font-size: 12px;
+  color: #94a3b8;
+  line-height: 1.4;
+  margin-bottom: 16px;
+}
+.view-loading-bar-track {
+  width: 140px;
+  height: 3.5px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 99px;
+  margin: 0 auto;
+  overflow: hidden;
+  position: relative;
+}
+.view-loading-bar-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 45%;
+  background: linear-gradient(90deg, #0284c7, #38bdf8, #818cf8);
+  border-radius: 99px;
+  animation: otpProgressIndeterminate 1.4s ease-in-out infinite;
+}
+
+/* Click feedback for buttons */
+.btn-clicked {
+  transform: scale(0.97) !important;
+  opacity: 0.85 !important;
+  filter: brightness(1.15) !important;
+  transition: transform 0.1s ease, opacity 0.1s ease !important;
+}
 </style></head><body>
+
+<!-- Top Animated Progress Bar -->
+<div id="globalProgressBar" class="global-progress-bar"></div>
+
+<!-- Corner Syncing DB Indicator Badge -->
+<div id="dbLoadingBadge" class="db-loading-badge">
+  <span class="db-loading-spinner"></span>
+  <span id="dbLoadingText">Syncing DB…</span>
+</div>
 
 <!-- Beautiful OTP & Login Loader Overlay -->
 <div id="otpLoaderOverlay" class="otp-loader-overlay" style="display:none">
@@ -2639,26 +2797,95 @@ const $=s=>document.querySelector(s),h=s=>String(s??'').replace(/[&<>"']/g,c=>({
 const inr=n=>'₹'+(+n||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}),today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
 const dmy=d=>String(d||'').split('-').reverse().join('-');
 let me,co,cache={};
-async function api(m,u,b){
-  const headers = {'Content-Type':'application/json'};
-  const token = localStorage.getItem('amigo_token');
-  if (token) headers['Authorization'] = 'Bearer ' + token;
-  const r = await fetch('/api/'+u, {
-    method: m,
-    credentials: 'include',
-    headers,
-    body: b ? JSON.stringify(b) : undefined
-  });
-  const d = await r.json().catch(()=>({}));
-  if (d && d.token) localStorage.setItem('amigo_token', d.token);
-  if (!r.ok) {
-    if (r.status == 401 && !u.startsWith('login')) {
-      localStorage.removeItem('amigo_token');
-      showLogin();
+
+/* === Global Click & API Progress Management === */
+let activeApiRequests = 0;
+let progressTimer = null;
+let currentProgress = 0;
+
+function startGlobalLoader(customMsg) {
+  activeApiRequests++;
+  const bar = document.getElementById('globalProgressBar');
+  const badge = document.getElementById('dbLoadingBadge');
+  const badgeText = document.getElementById('dbLoadingText');
+
+  if (badgeText && customMsg) badgeText.textContent = customMsg;
+  if (badge) badge.classList.add('visible');
+
+  if (bar) {
+    bar.style.opacity = '1';
+    if (activeApiRequests === 1) {
+      currentProgress = 15;
+      bar.style.width = currentProgress + '%';
+      clearInterval(progressTimer);
+      progressTimer = setInterval(() => {
+        if (currentProgress < 85) {
+          currentProgress += Math.max(1, (85 - currentProgress) * 0.18);
+          bar.style.width = currentProgress + '%';
+        }
+      }, 100);
     }
-    throw Object.assign(new Error(d.error||'Error'), {status: r.status});
   }
-  return d;
+}
+
+function stopGlobalLoader() {
+  activeApiRequests = Math.max(0, activeApiRequests - 1);
+  if (activeApiRequests === 0) {
+    clearInterval(progressTimer);
+    const bar = document.getElementById('globalProgressBar');
+    const badge = document.getElementById('dbLoadingBadge');
+    if (bar) {
+      bar.style.width = '100%';
+      setTimeout(() => {
+        bar.style.opacity = '0';
+        setTimeout(() => {
+          bar.style.width = '0%';
+          currentProgress = 0;
+        }, 220);
+      }, 150);
+    }
+    if (badge) {
+      setTimeout(() => {
+        if (activeApiRequests === 0) badge.classList.remove('visible');
+      }, 180);
+    }
+  }
+}
+
+// Instant visual click feedback on every interactive element
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('button, .btn, a[data-t], .tally-menu-item, .side-toggle-btn');
+  if (btn) {
+    btn.classList.add('btn-clicked');
+    setTimeout(() => btn.classList.remove('btn-clicked'), 350);
+  }
+}, true);
+
+async function api(m,u,b){
+  startGlobalLoader();
+  try {
+    const headers = {'Content-Type':'application/json'};
+    const token = localStorage.getItem('amigo_token');
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+    const r = await fetch('/api/'+u, {
+      method: m,
+      credentials: 'include',
+      headers,
+      body: b ? JSON.stringify(b) : undefined
+    });
+    const d = await r.json().catch(()=>({}));
+    if (d && d.token) localStorage.setItem('amigo_token', d.token);
+    if (!r.ok) {
+      if (r.status == 401 && !u.startsWith('login')) {
+        localStorage.removeItem('amigo_token');
+        showLogin();
+      }
+      throw Object.assign(new Error(d.error||'Error'), {status: r.status});
+    }
+    return d;
+  } finally {
+    stopGlobalLoader();
+  }
 }
 window.clientErrorLog = [];
 window.addEventListener('error', e => {
@@ -4572,6 +4799,45 @@ function go(t) {
   say('');
   renderNav(t);
   updateCounts();
+
+  // Instant view transition feedback: show elegant loading skeleton if fetching data
+  const viewEl = $('#view');
+  if (viewEl && !['support'].includes(t)) {
+    const titles = {
+      dash: 'Financial Dashboard',
+      invoices: 'Tax Invoices',
+      purchases: 'Purchase Bills',
+      clients: 'Client Directory',
+      products: 'Products & Inventory',
+      quotation: 'Quotations',
+      pi: 'Proforma Invoices',
+      po: 'Purchase Orders',
+      sheets: 'Excel Spreadsheets',
+      tally: 'Tally Accounting & Vouchers',
+      users: 'User Management',
+      settings: 'Company Profile',
+      mail: 'Email Settings',
+      monitoring: 'Employee Activity & Audit',
+      sync: 'Database Backup & Sync'
+    };
+    const title = titles[t] || (t.charAt(0).toUpperCase() + t.slice(1));
+    viewEl.innerHTML = `
+      <div class="view-loading-container">
+        <div class="view-loading-card">
+          <div class="view-loading-spinner-wrap">
+            <div class="view-spinner-ring"></div>
+            <div class="view-spinner-icon">📊</div>
+          </div>
+          <div class="view-loading-title">Loading ${h(title)}…</div>
+          <div class="view-loading-sub">Fetching live records from Supabase PostgreSQL database</div>
+          <div class="view-loading-bar-track">
+            <div class="view-loading-bar-fill"></div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   ({dash,invoices,settings,ai:aiSettingsView,workupdates,logins,mail,monitoring,sheets:sheetsView,tally:tallyView,sync:syncView,weeklybackup:()=>syncView(true),quotation:()=>docs('quotation'),pi:()=>docs('pi'),po:()=>docs('po'),support:supportView}[t]||(()=>crud(t)))(t).catch?.(e=>say(e.message));
 }
 const load=async t=>{const r=await api('GET',t);cache[t]=r;updateCounts();return r;};
