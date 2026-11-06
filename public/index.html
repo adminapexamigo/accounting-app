@@ -2818,7 +2818,8 @@ const SessionCache = {
   },
 
   key(t) {
-    return 'amigo_sec_' + (me?.id || 'anon') + '_' + t;
+    if (!me || !me.id) return null;
+    return 'amigo_sec_' + me.id + '_' + t;
   },
 
   // Strip sensitive credentials before storing in session cache
@@ -2834,19 +2835,22 @@ const SessionCache = {
   },
 
   get(t) {
+    if (!me || !me.id) return null; // STRICT: Only read cache once user is 100% authorized
+    const k = this.key(t);
+    if (!k) return null;
     try {
-      const raw = sessionStorage.getItem(this.key(t));
+      const raw = sessionStorage.getItem(k);
       if (!raw) return null;
       const entry = JSON.parse(raw);
       const now = Date.now();
       // 1. Enforce 8-hour max TTL
       if (!entry.timestamp || (now - entry.timestamp > this.TTL)) {
-        sessionStorage.removeItem(this.key(t));
+        sessionStorage.removeItem(k);
         return null;
       }
       // 2. Enforce 7:00 AM morning boundary (refresh every day at 7 AM)
       if (entry.timestamp < this.getLast7AM()) {
-        sessionStorage.removeItem(this.key(t));
+        sessionStorage.removeItem(k);
         return null;
       }
       return entry.data;
@@ -2856,20 +2860,27 @@ const SessionCache = {
   },
 
   set(t, data) {
+    if (!me || !me.id) return; // STRICT: Only write to cache once user is 100% authorized
+    const k = this.key(t);
+    if (!k) return;
     try {
       const cleanData = this.sanitize(t, data);
       const entry = {
         timestamp: Date.now(),
         data: cleanData
       };
-      sessionStorage.setItem(this.key(t), JSON.stringify(entry));
+      sessionStorage.setItem(k, JSON.stringify(entry));
     } catch(e) {
       this.prune();
     }
   },
 
   remove(t) {
-    try { sessionStorage.removeItem(this.key(t)); } catch {}
+    if (!me || !me.id) return;
+    const k = this.key(t);
+    if (k) {
+      try { sessionStorage.removeItem(k); } catch {}
+    }
   },
 
   clearAll() {
@@ -4903,6 +4914,27 @@ function start() {
   }
   checkSyncBanner();
   go(me.role === 'admin' ? 'dash' : 'invoices');
+  primeUserCacheAfterAuth();
+}
+
+async function primeUserCacheAfterAuth() {
+  if (!me || !me.id) return;
+  const tablesToWarm = me.role === 'admin'
+    ? ['counts', 'invoices', 'purchases', 'clients', 'products', 'ledgers', 'vouchers', 'sheets']
+    : ['counts', 'invoices', 'clients', 'products'];
+
+  // Pre-load session cache in parallel once user is completely authenticated
+  Promise.all(tablesToWarm.map(async t => {
+    if (!SessionCache.get(t)) {
+      try {
+        const data = await api('GET', t, null, true);
+        SessionCache.set(t, data);
+        cache[t] = data;
+      } catch (e) {}
+    }
+  })).then(() => {
+    updateCounts(true);
+  });
 }
 
 window.addEventListener('keydown', (e) => {
