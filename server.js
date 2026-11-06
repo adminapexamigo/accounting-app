@@ -61,10 +61,14 @@ function readTable(t) {
     return rows.map(r => Object.fromEntries(SCHEMA[t].map(k => [k, r[head.indexOf(k)] ?? ''])));
   } catch { return []; }
 }
-function writeTable(t, list) {
+async function writeTable(t, list) {
   if (db.isDbActive()) {
     db.setCachedTable(t, list);
-    db.writeTable(t, list).catch(err => console.error('DB writeTable error:', err.message));
+    try {
+      await db.writeTable(t, list);
+    } catch (err) {
+      console.error('DB writeTable error:', err.message);
+    }
     return;
   }
   try {
@@ -1995,7 +1999,7 @@ async function api(req, res, parts) {
     } else if (t !== 'workupdates') {
       if (!hasPermission(user, targetMod, 'create')) throw fail(403, 'Permission denied: Cannot create ' + targetMod);
     }
-    const row = await locked(() => {
+    const row = await locked(async () => {
       const L = readTable(t), now = new Date().toISOString();
       let o;
       if (t === 'invoices') o = buildInvoice(b, L, user);
@@ -2016,7 +2020,14 @@ async function api(req, res, parts) {
         if (t === 'products' || t === 'purchases') for (const k of ['rate','amount','gst']) if (k in o && o[k] !== '' && isNaN(o[k])) throw fail(400, k + ' must be a number');
       }
       o.id = o.id || newId(); o.createdAt = now; if (SCHEMA[t].includes('createdBy')) o.createdBy = user.username;
-      L.push(o); writeTable(t, L); return o;
+      L.push(o);
+      if (db.isDbActive()) {
+        await db.saveRecord(t, o);
+        db.setCachedTable(t, L);
+      } else {
+        await writeTable(t, L);
+      }
+      return o;
     });
     if (t === 'workupdates') { // e-mail the update, then record whether it went out
       row.emailStatus = await emailUpdate(row);
@@ -2052,14 +2063,67 @@ async function api(req, res, parts) {
       if (m === 'DELETE') {
         if (t === 'users' && (L[i].id === user.id || L.filter(x => x.role === 'admin').length < 2 && L[i].role === 'admin')) throw fail(400, 'Cannot delete yourself or the last admin');
         if (t === 'users') fs.rmSync(path.join(PHOTOS, L[i].id + '.jpg'), { force: true });
+        const deletedId = L[i].id;
         L.splice(i, 1);
+        if (db.isDbActive()) {
+          await db.deleteRecord(t, deletedId);
+          db.setCachedTable(t, L);
+        } else {
+          await writeTable(t, L);
+        }
+        return {};
       } else {
         const b = await body(req);
-        if (t === 'invoices') { Object.assign(L[i], buildInvoice(b, L.filter(x => x.id !== id), user, L[i])); writeTable(t, L); return L[i]; }
-        if (t === 'docs') { Object.assign(L[i], buildDoc(b, L, user, L[i])); writeTable(t, L); return L[i]; }
-        if (t === 'sheets') { Object.assign(L[i], buildSheet(b, L, user, L[i])); writeTable(t, L); return L[i]; }
-        if (t === 'ledgers') { Object.assign(L[i], buildLedger(b, L, user, L[i])); writeTable(t, L); return L[i]; }
-        if (t === 'vouchers') { Object.assign(L[i], buildVoucher(b, L, user, L[i])); writeTable(t, L); return L[i]; }
+        if (t === 'invoices') {
+          Object.assign(L[i], buildInvoice(b, L.filter(x => x.id !== id), user, L[i]));
+          if (db.isDbActive()) {
+            await db.saveRecord(t, L[i]);
+            db.setCachedTable(t, L);
+          } else {
+            await writeTable(t, L);
+          }
+          return L[i];
+        }
+        if (t === 'docs') {
+          Object.assign(L[i], buildDoc(b, L, user, L[i]));
+          if (db.isDbActive()) {
+            await db.saveRecord(t, L[i]);
+            db.setCachedTable(t, L);
+          } else {
+            await writeTable(t, L);
+          }
+          return L[i];
+        }
+        if (t === 'sheets') {
+          Object.assign(L[i], buildSheet(b, L, user, L[i]));
+          if (db.isDbActive()) {
+            await db.saveRecord(t, L[i]);
+            db.setCachedTable(t, L);
+          } else {
+            await writeTable(t, L);
+          }
+          return L[i];
+        }
+        if (t === 'ledgers') {
+          Object.assign(L[i], buildLedger(b, L, user, L[i]));
+          if (db.isDbActive()) {
+            await db.saveRecord(t, L[i]);
+            db.setCachedTable(t, L);
+          } else {
+            await writeTable(t, L);
+          }
+          return L[i];
+        }
+        if (t === 'vouchers') {
+          Object.assign(L[i], buildVoucher(b, L, user, L[i]));
+          if (db.isDbActive()) {
+            await db.saveRecord(t, L[i]);
+            db.setCachedTable(t, L);
+          } else {
+            await writeTable(t, L);
+          }
+          return L[i];
+        }
         const o = clean(b, t);
         if (t === 'users') {
           delete o.password;
@@ -2077,8 +2141,14 @@ async function api(req, res, parts) {
           checkUser(o, L[i], b);
         }
         Object.assign(L[i], o);
+        if (db.isDbActive()) {
+          await db.saveRecord(t, L[i]);
+          db.setCachedTable(t, L);
+        } else {
+          await writeTable(t, L);
+        }
+        return L[i];
       }
-      writeTable(t, L);
     });
     try {
       if (m === 'PUT' && row) {
@@ -2297,7 +2367,8 @@ function serve(req, res, p) {
       'Content-Type': ctype,
       'Accept-Ranges': 'bytes',
       'X-Content-Type-Options': 'nosniff',
-      'X-Frame-Options': 'DENY'
+      'X-Frame-Options': 'DENY',
+      'Cache-Control': ext === '.html' ? 'no-cache, no-store, must-revalidate' : 'public, max-age=3600'
     });
     fs.createReadStream(f).pipe(res);
   }

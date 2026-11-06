@@ -1000,8 +1000,40 @@ label{display:block;font-size:12.5px;color:var(--mute);margin:0 0 5px;font-weigh
   color:#f1f5f9;
   display:flex;
   align-items:center;
-  gap:9px;
+  gap:10px;
   margin-bottom:0;
+  min-width:0;
+  width:100%;
+}
+.side-user-card .side-user-info{
+  min-width:0;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  overflow:hidden;
+}
+.side-user-card .side-user-name{
+  font-weight:700;
+  color:#f8fafc;
+  font-size:13.5px;
+  line-height:1.25;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.side-user-card .side-user-role-badge{
+  display:inline-block;
+  padding:2px 8px;
+  border-radius:99px;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:0.3px;
+  width:fit-content;
+  max-width:100%;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 .side-user-active-bar{
   display:flex;
@@ -1017,6 +1049,8 @@ label{display:block;font-size:12.5px;color:var(--mute);margin:0 0 5px;font-weigh
   color:#34d399;
   text-align:center;
   letter-spacing:0.2px;
+  width:100%;
+  box-sizing:border-box;
   transition:all 0.2s ease;
 }
 .side-user-active-bar:hover{
@@ -3033,11 +3067,14 @@ async function api(m,u,b,silent=false){
       throw Object.assign(new Error(d.error||'Error'), {status: r.status});
     }
 
-    // Invalidate session cache on mutations to prevent stale records
+    // Invalidate session cache on mutations to prevent stale records & sync tabs
     if (['POST', 'PUT', 'DELETE'].includes(m.toUpperCase())) {
       const seg = u.split('/')[0];
       SessionCache.remove(seg);
       SessionCache.remove('counts');
+      try {
+        localStorage.setItem('amigo_db_sync', seg + ':' + Date.now());
+      } catch {}
     }
 
     return d;
@@ -3045,6 +3082,18 @@ async function api(m,u,b,silent=false){
     if (!silent) stopGlobalLoader();
   }
 }
+window.addEventListener('storage', e => {
+  if (e.key === 'amigo_db_sync' && e.newValue) {
+    const parts = e.newValue.split(':');
+    const table = parts[0];
+    SessionCache.remove(table);
+    SessionCache.remove('counts');
+    const cur = window.currentViewName;
+    if (cur === table || (table === 'docs' && ['quotation', 'pi', 'po'].includes(cur)) || (['ledgers', 'vouchers'].includes(table) && cur === 'tally')) {
+      load(table, true).then(() => { if (window.currentViewName === cur) go(cur); });
+    }
+  }
+});
 window.clientErrorLog = [];
 window.addEventListener('error', e => {
   const line = `[${new Date().toLocaleTimeString()}] Error: ${e.message} at ${e.filename || 'inline'}:${e.lineno}:${e.colno}`;
@@ -3961,6 +4010,7 @@ async function docs(type){
           <span class="header-count-pill">${L.length} Total</span>
         </h1>
         <div style="display:flex;gap:10px">
+          <button class="btn ghost" id="docRefreshBtn" title="Fetch fresh records directly from database">🔄 Refresh</button>
           <button class="btn ghost" id="docExportBtn">📊 Export Excel</button>
           ${can(type, 'create') ? `<button class="btn" id="new">+ New ${T.l.toLowerCase()}</button>` : ''}
         </div>
@@ -4032,6 +4082,15 @@ async function docs(type){
     `;
 
     if ($('#new')) $('#new').onclick = () => docForm(type);
+    const docRef = $('#docRefreshBtn');
+    if (docRef) {
+      docRef.onclick = async () => {
+        SessionCache.remove('docs');
+        await load('docs', true);
+        go(type);
+        say('Refreshed latest ' + type + ' from database.', 1);
+      };
+    }
     $('#docExportBtn').onclick = () => {
       if (!L.length) { say('No records to export'); return; }
       try {
@@ -5093,6 +5152,10 @@ const load = async (t, forceFresh = false) => {
             SessionCache.set(t, fresh);
             cache[t] = fresh;
             updateCounts();
+            const cur = window.currentViewName;
+            if (cur === t || (t === 'docs' && ['quotation', 'pi', 'po'].includes(cur)) || (['ledgers', 'vouchers'].includes(t) && cur === 'tally')) {
+              go(cur);
+            }
           }
         }).catch(() => {});
       }, 60);
@@ -5540,6 +5603,7 @@ async function invoices(){
           <span class="header-count-pill">${L.length} Total</span>
         </h1>
         <div style="display:flex;gap:10px">
+          <button class="btn ghost" id="invRefreshBtn" title="Fetch fresh records directly from database">🔄 Refresh</button>
           <button class="btn ghost" id="invExportBtn">📊 Export Excel</button>
           ${can('invoices', 'create') ? `<button class="btn" id="new">+ New invoice</button>` : ''}
         </div>
@@ -5613,6 +5677,15 @@ async function invoices(){
     `;
 
     if ($('#new')) $('#new').onclick = () => builder();
+    const invRef = $('#invRefreshBtn');
+    if (invRef) {
+      invRef.onclick = async () => {
+        SessionCache.remove('invoices');
+        await load('invoices', true);
+        go('invoices');
+        say('Refreshed latest invoices from database.', 1);
+      };
+    }
     $('#invExportBtn').onclick = () => {
       if (!L.length) { say('No invoices to export'); return; }
       try {
