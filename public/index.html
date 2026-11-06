@@ -2798,6 +2798,32 @@ const inr=n=>'₹'+(+n||0).toLocaleString('en-IN',{minimumFractionDigits:2,maxim
 const dmy=d=>String(d||'').split('-').reverse().join('-');
 let me,co,cache={};
 
+/* === Granular Role-Based Access Control (RBAC) === */
+const DEFAULT_EMPLOYEE_PERMISSIONS = {
+  invoices:  { view: true, create: true, edit: true, delete: false, mail: true },
+  quotation: { view: true, create: true, edit: true, delete: false, mail: true },
+  pi:        { view: true, create: true, edit: true, delete: false, mail: true },
+  po:        { view: true, create: true, edit: true, delete: false, mail: true },
+  sheets:    { view: true, create: true, edit: true, delete: false, mail: false },
+  clients:   { view: true, create: true, edit: true, delete: false },
+  products:  { view: true, create: true, edit: true, delete: false },
+  purchases: { view: false, create: false, edit: false, delete: false },
+  ledgers:   { view: true, create: true, edit: true, delete: false },
+  vouchers:  { view: true, create: true, edit: true, delete: false }
+};
+
+function can(mod, action) {
+  if (!me) return false;
+  if (me.role === 'admin') return true;
+  if (mod === 'taxinvoice' || mod === 'invoice') mod = 'invoices';
+  if (mod === 'docs') mod = 'quotation';
+  const userPerms = (me.permissions && typeof me.permissions === 'object' && Object.keys(me.permissions).length > 0)
+    ? me.permissions
+    : DEFAULT_EMPLOYEE_PERMISSIONS;
+  const modPerms = userPerms[mod] || DEFAULT_EMPLOYEE_PERMISSIONS[mod] || {};
+  return !!modPerms[action];
+}
+
 /* === Secure SWR Session Storage Cache with 8-Hour TTL & 7:00 AM Daily Invalidation === */
 const SessionCache = {
   TTL: 8 * 3600 * 1000, // Strictly 8 hours maximum lifetime
@@ -3347,7 +3373,7 @@ const tmf=i=>i?new Date(i).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-
 async function workupdates(){const[L,st]=await Promise.all([api('GET','workupdates'),api('GET','workupdates/today')]);wu={...wu,...st};drawBanner();const adm=me.role=='admin';
  L.sort((a,b)=>b.submittedAt.localeCompare(a.submittedAt));
  const form=adm?'':st.submitted?'<div class="msg ok">✓ Today\'s update is submitted. Thank you!</div>':`<div class="card"><h3>Today's work update — ${dmy(st.date)}</h3><div class="field-label-ai"><label style="margin:0">What work did you do today? *</label><button type="button" class="btn-ai-assist" onclick="openAiMenu('wk','workupdate',this)">✨ AI Assist <span style="font-size:9px">▼</span></button></div><textarea id="wk" rows="5" placeholder="e.g. Created 3 invoices, followed up with client X, updated stock list…"></textarea><br><br><div class="grid"><div><div class="field-label-ai"><label style="margin:0">Pending / blockers (optional)</label><button type="button" class="btn-ai-assist" onclick="openAiMenu('wp','workupdate',this)">✨ AI Assist <span style="font-size:9px">▼</span></button></div><textarea id="wp" rows="2"></textarea></div><div><label>Hours worked (optional)</label><input id="wh" type="number" min="0" max="24" step="0.5"></div></div><br><button class="btn" id="wsub">Submit &amp; email update</button></div>`;
- $('#view').innerHTML=`<h1>${adm?'Daily work updates':'My work update'}</h1>${form}<div class="card" style="overflow:auto"><table><tr><th>Date</th>${adm?'<th>Employee</th>':''}<th>Login</th><th>Submitted</th><th>Hrs</th><th>Work done</th><th>Pending</th><th>Email</th>${adm?'<th></th>':''}</tr>${L.map(r=>`<tr><td>${dmy(r.date)}</td>${adm?`<td>${h(r.fullName||r.username)}</td>`:''}<td>${tmf(r.loginTime)}</td><td>${tmf(r.submittedAt)}</td><td>${h(r.hours)}</td><td style="white-space:pre-wrap;max-width:320px">${h(r.work)}</td><td style="white-space:pre-wrap;max-width:200px">${h(r.pending)}</td><td>${h(r.emailStatus)}</td>${adm?`<td class="n" style="white-space:nowrap"><button class="btn ghost sm" data-r="${r.id}">Resend email</button> <button class="btn red sm" data-d="${r.id}">Delete</button></td>`:''}</tr>`).join('')||'<tr><td>No updates yet</td></tr>'}</table></div>`;
+ $('#view').innerHTML=`<h1>${adm?'Daily work updates':'My work update'}</h1>${form}<div class="card" style="overflow:auto"><table><tr><th>Date</th>${adm?'<th>Employee</th>':''}<th>Login</th><th>Submitted</th><th>Hrs</th><th>Work done</th><th>Pending</th><th>Email</th>${t==='users'?(adm?'<th>Actions</th>':''):((can(t,'edit')||can(t,'delete'))?'<th>Actions</th>':'')}</tr>${L.map(r=>`<tr><td>${dmy(r.date)}</td>${adm?`<td>${h(r.fullName||r.username)}</td>`:''}<td>${tmf(r.loginTime)}</td><td>${tmf(r.submittedAt)}</td><td>${h(r.hours)}</td><td style="white-space:pre-wrap;max-width:320px">${h(r.work)}</td><td style="white-space:pre-wrap;max-width:200px">${h(r.pending)}</td><td>${h(r.emailStatus)}</td>${adm?`<td class="n" style="white-space:nowrap"><button class="btn ghost sm" data-r="${r.id}">Resend email</button> <button class="btn red sm" data-d="${r.id}">Delete</button></td>`:''}</tr>`).join('')||'<tr><td>No updates yet</td></tr>'}</table></div>`;
  if($('#wsub'))$('#wsub').onclick=async e=>{e.target.disabled=true;e.target.textContent='Submitting…';try{const r=await api('POST','workupdates',{work:$('#wk').value,pending:$('#wp').value,hours:$('#wh').value});wu.submitted=true;await workupdates();say(/^sent/.test(r.emailStatus)?'Update submitted and emailed.':'Update saved, but the email did not go out ('+r.emailStatus+'). The admin can resend it.',/^sent/.test(r.emailStatus))}catch(er){e.target.disabled=false;e.target.textContent='Submit & email update';say(er.message)}};
  $('#view').onclick=async e=>{const d=e.target.dataset;try{if(d.r){e.target.textContent='Sending…';const r=await api('POST','workupdates/'+d.r+'/resend');await workupdates();say('Email: '+r.emailStatus,/^sent/.test(r.emailStatus))}if(d.d&&confirm('Delete this update?')){await api('DELETE','workupdates/'+d.d);workupdates()}}catch(er){say(er.message)}}}
 async function logins(){const L=(await api('GET','logins')).sort((a,b)=>b.loginAt.localeCompare(a.loginAt)).slice(0,300);
@@ -3897,12 +3923,10 @@ async function docs(type){
         </td>
         <td class="n" style="white-space:nowrap">
           <button class="btn ghost sm" data-v="${r.id}">View / Download</button>
-          <button class="btn ghost sm" data-m="${r.id}">✉️ Mail</button>
-          <button class="btn ghost sm" data-c="${r.id}">Copy</button>
-          ${adm ? `
-            <button class="btn ghost sm" data-x="${r.id}">Edit</button>
-            <button class="btn red sm" data-d="${r.id}">Delete</button>
-          ` : ''}
+          ${can(type, 'mail') ? `<button class="btn ghost sm" data-m="${r.id}">✉️ Mail</button>` : ''}
+          ${can(type, 'create') ? `<button class="btn ghost sm" data-c="${r.id}">Copy</button>` : ''}
+          ${can(type, 'edit') ? `<button class="btn ghost sm" data-x="${r.id}">Edit</button>` : ''}
+          ${can(type, 'delete') ? `<button class="btn red sm" data-d="${r.id}">Delete</button>` : ''}
         </td>
       </tr>
     `).join('') : `<tr><td colspan="6" style="text-align:center;padding:36px;color:var(--mute)">No ${T.p.toLowerCase()} matching search or filter</td></tr>`;
@@ -3916,7 +3940,7 @@ async function docs(type){
         </h1>
         <div style="display:flex;gap:10px">
           <button class="btn ghost" id="docExportBtn">📊 Export Excel</button>
-          <button class="btn" id="new">+ New ${T.l.toLowerCase()}</button>
+          ${can(type, 'create') ? `<button class="btn" id="new">+ New ${T.l.toLowerCase()}</button>` : ''}
         </div>
       </div>
 
@@ -3985,7 +4009,7 @@ async function docs(type){
       </div>
     `;
 
-    $('#new').onclick = () => docForm(type);
+    if ($('#new')) $('#new').onclick = () => docForm(type);
     $('#docExportBtn').onclick = () => {
       if (!L.length) { say('No records to export'); return; }
       try {
@@ -4416,11 +4440,11 @@ async function saveWord(body,css,fn,imgs){ // Word-compatible MHTML (images embe
  for(const im of imgs){const bb=await (await fetch(im.url)).arrayBuffer();m+=`------=_Amigo\r\nContent-Type: ${im.type}\r\nContent-Transfer-Encoding: base64\r\nContent-Location: file:///C:/${im.name}\r\n\r\n${wrap(b64(bb))}`}
  m+='------=_Amigo--\r\n';const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([m],{type:'application/msword'}));a.download=fn+'.doc';document.body.append(a);a.click();a.remove()}
 function showDoc(doc){const fn=(DOCT[doc.type].l+'_'+doc.number).replace(/[\/\\:*?"<>|\s]+/g,'-');
- $('#invoiceView').innerHTML=`<style>${DCSS}</style><div class="bar"><button class="btn" id="dp">⬇ Download PDF</button><button class="btn" id="dw">⬇ Download Word</button><button class="btn" id="dm" style="background:#0284c7;border-color:#0369a1">✉️ Send Mail</button>${me.role=='admin'?'<button class="btn ghost" id="ed">✎ Edit</button>':''}<button class="btn ghost" id="cl">Close</button></div><div class="sheet">${docHTML(doc)}</div>`;
+ $('#invoiceView').innerHTML=`<style>${DCSS}</style><div class="bar"><button class="btn" id="dp">⬇ Download PDF</button><button class="btn" id="dw">⬇ Download Word</button>${can(doc.type,'mail')?'<button class="btn" id="dm" style="background:#0284c7;border-color:#0369a1">✉️ Send Mail</button>':''}${can(doc.type,'edit')?'<button class="btn ghost" id="ed">✎ Edit</button>':''}<button class="btn ghost" id="cl">Close</button></div><div class="sheet">${docHTML(doc)}</div>`;
  $('#invoiceView').style.display='block';$('#cl').onclick=()=>$('#invoiceView').style.display='none';
  $('#dp').onclick=()=>{const t=document.title;document.title=fn;print();document.title=t};
  $('#dw').onclick=()=>saveWord(docHTML(doc,1),DCSS,fn,[{url:'/logo.png',type:'image/png',name:'logo.png'}]).catch(e=>say('Word export failed: '+e.message));
- $('#dm').onclick=()=>sendDocMail(doc);
+ if($('#dm'))$('#dm').onclick=()=>sendDocMail(doc);
  if($('#ed'))$('#ed').onclick=()=>{$('#invoiceView').style.display='none';docForm(doc.type,doc)}}
 // ---- OTP & Login Loader controller ----
 function showOtpLoader(title='Sending Security Code',msg='Contacting mail server to dispatch your 6-digit login token...',icon='✉️'){
@@ -4740,7 +4764,13 @@ function renderNav(activeTab) {
   };
   
   $('#nav').innerHTML = visibleGroups.map(g => {
-    const validItems = g.items.filter(item => !item[3] || me.role === 'admin');
+    const validItems = g.items.filter(item => {
+    if (item[3] && me.role !== 'admin') return false;
+    if (['invoices','quotation','pi','po','sheets','purchases','clients','products'].includes(item[0])) {
+      return can(item[0], 'view');
+    }
+    return true;
+  });
     if (!validItems.length) return '';
     const containsActive = validItems.some(i => i[0] === activeTab);
 
@@ -4945,6 +4975,14 @@ window.addEventListener('keydown', (e) => {
 });
 
 function go(t) {
+  if (me && me.role !== 'admin') {
+    if (['invoices','quotation','pi','po','sheets','purchases','clients','products'].includes(t)) {
+      if (!can(t, 'view')) {
+        say('Access restricted: You do not have permission to view ' + t);
+        return;
+      }
+    }
+  }
   closeMobileSidebar();
   window.currentViewName = t;
   sendActivityPing(t);
@@ -5346,7 +5384,7 @@ async function crud(t){const c=CFG[t],L=await load(t),adm=me.role=='admin';let e
    if(t=='users'&&x[0]=='role') return `<td>${r.role==='admin'?'<span style="display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;background:#e0e7ff;color:#3730a3">ADMIN</span>':'<span style="display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;background:#ecfdf5;color:#065f46">EMPLOYEE</span>'}</td>`;
    if(t=='users'&&x[0]=='designation') return `<td>${r.designation?`<span style="display:inline-block;padding:2px 8px;border-radius:6px;font-size:12px;font-weight:600;background:#f1f5f9;color:#0f172a;border:1px solid #cbd5e1">${h(r.designation)}</span>`:'<span style="color:var(--mute)">—</span>'}</td>`;
    return `<td>${h(r[x[0]])}</td>`;
- }).join('')}${t=='users'?`<td>${(()=>{if(r.role=='admin')return'<span style="color:var(--mute)">Password only</span>';const w=[];w.push(r.photo?'Face':'<span style="color:var(--danger)">Face (no photo)</span>');w.push(r.email?'Email OTP':'<span style="color:var(--danger)">OTP (no email)</span>');return w.join(' or ')})()}</td>`:''}${adm?`<td class="n" style="white-space:nowrap"><button class="btn ghost sm" data-e="${r.id}">Edit</button> <button class="btn red sm" data-d="${r.id}">Delete</button></td>`:''}</tr>`).join('')||'<tr><td>No records yet</td></tr>'}</table></div>`;
+ }).join('')}${t=='users'?`<td>${(()=>{if(r.role=='admin')return'<span style="color:var(--mute)">Password only</span>';const w=[];w.push(r.photo?'Face':'<span style="color:var(--danger)">Face (no photo)</span>');w.push(r.email?'Email OTP':'<span style="color:var(--danger)">OTP (no email)</span>');return w.join(' or ')})()}</td>`:''}${t==='users'?(adm?`<td class="n" style="white-space:nowrap"><button type="button" class="btn sm" style="background:#4f46e5;color:#fff;border-color:#4338ca" data-perm="${r.id}">🛡️ Permissions</button> <button class="btn ghost sm" data-e="${r.id}">Edit</button> <button class="btn red sm" data-d="${r.id}">Delete</button></td>`:''):((can(t,'edit')||can(t,'delete'))?`<td class="n" style="white-space:nowrap">${can(t,'edit')?`<button class="btn ghost sm" data-e="${r.id}">Edit</button> `:''}${can(t,'delete')?`<button class="btn red sm" data-d="${r.id}">Delete</button>`:''}</td>`:'')}</tr>`).join('')||'<tr><td>No records yet</td></tr>'}</table></div>`;
   const f=$('#f');if(edit){c.f.forEach(([k])=>{if(k!='password'&&f.elements[k])f.elements[k].value=edit[k]||''})}
   const syncRole=()=>{
     const info=$('#uinfo');
@@ -5369,7 +5407,7 @@ async function crud(t){const c=CFG[t],L=await load(t),adm=me.role=='admin';let e
    $('#pcam').onclick=async()=>{try{face=await camera({title:'Take profile photo'});$('#pimg').src=face.photo;$('#pimg').style.display='block';pst('✓ Face detected')}catch(er){if(er.message!='Cancelled')pst(er.message)}}}
   f.onsubmit=async e=>{e.preventDefault();const b=Object.fromEntries(new FormData(f));if(t=='users'){b.faceRequired=false;b.otpRequired=false;if(face){b.photo=face.photo;b.descriptor=face.descriptor}}try{edit?await api('PUT',t+'/'+edit.id,b):await api('POST',t,b);edit=null;await load(t).then(x=>L.splice(0,L.length,...x));draw();say('Saved',1)}catch(er){say(er.message)}};
   $('#cx')&&($('#cx').onclick=()=>{edit=null;draw()});
-  $('#view').onclick=async e=>{const d=e.target.dataset;if(d.e){edit=L.find(x=>x.id==d.e);draw();scrollTo(0,0)}if(d.d&&confirm('Delete this record?')){try{await api('DELETE',t+'/'+d.d);L.splice(0,L.length,...await load(t));draw()}catch(er){say(er.message)}}}};draw()}
+  $('#view').onclick=async e=>{const d=e.target.dataset;if(d.perm){const u=L.find(x=>x.id==d.perm);if(u)openPermissionsModal(u,()=>load(t,true).then(x=>{L.splice(0,L.length,...x);draw()}));return}if(d.e){edit=L.find(x=>x.id==d.e);draw();scrollTo(0,0)}if(d.d&&confirm('Delete this record?')){try{await api('DELETE',t+'/'+d.d);L.splice(0,L.length,...await load(t));draw()}catch(er){say(er.message)}}}};draw()}
 // ---- invoices ----
 async function invoices(){
   const L = await load('invoices');
@@ -5438,11 +5476,9 @@ async function invoices(){
         </td>
         <td class="n" style="white-space:nowrap">
           <button class="btn ghost sm" data-v="${r.id}">View / Download</button>
-          <button class="btn ghost sm" data-m="${r.id}">✉️ Mail</button>
-          ${me.role === 'admin' ? `
-            <button class="btn ghost sm" data-x="${r.id}">Edit</button>
-            <button class="btn red sm" data-d="${r.id}">Delete</button>
-          ` : ''}
+          ${can('invoices', 'mail') ? `<button class="btn ghost sm" data-m="${r.id}">✉️ Mail</button>` : ''}
+          ${can('invoices', 'edit') ? `<button class="btn ghost sm" data-x="${r.id}">Edit</button>` : ''}
+          ${can('invoices', 'delete') ? `<button class="btn red sm" data-d="${r.id}">Delete</button>` : ''}
         </td>
       </tr>
     `).join('') : `<tr><td colspan="7" style="text-align:center;padding:36px;color:var(--mute)">No invoices matching search or filter</td></tr>`;
@@ -5456,7 +5492,7 @@ async function invoices(){
         </h1>
         <div style="display:flex;gap:10px">
           <button class="btn ghost" id="invExportBtn">📊 Export Excel</button>
-          <button class="btn" id="new">+ New invoice</button>
+          ${can('invoices', 'create') ? `<button class="btn" id="new">+ New invoice</button>` : ''}
         </div>
       </div>
 
@@ -5527,7 +5563,7 @@ async function invoices(){
       </div>
     `;
 
-    $('#new').onclick = () => builder();
+    if ($('#new')) $('#new').onclick = () => builder();
     $('#invExportBtn').onclick = () => {
       if (!L.length) { say('No invoices to export'); return; }
       try {
@@ -5913,12 +5949,12 @@ function invHTML(inv,word){const it=JSON.parse(inv.items),br=s=>h(s).replace(/\n
  <tr><td class="p0">${sum}</td></tr>
  <tr><td class="p0 last"><table><tr><td width="50%" style="height:190px;padding:8px"><b style="font-size:10.5px">Terms And Conditions</b>${terms}</td><td class="l" style="height:190px;padding:8px;font-size:11px">Certified that the particular given above are true and correct<br><br><b style="font-size:12.5px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;For, ${h(co.name)}</b><div style="height:90px;padding-top:6px">${stamp}</div><div style="margin-top:8px">Authorised Signatory</div></td></tr></table></td></tr></table><div class="tp">Thankyou for your business</div>`}
 function showInv(inv){const fn=inv.number.replace(/[\/\\:*?"<>|]/g,'-');
- $('#invoiceView').innerHTML=`<style>${IVCSS}</style><div class="bar"><button class="btn" id="dp">⬇ Download PDF</button><button class="btn" id="dw">⬇ Download Word</button><button class="btn" id="im" style="background:#0284c7;border-color:#0369a1">✉️ Send Mail</button>${me.role=='admin'?'<button class="btn ghost" id="ed">✎ Edit</button>':''}<button class="btn ghost" id="cl">Close</button></div><div class="sheet"><div class="iv">${invHTML(inv)}</div></div>`;
+ $('#invoiceView').innerHTML=`<style>${IVCSS}</style><div class="bar"><button class="btn" id="dp">⬇ Download PDF</button><button class="btn" id="dw">⬇ Download Word</button>${can('invoices','mail')?'<button class="btn" id="im" style="background:#0284c7;border-color:#0369a1">✉️ Send Mail</button>':''}${can('invoices','edit')?'<button class="btn ghost" id="ed">✎ Edit</button>':''}<button class="btn ghost" id="cl">Close</button></div><div class="sheet"><div class="iv">${invHTML(inv)}</div></div>`;
  $('#invoiceView').style.display='block';$('#cl').onclick=()=>$('#invoiceView').style.display='none';
  $('#dp').onclick=()=>{const t=document.title;document.title=fn;print();document.title=t}; // in the print dialog choose "Save as PDF"
  $('#dw').onclick=()=>{const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>${h(inv.number)}</title><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]--><style>@page{size:A4;margin:10mm}${IVCSS}</style></head><body><div class="iv">${invHTML(inv,1)}</div></body></html>`;
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff',html],{type:'application/msword'}));a.download=fn+'.doc';document.body.append(a);a.click();a.remove()};
- $('#im').onclick=()=>sendInvoiceMail(inv);
+ if($('#im'))$('#im').onclick=()=>sendInvoiceMail(inv);
  if($('#ed'))$('#ed').onclick=()=>{$('#invoiceView').style.display='none';builder(inv)}}
 
 // ---- Email Sending Feature for Invoices, PI, PO, Excel & Word Documents ----
@@ -6893,9 +6929,9 @@ async function sheetsView() {
           <div style="font-size:13px;color:var(--mute)">Interactive real-time Excel spreadsheets and rich Word documents with full import, edit, save & export capabilities.</div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn" id="importAnyDoc" style="background:#7c3aed;border-color:#6d28d9">⬆ Import File (Excel / Word)</button>
+          ${can('sheets', 'create') ? `<button class="btn" id="importAnyDoc" style="background:#7c3aed;border-color:#6d28d9">⬆ Import File (Excel / Word)</button>
           <button class="btn" id="newExcel" style="background:#107c41;border-color:#0b5c30">📊 + New Excel Sheet</button>
-          <button class="btn" id="newWord" style="background:#2563eb;border-color:#1d4ed8">📝 + New Word Doc</button>
+          <button class="btn" id="newWord" style="background:#2563eb;border-color:#1d4ed8">📝 + New Word Doc</button>` : ''}
           <input type="file" id="mainDocFileInput" accept=".xlsx,.xls,.csv,.docx,.doc,.htm,.html,.txt" style="display:none">
         </div>
       </div>
@@ -6936,9 +6972,9 @@ async function sheetsView() {
                 <td class="n" style="white-space:nowrap">
                   <button class="btn ghost sm" data-open="${r.id}">Open</button>
                   <button class="btn ghost sm" data-dl="${r.id}">⬇ ${r.type === 'excel' ? 'Excel / CSV' : 'Word'}</button>
-                  <button class="btn ghost sm" data-mail="${r.id}">✉️ Mail</button>
+                  ${can('sheets', 'mail') ? `<button class="btn ghost sm" data-mail="${r.id}">✉️ Mail</button>` : ''}
                   <button class="btn ghost sm" data-pr="${r.id}">🖨️</button>
-                  ${(me.role === 'admin' || r.createdBy === me.username) ? `<button class="btn red sm" data-del="${r.id}">Delete</button>` : ''}
+                  ${(can('sheets', 'delete') && (me.role === 'admin' || r.createdBy === me.username)) ? `<button class="btn red sm" data-del="${r.id}">Delete</button>` : ''}
                 </td>
               </tr>
             `).join('') || '<tr><td colspan="6" style="text-align:center;padding:26px;color:var(--mute)">No documents found. Click "+ New Excel Sheet" or "+ New Word Doc" above to create one.</td></tr>'}
@@ -6956,7 +6992,7 @@ async function sheetsView() {
       b.onclick = () => { filterType = b.dataset.filter; render(); };
     });
 
-    $('#importAnyDoc').onclick = () => $('#mainDocFileInput').click();
+    if ($('#importAnyDoc')) $('#importAnyDoc').onclick = () => $('#mainDocFileInput').click();
     $('#mainDocFileInput').onchange = async e => {
       const file = e.target.files[0];
       if (!file) return;
@@ -7095,8 +7131,8 @@ async function excelEditor(ex) {
             <input id="exDate" type="date" value="${h(docDate)}" style="width:130px">
           </div>
           <div style="display:flex;gap:6px">
-            <button class="ex-btn" id="exMail" style="background:#0284c7;color:#fff;border-color:#0369a1">✉️ Send Mail</button>
-            <button class="ex-btn primary" id="exSave">💾 Save Sheet</button>
+            ${can('sheets', 'mail') ? `<button class="ex-btn" id="exMail" style="background:#0284c7;color:#fff;border-color:#0369a1">✉️ Send Mail</button>` : ''}
+            ${(ex ? can('sheets', 'edit') : can('sheets', 'create')) ? `<button class="ex-btn primary" id="exSave">💾 Save Sheet</button>` : ''}
             <button class="ex-btn" id="exBack">🔙 Close</button>
           </div>
         </div>
@@ -7334,7 +7370,7 @@ async function excelEditor(ex) {
       sendExcelMail({ title, category, date, data: JSON.stringify({ rows }) });
     };
 
-    $('#exSave').onclick = async () => {
+    if ($('#exSave')) $('#exSave').onclick = async () => {
       const title = $('#exTitle').value.trim();
       if (!title) { say('Please provide a document title'); return; }
       const category = $('#exCat').value.trim() || 'General';
@@ -7415,8 +7451,8 @@ async function wordEditor(ex) {
             <input id="wdDate" type="date" value="${h(docDate)}" style="width:130px">
           </div>
           <div style="display:flex;gap:6px">
-            <button class="ex-btn" id="wdMail" style="background:#0284c7;color:#fff;border-color:#0369a1">✉️ Send Mail</button>
-            <button class="ex-btn primary" id="wdSave">💾 Save Document</button>
+            ${can('sheets', 'mail') ? `<button class="ex-btn" id="wdMail" style="background:#0284c7;color:#fff;border-color:#0369a1">✉️ Send Mail</button>` : ''}
+            ${(ex ? can('sheets', 'edit') : can('sheets', 'create')) ? `<button class="ex-btn primary" id="wdSave">💾 Save Document</button>` : ''}
             <button class="ex-btn" id="wdBack">🔙 Close</button>
           </div>
         </div>
@@ -7587,7 +7623,7 @@ async function wordEditor(ex) {
       sendWordMail({ title, category, date, data: JSON.stringify({ html }) });
     };
 
-    $('#wdSave').onclick = async () => {
+    if ($('#wdSave')) $('#wdSave').onclick = async () => {
       const title = $('#wdTitle').value.trim();
       if (!title) { say('Please provide a document title'); return; }
       const category = $('#wdCat').value.trim() || 'General';
@@ -10070,4 +10106,225 @@ async function supportView() {
 }
 
 boot();
+
+/* === Role-Based Permissions Management Modal for Admins === */
+const PERM_MODULES = [
+  { id: 'invoices', label: 'Tax Invoices', icon: '🧾', actions: ['view', 'create', 'edit', 'delete', 'mail'] },
+  { id: 'quotation', label: 'Quotations', icon: '📑', actions: ['view', 'create', 'edit', 'delete', 'mail'] },
+  { id: 'pi', label: 'Proforma Invoices (PI)', icon: '📋', actions: ['view', 'create', 'edit', 'delete', 'mail'] },
+  { id: 'po', label: 'Purchase Orders (PO)', icon: '📦', actions: ['view', 'create', 'edit', 'delete', 'mail'] },
+  { id: 'sheets', label: 'Excel & Word Docs', icon: '📗', actions: ['view', 'create', 'edit', 'delete', 'mail'] },
+  { id: 'clients', label: 'Clients / Parties', icon: '👥', actions: ['view', 'create', 'edit', 'delete'] },
+  { id: 'products', label: 'Products & Services', icon: '🏷️', actions: ['view', 'create', 'edit', 'delete'] },
+  { id: 'purchases', label: 'Purchases Register', icon: '🛒', actions: ['view', 'create', 'edit', 'delete'] },
+  { id: 'ledgers', label: 'Ledgers & Accounts', icon: '🏛️', actions: ['view', 'create', 'edit', 'delete'] },
+  { id: 'vouchers', label: 'Vouchers & Entries', icon: '🎫', actions: ['view', 'create', 'edit', 'delete'] }
+];
+
+function openPermissionsModal(user, onSaved) {
+  const existing = (user.permissions && typeof user.permissions === 'object' && Object.keys(user.permissions).length)
+    ? JSON.parse(JSON.stringify(user.permissions))
+    : JSON.parse(JSON.stringify(DEFAULT_EMPLOYEE_PERMISSIONS));
+
+  const o = document.createElement('div');
+  o.className = 'mail-modal-overlay';
+  o.innerHTML = `
+    <div class="mail-modal-card" style="width:840px;max-width:96vw">
+      <div class="mail-modal-header" style="background:linear-gradient(135deg,#1e1b4b 0%,#312e81 100%);color:#fff">
+        <h3 style="color:#fff;font-size:16px;display:flex;align-items:center;gap:10px">
+          <span>🛡️ User Access Control &amp; Permissions</span>
+        </h3>
+        <button type="button" class="btn ghost sm" id="closePermModal" style="color:#fff;border-color:rgba(255,255,255,0.3);padding:4px 10px">✕</button>
+      </div>
+
+      <div class="mail-modal-body" style="gap:14px;padding:20px 24px">
+        <!-- User Summary Pill -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;flex-wrap:wrap;gap:12px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="width:42px;height:42px;border-radius:50%;background:#4f46e5;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px">
+              ${user.photo ? `<img src="/api/photo/${user.id}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">` : h((user.fullName||user.username||'U').slice(0,2).toUpperCase())}
+            </div>
+            <div>
+              <div style="font-size:15px;font-weight:700;color:#0f172a">${h(user.fullName || user.username)} <span style="font-size:12px;color:var(--mute);font-weight:400">(@${h(user.username)})</span></div>
+              <div style="font-size:12px;color:#64748b">${user.designation ? h(user.designation) : (user.role === 'admin' ? 'System Administrator' : 'Employee')} &bull; Base Role: <b style="text-transform:uppercase;color:${user.role==='admin'?'#4338ca':'#059669'}">${h(user.role)}</b></div>
+            </div>
+          </div>
+          <div>
+            ${user.role === 'admin' ? '<span style="font-size:12px;background:#e0e7ff;color:#3730a3;padding:4px 10px;border-radius:6px;font-weight:700">Admin has full unconditional bypass</span>' : '<span style="font-size:12px;background:#ecfdf5;color:#065f46;padding:4px 10px;border-radius:6px;font-weight:700">Custom Role &amp; Permissions</span>'}
+          </div>
+        </div>
+
+        <!-- Presets Bar -->
+        <div style="background:#f1f5f9;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;display:flex;align-items:center;flex-wrap:wrap;gap:8px">
+          <span style="font-size:12px;font-weight:700;color:#334155">⚡ Quick Presets:</span>
+          <button type="button" class="btn sm ghost" id="presetBilling" style="background:#fff">🧾 Billing Executive</button>
+          <button type="button" class="btn sm ghost" id="presetAddOnly" style="background:#fff">➕ Add-Only Data Entry</button>
+          <button type="button" class="btn sm ghost" id="presetFull" style="background:#fff">👑 Full Access</button>
+          <button type="button" class="btn sm ghost" id="presetViewer" style="background:#fff">👁️ Viewer Only</button>
+          <button type="button" class="btn sm ghost" id="presetDefault" style="background:#fff">🔄 Reset to Default</button>
+        </div>
+
+        <!-- Permissions Matrix Table -->
+        <div style="overflow-x:auto;border:1px solid #e2e8f0;border-radius:8px">
+          <table style="width:100%;border-collapse:collapse;margin:0;font-size:13px">
+            <thead>
+              <tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0;text-align:center">
+                <th style="text-align:left;padding:10px 14px">Module / Feature</th>
+                <th style="padding:10px 8px;width:95px">👁️ View</th>
+                <th style="padding:10px 8px;width:95px">➕ Create</th>
+                <th style="padding:10px 8px;width:95px">✏️ Edit</th>
+                <th style="padding:10px 8px;width:95px">🗑️ Delete</th>
+                <th style="padding:10px 8px;width:95px">✉️ Send Mail</th>
+              </tr>
+            </thead>
+            <tbody id="permMatrixBody">
+            </tbody>
+          </table>
+        </div>
+
+        <div style="font-size:11.5px;color:var(--mute);line-height:1.5">
+          💡 <b>Permissions Guide:</b> 
+          &bull; <b>Create</b> allows creating new entries.
+          &bull; <b>Edit</b> allows modifying existing entries (invoices, quotations, PI, PO, sheets).
+          &bull; <b>Delete</b> allows deleting existing entries.
+          &bull; <b>Send Mail</b> enables emailing documents to clients directly with PDF/Word attachments.
+        </div>
+      </div>
+
+      <div class="mail-modal-footer" style="padding:14px 24px">
+        <button type="button" class="btn ghost" id="cancelPermModal">Cancel</button>
+        <button type="button" class="btn" id="savePermModal" style="background:#4f46e5;border-color:#4338ca;color:#fff;padding:8px 24px;font-weight:700">💾 Save Permissions</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(o);
+
+  const curState = JSON.parse(JSON.stringify(existing));
+
+  const renderMatrix = () => {
+    const tbody = o.querySelector('#permMatrixBody');
+    if (!tbody) return;
+    tbody.innerHTML = PERM_MODULES.map(m => {
+      const p = curState[m.id] || {};
+      const chk = act => {
+        if (!m.actions.includes(act)) return '<span style="color:#cbd5e1">—</span>';
+        const checked = p[act] ? 'checked' : '';
+        return `<input type="checkbox" data-mod="${m.id}" data-act="${act}" ${checked} style="width:16px;height:16px;cursor:pointer">`;
+      };
+      return `
+        <tr style="border-bottom:1px solid #e2e8f0">
+          <td style="padding:10px 14px;font-weight:600;color:#1e293b;display:flex;align-items:center;gap:8px">
+            <span>${m.icon}</span>
+            <span>${m.label}</span>
+          </td>
+          <td style="text-align:center;padding:8px">${chk('view')}</td>
+          <td style="text-align:center;padding:8px">${chk('create')}</td>
+          <td style="text-align:center;padding:8px">${chk('edit')}</td>
+          <td style="text-align:center;padding:8px">${chk('delete')}</td>
+          <td style="text-align:center;padding:8px">${chk('mail')}</td>
+        </tr>
+      `;
+    }).join('');
+  };
+
+  renderMatrix();
+
+  o.querySelector('#permMatrixBody').onchange = e => {
+    const cb = e.target;
+    if (cb.dataset.mod && cb.dataset.act) {
+      if (!curState[cb.dataset.mod]) curState[cb.dataset.mod] = {};
+      curState[cb.dataset.mod][cb.dataset.act] = cb.checked;
+    }
+  };
+
+  // Preset Handlers
+  o.querySelector('#presetBilling').onclick = () => {
+    PERM_MODULES.forEach(m => {
+      curState[m.id] = {
+        view: true,
+        create: true,
+        edit: true,
+        delete: false,
+        mail: m.actions.includes('mail')
+      };
+    });
+    curState.purchases = { view: false, create: false, edit: false, delete: false };
+    renderMatrix();
+    say('Applied Billing Executive preset', 1);
+  };
+
+  o.querySelector('#presetAddOnly').onclick = () => {
+    PERM_MODULES.forEach(m => {
+      curState[m.id] = {
+        view: true,
+        create: true,
+        edit: false,
+        delete: false,
+        mail: false
+      };
+    });
+    renderMatrix();
+    say('Applied Add-Only Data Entry preset', 1);
+  };
+
+  o.querySelector('#presetFull').onclick = () => {
+    PERM_MODULES.forEach(m => {
+      curState[m.id] = {
+        view: true,
+        create: true,
+        edit: true,
+        delete: true,
+        mail: m.actions.includes('mail')
+      };
+    });
+    renderMatrix();
+    say('Applied Full Access preset', 1);
+  };
+
+  o.querySelector('#presetViewer').onclick = () => {
+    PERM_MODULES.forEach(m => {
+      curState[m.id] = {
+        view: true,
+        create: false,
+        edit: false,
+        delete: false,
+        mail: false
+      };
+    });
+    renderMatrix();
+    say('Applied Viewer Only preset', 1);
+  };
+
+  o.querySelector('#presetDefault').onclick = () => {
+    Object.assign(curState, JSON.parse(JSON.stringify(DEFAULT_EMPLOYEE_PERMISSIONS)));
+    renderMatrix();
+    say('Reset to default employee permissions', 1);
+  };
+
+  const closeModal = () => o.remove();
+  o.querySelector('#closePermModal').onclick = closeModal;
+  o.querySelector('#cancelPermModal').onclick = closeModal;
+
+  o.querySelector('#savePermModal').onclick = async () => {
+    const saveBtn = o.querySelector('#savePermModal');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving…';
+    try {
+      await api('PUT', 'users/' + user.id, { permissions: curState });
+      user.permissions = curState;
+      if (me && me.id === user.id) {
+        me.permissions = curState;
+      }
+      say('Permissions updated successfully for ' + (user.fullName || user.username), 1);
+      closeModal();
+      if (onSaved) onSaved();
+    } catch (err) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = '💾 Save Permissions';
+      say('Failed to save permissions: ' + err.message);
+    }
+  };
+}
+
 </script></body></html>

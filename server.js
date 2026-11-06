@@ -21,7 +21,7 @@ const tlsOptions = () => { // key.pem + cert.pem, or amigo.pfx + pfx.pass (creat
 let TLS_OPTS = tlsOptions(), TLS = !!TLS_OPTS;
 
 const SCHEMA = {
-  users: ['id','username','fullName','password','role','designation','contact','email','photo','faceDescriptor','faceRequired','otpRequired','createdAt'],
+  users: ['id','username','fullName','password','role','designation','contact','email','photo','faceDescriptor','faceRequired','otpRequired','permissions','createdAt'],
   clients: ['id','name','email','phone','address','gstin','contact','mobile','createdAt'],
   products: ['id','name','hsn','rate','gst','createdAt'],
   invoices: ['id','number','date','state','taxType','clientId','clientName','clientAddress','clientGstin','clientContact','clientMobile','shipName','shipAddress','shipGstin','shipContact','shipMobile','poNumber','poDate','items','subtotal','tax','total','createdBy','createdAt'],
@@ -98,7 +98,22 @@ function session(req) {
   s.exp = Date.now() + TTL;
   return s;
 }
-const safeUser = u => ({ id: u.id, username: u.username, fullName: u.fullName || '', role: u.role, designation: u.designation || '', contact: u.contact || '', email: u.email || '', photo: u.photo || '', faceRequired: u.faceRequired || '', otpRequired: u.otpRequired || '', createdAt: u.createdAt });
+const safeUser = u => ({
+  id: u.id,
+  username: u.username,
+  fullName: u.fullName || '',
+  role: u.role,
+  designation: u.designation || '',
+  contact: u.contact || '',
+  email: u.email || '',
+  photo: u.photo || '',
+  faceRequired: u.faceRequired || '',
+  otpRequired: u.otpRequired || '',
+  permissions: typeof u.permissions === 'object' && u.permissions !== null
+    ? u.permissions
+    : (typeof u.permissions === 'string' ? (() => { try { return JSON.parse(u.permissions || '{}'); } catch { return {}; } })() : {}),
+  createdAt: u.createdAt
+});
 const needsFace = u => u.role === 'employee' && mailCfg().faceEmployees !== false; // face check is an allowed way to verify for employees
 // ---- HTML e-mail templates (table layout + inline CSS so Gmail/Outlook render them; logo is embedded as a CID image) ----
 const hx = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -982,7 +997,46 @@ const send = (res, code, obj) => {
 const fail = (code, msg) => Object.assign(new Error(msg), { code });
 const body = req => new Promise((ok, no) => { let d = ''; req.on('data', c => { d += c; if (d.length > 50e6) { req.destroy(); no(fail(413, 'Too large')); } }); req.on('end', () => { try { ok(d ? JSON.parse(d) : {}); } catch { no(fail(400, 'Bad JSON')); } }); });
 const r2 = n => Math.round((+n + Number.EPSILON) * 100) / 100;
-const clean = (o, t) => { const x = {}; for (const k of SCHEMA[t]) if (o[k] !== undefined && !['id','createdAt','createdBy'].includes(k)) x[k] = String(o[k]).trim().slice(0, 500); return x; };
+const clean = (o, t) => {
+  const x = {};
+  for (const k of SCHEMA[t]) {
+    if (o[k] !== undefined && !['id','createdAt','createdBy'].includes(k)) {
+      if (k === 'permissions') {
+        x[k] = typeof o[k] === 'object' && o[k] !== null
+          ? o[k]
+          : (typeof o[k] === 'string' ? (() => { try { return JSON.parse(o[k] || '{}'); } catch { return {}; } })() : {});
+      } else {
+        x[k] = String(o[k]).trim().slice(0, 500);
+      }
+    }
+  }
+  return x;
+};
+
+const DEFAULT_EMPLOYEE_PERMISSIONS = {
+  invoices:  { view: true, create: true, edit: true, delete: false, mail: true },
+  quotation: { view: true, create: true, edit: true, delete: false, mail: true },
+  pi:        { view: true, create: true, edit: true, delete: false, mail: true },
+  po:        { view: true, create: true, edit: true, delete: false, mail: true },
+  sheets:    { view: true, create: true, edit: true, delete: false, mail: false },
+  clients:   { view: true, create: true, edit: true, delete: false },
+  products:  { view: true, create: true, edit: true, delete: false },
+  purchases: { view: false, create: false, edit: false, delete: false },
+  ledgers:   { view: true, create: true, edit: true, delete: false },
+  vouchers:  { view: true, create: true, edit: true, delete: false }
+};
+
+function hasPermission(user, mod, action) {
+  if (!user) return false;
+  if (user.role === 'admin') return true;
+  if (mod === 'taxinvoice' || mod === 'invoice') mod = 'invoices';
+  if (mod === 'docs') mod = 'quotation';
+  const userPerms = (user.permissions && typeof user.permissions === 'object' && Object.keys(user.permissions).length > 0)
+    ? user.permissions
+    : DEFAULT_EMPLOYEE_PERMISSIONS;
+  const modPerms = userPerms[mod] || DEFAULT_EMPLOYEE_PERMISSIONS[mod] || {};
+  return !!modPerms[action];
+}
 
 // ---------- API ----------
 async function api(req, res, parts) {
@@ -1813,6 +1867,10 @@ async function api(req, res, parts) {
         throw fail(400, 'Company SMTP email is not configured. Please set the sender Gmail & App Password in Email & Alerts first.');
       }
       const b = await body(req);
+      const docType = b.docType || 'invoices';
+      if (!hasPermission(user, docType, 'mail')) {
+        throw fail(403, 'Permission denied: Cannot send email for ' + docType);
+      }
       const to = String(b.to || '').trim();
       const cc = String(b.cc || '').trim();
       const bcc = String(b.bcc || '').trim();
@@ -1914,14 +1972,29 @@ async function api(req, res, parts) {
   }
   const P = PERM[t];
   if (m === 'GET' && !id) {
-    if (!P.r.includes(user.role)) throw fail(403, 'Not allowed');
-    let L = readTable(t); if (t === 'users') L = L.map(safeUser);
+    if (t === 'users' || t === 'purchases' || t === 'logins') {
+      if (!P.r.includes(user.role)) throw fail(403, 'Not allowed');
+    } else if (t === 'docs') {
+      if (!hasPermission(user, 'quotation', 'view') && !hasPermission(user, 'pi', 'view') && !hasPermission(user, 'po', 'view')) {
+        throw fail(403, 'Not allowed');
+      }
+    } else {
+      if (!hasPermission(user, t, 'view')) throw fail(403, 'Not allowed');
+    }
+    let L = readTable(t);
+    if (t === 'users') L = L.map(safeUser);
+    if (t === 'docs' && user.role !== 'admin') L = L.filter(x => hasPermission(user, x.type, 'view'));
     if (t === 'workupdates' && user.role !== 'admin') L = L.filter(x => x.userId === user.id);
     return send(res, 200, L);
   }
   if (m === 'POST' && !id) {
-    if (!P.c.includes(user.role)) throw fail(403, 'Not allowed');
     const b = await body(req);
+    const targetMod = t === 'docs' ? (b.type || 'quotation') : t;
+    if (t === 'users' || t === 'purchases') {
+      if (!P.c.includes(user.role)) throw fail(403, 'Not allowed');
+    } else if (t !== 'workupdates') {
+      if (!hasPermission(user, targetMod, 'create')) throw fail(403, 'Permission denied: Cannot create ' + targetMod);
+    }
     const row = await locked(() => {
       const L = readTable(t), now = new Date().toISOString();
       let o;
@@ -1961,10 +2034,21 @@ async function api(req, res, parts) {
     return send(res, 201, t === 'users' ? safeUser(row) : row);
   }
   if ((m === 'PUT' || m === 'DELETE') && id) {
-    if (user.role !== 'admin' && !['sheets','ledgers','vouchers'].includes(t)) throw fail(403, 'Admin only');
+    const action = m === 'PUT' ? 'edit' : 'delete';
+    if (t === 'users' || t === 'purchases') {
+      if (user.role !== 'admin') throw fail(403, 'Admin only');
+    }
+    const L = readTable(t), i = L.findIndex(x => x.id === id); if (i < 0) throw fail(404, 'Not found');
+    const targetMod = t === 'docs' ? (L[i].type || 'quotation') : t;
+    if (t !== 'users' && t !== 'purchases') {
+      if (!hasPermission(user, targetMod, action)) {
+        throw fail(403, 'Permission denied: Cannot ' + action + ' ' + targetMod);
+      }
+      if (['sheets','vouchers'].includes(t) && user.role !== 'admin' && L[i].createdBy && L[i].createdBy !== user.username) {
+        throw fail(403, 'You can only edit or delete your own entries');
+      }
+    }
     const row = await locked(async () => {
-      const L = readTable(t), i = L.findIndex(x => x.id === id); if (i < 0) throw fail(404, 'Not found');
-      if (['sheets','vouchers'].includes(t) && user.role !== 'admin' && L[i].createdBy !== user.username) throw fail(403, 'You can only edit or delete your own entries');
       if (m === 'DELETE') {
         if (t === 'users' && (L[i].id === user.id || L.filter(x => x.role === 'admin').length < 2 && L[i].role === 'admin')) throw fail(400, 'Cannot delete yourself or the last admin');
         if (t === 'users') fs.rmSync(path.join(PHOTOS, L[i].id + '.jpg'), { force: true });
@@ -1977,7 +2061,21 @@ async function api(req, res, parts) {
         if (t === 'ledgers') { Object.assign(L[i], buildLedger(b, L, user, L[i])); writeTable(t, L); return L[i]; }
         if (t === 'vouchers') { Object.assign(L[i], buildVoucher(b, L, user, L[i])); writeTable(t, L); return L[i]; }
         const o = clean(b, t);
-        if (t === 'users') { delete o.password; if (b.password) { if (String(b.password).length < 8) throw fail(400, 'Password must be at least 8 characters'); o.password = hash(b.password); } if (o.role && !BOTH.includes(o.role)) throw fail(400, 'Invalid role'); applyFace(o, b, L[i].id); checkUser(o, L[i], b); }
+        if (t === 'users') {
+          delete o.password;
+          if (b.password) {
+            if (String(b.password).length < 8) throw fail(400, 'Password must be at least 8 characters');
+            o.password = hash(b.password);
+          }
+          if (o.role && !BOTH.includes(o.role)) throw fail(400, 'Invalid role');
+          if (b.permissions !== undefined) {
+            o.permissions = typeof b.permissions === 'object' && b.permissions !== null
+              ? b.permissions
+              : (typeof b.permissions === 'string' ? (() => { try { return JSON.parse(b.permissions || '{}'); } catch { return {}; } })() : {});
+          }
+          applyFace(o, b, L[i].id);
+          checkUser(o, L[i], b);
+        }
         Object.assign(L[i], o);
       }
       writeTable(t, L);
