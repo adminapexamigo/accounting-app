@@ -2384,6 +2384,171 @@ body.mobile-sidebar-open {
 /* === Print === */
 @media print{body>*:not(#invoiceView){display:none!important}#invoiceView{position:static;display:block!important;background:#fff;padding:0}.bar{display:none}.sheet{box-shadow:none;padding:0;max-width:none}@page{size:A4;margin:14mm}}
 
+/* === Permanent Database Mutation Loader Overlay === */
+.op-loader-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 15, 29, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.op-loader-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+.op-loader-card {
+  background: #111827;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(99, 102, 241, 0.3);
+  border-radius: 16px;
+  padding: 28px 30px;
+  width: 92%;
+  max-width: 420px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 13px;
+  transform: scale(0.92);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+.op-loader-overlay.active .op-loader-card {
+  transform: scale(1);
+}
+.op-loader-ring-wrap {
+  position: relative;
+  width: 62px;
+  height: 62px;
+  margin-bottom: 2px;
+}
+.op-loader-ring {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 3.5px solid rgba(99, 102, 241, 0.2);
+  border-top-color: #6366f1;
+  border-right-color: #818cf8;
+  animation: opSpin 0.85s linear infinite;
+  box-sizing: border-box;
+}
+@keyframes opSpin {
+  to { transform: rotate(360deg); }
+}
+.op-loader-icon {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  user-select: none;
+}
+.op-loader-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #f8fafc;
+  line-height: 1.3;
+}
+.op-loader-sub {
+  font-size: 13px;
+  color: #94a3b8;
+  line-height: 1.45;
+  margin-top: -3px;
+}
+.op-loader-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 11.5px;
+  font-weight: 600;
+  background: rgba(99, 102, 241, 0.15);
+  color: #a5b4fc;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+}
+.op-loader-progress-track {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 99px;
+  overflow: hidden;
+  position: relative;
+  margin-top: 4px;
+}
+.op-loader-progress-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 30%;
+  background: linear-gradient(90deg, #6366f1, #3b82f6);
+  border-radius: 99px;
+  animation: opIndeterminate 1.4s infinite ease-in-out;
+}
+@keyframes opIndeterminate {
+  0% { left: 0%; width: 20%; }
+  50% { left: 35%; width: 55%; }
+  100% { left: 100%; width: 10%; }
+}
+
+/* Success state */
+.op-loader-card.is-success {
+  border-color: rgba(16, 185, 129, 0.4);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(16, 185, 129, 0.3);
+}
+.op-loader-card.is-success .op-loader-ring {
+  border-color: #10b981;
+  animation: none;
+}
+.op-loader-card.is-success .op-loader-title {
+  color: #34d399;
+}
+.op-loader-card.is-success .op-loader-progress-fill {
+  width: 100%;
+  left: 0;
+  animation: none;
+  background: #10b981;
+}
+.op-loader-card.is-success .op-loader-badge {
+  background: rgba(16, 185, 129, 0.16);
+  color: #6ee7b7;
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+/* Error state */
+.op-loader-card.is-error {
+  border-color: rgba(239, 68, 68, 0.4);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(239, 68, 68, 0.3);
+}
+.op-loader-card.is-error .op-loader-ring {
+  border-color: #ef4444;
+  animation: none;
+}
+.op-loader-card.is-error .op-loader-title {
+  color: #f87171;
+}
+.op-loader-card.is-error .op-loader-progress-fill {
+  width: 100%;
+  left: 0;
+  animation: none;
+  background: #ef4444;
+}
+.op-loader-card.is-error .op-loader-badge {
+  background: rgba(239, 68, 68, 0.16);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
 /* === OTP & Login Beautiful Loader === */
 .otp-loader-overlay {
   position: fixed;
@@ -2652,6 +2817,24 @@ body.mobile-sidebar-open {
 <div id="dbLoadingBadge" class="db-loading-badge">
   <span class="db-loading-spinner"></span>
   <span id="dbLoadingText">Syncing DB…</span>
+</div>
+
+<!-- Permanent Database Mutation Loader Overlay -->
+<div id="opLoaderOverlay" class="op-loader-overlay" style="display:none">
+  <div class="op-loader-card" id="opLoaderCard">
+    <div class="op-loader-ring-wrap">
+      <div class="op-loader-ring"></div>
+      <div class="op-loader-icon" id="opLoaderIcon">💾</div>
+    </div>
+    <div class="op-loader-title" id="opLoaderTitle">Saving to Database...</div>
+    <div class="op-loader-sub" id="opLoaderSub">Writing permanent record to cloud PostgreSQL... Please wait.</div>
+    <div class="op-loader-progress-track">
+      <div class="op-loader-progress-fill"></div>
+    </div>
+    <div class="op-loader-badge" id="opLoaderBadge">
+      <span>☁️</span> <span>Committing to Cloud DB</span>
+    </div>
+  </div>
 </div>
 
 <!-- Beautiful OTP & Login Loader Overlay -->
@@ -3044,8 +3227,121 @@ document.addEventListener('click', (e) => {
   }
 }, true);
 
+function showOperationLoader(method, url) {
+  const m = method.toUpperCase();
+  const seg = url.split('/')[0];
+  const overlay = document.getElementById('opLoaderOverlay');
+  const card = document.getElementById('opLoaderCard');
+  const icon = document.getElementById('opLoaderIcon');
+  const title = document.getElementById('opLoaderTitle');
+  const sub = document.getElementById('opLoaderSub');
+  const badge = document.getElementById('opLoaderBadge');
+  if (!overlay || !card) return;
+
+  card.classList.remove('is-success', 'is-error');
+
+  const entityNames = {
+    invoices: 'Invoice',
+    docs: 'Document',
+    sheets: 'Sheet',
+    ledgers: 'Ledger',
+    vouchers: 'Voucher',
+    clients: 'Client',
+    products: 'Product',
+    purchases: 'Purchase',
+    users: 'User Account',
+    workupdates: 'Work Update'
+  };
+  const name = entityNames[seg] || 'Record';
+
+  if (m === 'POST') {
+    if (icon) icon.textContent = '💾';
+    if (title) title.textContent = `Saving ${name} to Database...`;
+    if (sub) sub.textContent = 'Writing permanent record to Supabase PostgreSQL cloud database.';
+    if (badge) badge.innerHTML = '<span>☁️</span> <span>Committing to Cloud DB</span>';
+  } else if (m === 'PUT') {
+    if (icon) icon.textContent = '🔄';
+    if (title) title.textContent = `Updating ${name} in Database...`;
+    if (sub) sub.textContent = 'Saving modifications permanently to Supabase PostgreSQL.';
+    if (badge) badge.innerHTML = '<span>☁️</span> <span>Updating Cloud DB</span>';
+  } else if (m === 'DELETE') {
+    if (icon) icon.textContent = '🗑️';
+    if (title) title.textContent = `Deleting ${name} from Database...`;
+    if (sub) sub.textContent = 'Permanently removing record from Supabase PostgreSQL.';
+    if (badge) badge.innerHTML = '<span>☁️</span> <span>Deleting from Cloud DB</span>';
+  }
+
+  overlay.style.display = 'flex';
+  overlay.offsetHeight; // trigger reflow
+  overlay.classList.add('active');
+}
+
+function showOperationSuccess(method, url) {
+  const overlay = document.getElementById('opLoaderOverlay');
+  const card = document.getElementById('opLoaderCard');
+  const icon = document.getElementById('opLoaderIcon');
+  const title = document.getElementById('opLoaderTitle');
+  const sub = document.getElementById('opLoaderSub');
+  const badge = document.getElementById('opLoaderBadge');
+  if (!overlay || !card) return;
+
+  const m = method.toUpperCase();
+  card.classList.add('is-success');
+  if (icon) icon.textContent = '✅';
+
+  if (m === 'POST') {
+    if (title) title.textContent = 'Permanently Saved in Database!';
+    if (sub) sub.textContent = 'Your record is verified and stored in PostgreSQL cloud database.';
+  } else if (m === 'PUT') {
+    if (title) title.textContent = 'Updated Permanently in Database!';
+    if (sub) sub.textContent = 'Modifications committed and verified in cloud PostgreSQL.';
+  } else if (m === 'DELETE') {
+    if (title) title.textContent = 'Deleted Successfully from Database!';
+    if (sub) sub.textContent = 'Record permanently removed from cloud PostgreSQL.';
+  }
+  if (badge) badge.innerHTML = '<span>✅</span> <span>DB Transaction Confirmed</span>';
+
+  setTimeout(() => {
+    overlay.classList.remove('active');
+    setTimeout(() => {
+      overlay.style.display = 'none';
+      card.classList.remove('is-success');
+    }, 250);
+  }, 450);
+}
+
+function showOperationError(method, url, err) {
+  const overlay = document.getElementById('opLoaderOverlay');
+  const card = document.getElementById('opLoaderCard');
+  const icon = document.getElementById('opLoaderIcon');
+  const title = document.getElementById('opLoaderTitle');
+  const sub = document.getElementById('opLoaderSub');
+  const badge = document.getElementById('opLoaderBadge');
+  if (!overlay || !card) return;
+
+  card.classList.add('is-error');
+  if (icon) icon.textContent = '❌';
+  if (title) title.textContent = 'Database Operation Failed';
+  if (sub) sub.textContent = err?.message || 'Could not commit to database. Please check connection.';
+  if (badge) badge.innerHTML = '<span>⚠️</span> <span>Operation Failed</span>';
+
+  setTimeout(() => {
+    overlay.classList.remove('active');
+    setTimeout(() => {
+      overlay.style.display = 'none';
+      card.classList.remove('is-error');
+    }, 250);
+  }, 2200);
+}
+
 async function api(m,u,b,silent=false){
-  if (!silent) startGlobalLoader();
+  const isMutation = ['POST', 'PUT', 'DELETE'].includes(m.toUpperCase()) && !u.startsWith('activity/') && !u.startsWith('sync/live');
+  if (isMutation) {
+    showOperationLoader(m, u);
+  } else if (!silent) {
+    startGlobalLoader();
+  }
+
   try {
     const headers = {'Content-Type':'application/json'};
     const token = localStorage.getItem('amigo_token');
@@ -3068,18 +3364,24 @@ async function api(m,u,b,silent=false){
     }
 
     // Invalidate session cache on mutations to prevent stale records & sync tabs
-    if (['POST', 'PUT', 'DELETE'].includes(m.toUpperCase())) {
+    if (isMutation) {
       const seg = u.split('/')[0];
       SessionCache.remove(seg);
       SessionCache.remove('counts');
       try {
         localStorage.setItem('amigo_db_sync', seg + ':' + Date.now());
       } catch {}
+      showOperationSuccess(m, u);
     }
 
     return d;
+  } catch (err) {
+    if (isMutation) {
+      showOperationError(m, u, err);
+    }
+    throw err;
   } finally {
-    if (!silent) stopGlobalLoader();
+    if (!silent && !isMutation) stopGlobalLoader();
   }
 }
 window.addEventListener('storage', e => {
@@ -3181,6 +3483,39 @@ function drawBanner(){
 }
 async function refreshWU(){try{wu={...wu,...await api('GET','workupdates/today')}}catch{return}drawBanner()}
 async function checkSyncBanner(){try{syncMeta=await api('GET','sync/status')}catch{}drawBanner()}
+
+let lastKnownRevisions = {};
+let liveSyncPollingTimer = null;
+
+function startLiveSyncPolling() {
+  if (liveSyncPollingTimer) clearInterval(liveSyncPollingTimer);
+  liveSyncPollingTimer = setInterval(async () => {
+    if (!me || !me.id || !localStorage.getItem('amigo_token')) return;
+    try {
+      const resp = await api('GET', 'sync/live', null, true);
+      if (resp && resp.revisions) {
+        const revs = resp.revisions;
+        let anyUpdated = false;
+        for (const [table, rev] of Object.entries(revs)) {
+          if (lastKnownRevisions[table] && lastKnownRevisions[table] < rev) {
+            // Table was updated in DB by another user/tab!
+            SessionCache.remove(table);
+            SessionCache.remove('counts');
+            anyUpdated = true;
+            const cur = window.currentViewName;
+            if (cur === table || (table === 'docs' && ['quotation', 'pi', 'po'].includes(cur)) || (['ledgers', 'vouchers'].includes(table) && cur === 'tally')) {
+              load(table, true).then(() => { if (window.currentViewName === cur) go(cur); });
+            }
+          }
+          lastKnownRevisions[table] = rev;
+        }
+        if (anyUpdated) {
+          updateCounts();
+        }
+      }
+    } catch (e) {}
+  }, 4000); // 4-second real-time multi-user heartbeat
+}
 // ---- Universal Groq AI Assist ----
 let activeAiTarget = null;
 const aiUndoHistory = new Map();
@@ -5051,6 +5386,7 @@ function start() {
     if (!wuTimer) wuTimer = setInterval(wuTick, 60000);
   }
   checkSyncBanner();
+  startLiveSyncPolling();
   go(me.role === 'admin' ? 'dash' : 'invoices');
   primeUserCacheAfterAuth();
 }

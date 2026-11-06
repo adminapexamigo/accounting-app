@@ -1232,6 +1232,9 @@ async function api(req, res, parts) {
     }
   }
   if (a === 'sync') {
+    if (m === 'GET' && id === 'live') {
+      return send(res, 200, { revisions: db.getRevisions(), serverTime: Date.now() });
+    }
     const syncFile = path.join(DATA, 'sync.json');
     const readSyncMeta = () => {
       try { return JSON.parse(fs.readFileSync(syncFile, 'utf8')); }
