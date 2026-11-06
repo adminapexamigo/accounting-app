@@ -489,11 +489,17 @@ function checkUser(o, prev, b) { // validate the merged user record
 }
 
 const MAIL_DEFAULTS = { smtpHost: 'smtp.gmail.com', smtpPort: 465, smtpSecure: true, smtpUser: '', smtpPass: '', mailTo: '', supportEmail: '', alertTime: '17:30', otpEmployees: true, otpAdmin: true, faceEmployees: true };
-const mailCfg = () => ({
-  ...MAIL_DEFAULTS,
-  ...(db.isDbActive() ? db.getCachedSetting('mail') : (fs.existsSync(path.join(DATA, 'mail.json')) ? JSON.parse(fs.readFileSync(path.join(DATA, 'mail.json'), 'utf8')) : {})),
-  smtpPass: process.env.SMTP_PASS || (db.isDbActive() ? db.getCachedSetting('mail')?.smtpPass : '') || ''
-});
+const mailCfg = () => {
+  const dbSetting = db.isDbActive() ? (db.getCachedSetting('mail') || {}) : {};
+  let fileSetting = {};
+  try {
+    const mf = path.join(DATA, 'mail.json');
+    if (fs.existsSync(mf)) fileSetting = JSON.parse(fs.readFileSync(mf, 'utf8'));
+  } catch {}
+  const combined = { ...MAIL_DEFAULTS, ...fileSetting, ...dbSetting };
+  if (process.env.SMTP_PASS) combined.smtpPass = process.env.SMTP_PASS;
+  return combined;
+};
 const EMAIL_RE = /^[^\s@,<>]+@[^\s@,<>]+\.[^\s@,<>]+$/;
 const pad2 = n => String(n).padStart(2, '0');
 const formatDateTimeStamp = (d = new Date()) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}_${pad2(d.getHours())}-${pad2(d.getMinutes())}-${pad2(d.getSeconds())}`;
@@ -651,10 +657,15 @@ const COMPANY_DEFAULTS = { name: 'Your Company Name', address: 'Street, City, St
   quoteTerms: 'Price :-Ex work Pune .\nPacking :- Charges 2%\nDuties Taxes :- GST @ 18% extra\nPayment Terms :- 30% Advance with PO and 70% Against PI readiness of material\nDelivery :- 2-3weeks\nFreight :- To Pay Basis\nValidity :- This offer is valid for 15 days from date of quotation.\nService engineer and workers Loading & boarding is in customer scope.',
   quoteSign: 'Kuldeep Ranbawale\n08605069145\nAmigo Enterprises,Pune\nkuldeep.amigo@gmail.com', poPayment: '100% Against PI', quotePrefix: 'AE/', piPrefix: 'AEPI-', poPrefix: 'AE/',
   groqApiKey: '', groqModel: 'openai/gpt-oss-120b' };
-const company = () => ({
-  ...COMPANY_DEFAULTS,
-  ...(db.isDbActive() ? db.getCachedSetting('company') : (fs.existsSync(path.join(DATA, 'company.json')) ? JSON.parse(fs.readFileSync(path.join(DATA, 'company.json'), 'utf8')) : {}))
-});
+const company = () => {
+  const dbSetting = db.isDbActive() ? (db.getCachedSetting('company') || {}) : {};
+  let fileSetting = {};
+  try {
+    const cf = path.join(DATA, 'company.json');
+    if (fs.existsSync(cf)) fileSetting = JSON.parse(fs.readFileSync(cf, 'utf8'));
+  } catch {}
+  return { ...COMPANY_DEFAULTS, ...fileSetting, ...dbSetting };
+};
 
 // ---- AI Integration ----
 const WORKING_AI_MODELS = ['openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'qwen/qwen3.8-27b'];
@@ -1161,7 +1172,16 @@ async function api(req, res, parts) {
     const cf = path.join(DATA, 'company.json');
     if (m === 'GET') return send(res, 200, company());
     if (m === 'PUT') { if (user.role !== 'admin') throw fail(403, 'Admin only'); const b = await body(req), o = {}; for (const k of Object.keys(COMPANY_DEFAULTS)) if (k !== 'stamp') o[k] = String(b[k] ?? '').slice(0, 3000);
-      o.stamp = /^data:image\/(png|jpeg|gif|webp);base64,[A-Za-z0-9+\/=]+$/.test(b.stamp || '') && b.stamp.length < 600000 ? b.stamp : ''; await locked(() => fs.writeFileSync(cf, JSON.stringify(o, null, 2))); return send(res, 200, o); }
+      o.stamp = /^data:image\/(png|jpeg|gif|webp);base64,[A-Za-z0-9+\/=]+$/.test(b.stamp || '') && b.stamp.length < 600000 ? b.stamp : '';
+      if (db.isDbActive()) {
+        await db.saveSetting('company', o);
+      }
+      try {
+        fs.mkdirSync(DATA, { recursive: true });
+        fs.writeFileSync(cf, JSON.stringify(o, null, 2));
+      } catch {}
+      return send(res, 200, o);
+    }
   }
   if (a === 'ai') {
     const co = company();
@@ -1237,11 +1257,21 @@ async function api(req, res, parts) {
     }
     const syncFile = path.join(DATA, 'sync.json');
     const readSyncMeta = () => {
+      if (db.isDbActive()) {
+        const s = db.getCachedSetting('sync_meta');
+        if (s && s.history) return s;
+      }
       try { return JSON.parse(fs.readFileSync(syncFile, 'utf8')); }
       catch { return { lastSyncAt: '', syncedBy: '', lastEmailedAt: '', emailedBy: '', history: [] }; }
     };
-    const writeSyncMeta = meta => {
-      try { fs.writeFileSync(syncFile, JSON.stringify(meta, null, 2)); } catch {}
+    const writeSyncMeta = async meta => {
+      if (db.isDbActive()) {
+        await db.saveSetting('sync_meta', meta).catch(() => {});
+      }
+      try {
+        fs.mkdirSync(DATA, { recursive: true });
+        fs.writeFileSync(syncFile, JSON.stringify(meta, null, 2));
+      } catch {}
     };
 
     if (m === 'GET' && (id === 'status' || !id)) {
@@ -1729,7 +1759,13 @@ async function api(req, res, parts) {
             name: String(h.name || '').slice(0, 100)
           })).filter(h => /^\d{4}-\d{2}-\d{2}$/.test(h.date) && h.name);
         }
-        await locked(() => fs.writeFileSync(path.join(DATA, 'monitoring.json'), JSON.stringify(cur, null, 2)));
+        if (db.isDbActive()) {
+          await db.saveSetting('monitoring', cur);
+        }
+        try {
+          fs.mkdirSync(DATA, { recursive: true });
+          fs.writeFileSync(path.join(DATA, 'monitoring.json'), JSON.stringify(cur, null, 2));
+        } catch {}
         return send(res, 200, cur);
       }
     }
@@ -1952,7 +1988,14 @@ async function api(req, res, parts) {
       if (b.smtpUser && !EMAIL_RE.test(b.smtpUser)) throw fail(400, 'Sender must be an email address');
       c.smtpUser = oneLine(b.smtpUser); if (b.smtpPass) c.smtpPass = String(b.smtpPass).replace(/\s/g, ''); c.mailTo = to.join(', '); c.supportEmail = sup.join(', '); c.alertTime = b.alertTime || '17:30'; c.otpEmployees = b.otpEmployees !== false && b.otpEmployees !== 'false'; c.otpAdmin = b.otpAdmin !== false && b.otpAdmin !== 'false'; c.faceEmployees = b.faceEmployees !== false && b.faceEmployees !== 'false';
       if (!c.otpEmployees && !c.faceEmployees) throw fail(400, 'Keep at least one way for employees to verify (face check or emailed code) switched on.');
-      await locked(() => fs.writeFileSync(path.join(DATA, 'mail.json'), JSON.stringify(c, null, 2))); return send(res, 200, pub());
+      if (db.isDbActive()) {
+        await db.saveSetting('mail', c);
+      }
+      try {
+        fs.mkdirSync(DATA, { recursive: true });
+        fs.writeFileSync(path.join(DATA, 'mail.json'), JSON.stringify(c, null, 2));
+      } catch {}
+      return send(res, 200, pub());
     }
     if (m === 'POST' && id === 'test') {
       if (!c.smtpUser || !c.smtpPass || !c.mailTo) throw fail(400, 'Save sender, app password and recipient first');
@@ -2382,6 +2425,10 @@ if (!IS_SERVERLESS) {
 }
 const handler = async (req, res) => {
   try {
+    try {
+      fs.mkdirSync(DATA, { recursive: true });
+      fs.mkdirSync(PHOTOS, { recursive: true });
+    } catch {}
     if (db.isDbActive()) {
       await db.refreshCache();
     }
