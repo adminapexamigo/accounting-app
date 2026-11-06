@@ -2224,7 +2224,10 @@ const handler = async (req, res) => {
         if (qp) p = '/api/' + qp;
       } catch {}
     }
-    if (p === '/api/cron/check-inactivity') {
+    if (p === '/api/cron/check-inactivity' || p === '/api/cron/morning-sync') {
+      if (db.isDbActive()) {
+        try { await db.refreshCache(true); } catch (e) { console.error('Morning prewarm failed:', e.message); }
+      }
       await checkInactivityAlerts();
       return send(res, 200, { ok: true, timestamp: new Date().toISOString() });
     }

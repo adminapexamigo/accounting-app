@@ -6,7 +6,7 @@
   "crons": [
     {
       "path": "/api/cron/check-inactivity",
-      "schedule": "0 12 * * *"
+      "schedule": "30 1 * * *"
     }
   ]
 }

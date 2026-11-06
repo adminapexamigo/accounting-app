@@ -2798,6 +2798,96 @@ const inr=n=>'₹'+(+n||0).toLocaleString('en-IN',{minimumFractionDigits:2,maxim
 const dmy=d=>String(d||'').split('-').reverse().join('-');
 let me,co,cache={};
 
+/* === Secure SWR Session Storage Cache with 8-Hour TTL & 7:00 AM Daily Invalidation === */
+const SessionCache = {
+  TTL: 8 * 3600 * 1000, // Strictly 8 hours maximum lifetime
+
+  // Calculate the most recent 7:00 AM IST (1:30 AM UTC) boundary
+  getLast7AM() {
+    const now = new Date();
+    const istOffset = 5.5 * 3600 * 1000;
+    const istNow = new Date(now.getTime() + istOffset);
+    const y = istNow.getUTCFullYear();
+    const m = istNow.getUTCMonth();
+    const d = istNow.getUTCDate();
+    let sevenAmUTC = new Date(Date.UTC(y, m, d, 1, 30, 0)); // 1:30 UTC = 7:00 AM IST
+    if (now.getTime() < sevenAmUTC.getTime()) {
+      sevenAmUTC = new Date(sevenAmUTC.getTime() - 24 * 3600 * 1000);
+    }
+    return sevenAmUTC.getTime();
+  },
+
+  key(t) {
+    return 'amigo_sec_' + (me?.id || 'anon') + '_' + t;
+  },
+
+  // Strip sensitive credentials before storing in session cache
+  sanitize(t, data) {
+    if (!Array.isArray(data)) return data;
+    if (t === 'users') {
+      return data.map(u => {
+        const { password, faceDescriptor, ...safe } = u;
+        return safe;
+      });
+    }
+    return data;
+  },
+
+  get(t) {
+    try {
+      const raw = sessionStorage.getItem(this.key(t));
+      if (!raw) return null;
+      const entry = JSON.parse(raw);
+      const now = Date.now();
+      // 1. Enforce 8-hour max TTL
+      if (!entry.timestamp || (now - entry.timestamp > this.TTL)) {
+        sessionStorage.removeItem(this.key(t));
+        return null;
+      }
+      // 2. Enforce 7:00 AM morning boundary (refresh every day at 7 AM)
+      if (entry.timestamp < this.getLast7AM()) {
+        sessionStorage.removeItem(this.key(t));
+        return null;
+      }
+      return entry.data;
+    } catch {
+      return null;
+    }
+  },
+
+  set(t, data) {
+    try {
+      const cleanData = this.sanitize(t, data);
+      const entry = {
+        timestamp: Date.now(),
+        data: cleanData
+      };
+      sessionStorage.setItem(this.key(t), JSON.stringify(entry));
+    } catch(e) {
+      this.prune();
+    }
+  },
+
+  remove(t) {
+    try { sessionStorage.removeItem(this.key(t)); } catch {}
+  },
+
+  clearAll() {
+    try {
+      sessionStorage.clear();
+    } catch {}
+  },
+
+  prune() {
+    try {
+      for (let i = sessionStorage.length - 1; i >= 0; i--) {
+        const k = sessionStorage.key(i);
+        if (k && k.startsWith('amigo_sec_')) sessionStorage.removeItem(k);
+      }
+    } catch {}
+  }
+};
+
 /* === Global Click & API Progress Management === */
 let activeApiRequests = 0;
 let progressTimer = null;
@@ -2861,8 +2951,8 @@ document.addEventListener('click', (e) => {
   }
 }, true);
 
-async function api(m,u,b){
-  startGlobalLoader();
+async function api(m,u,b,silent=false){
+  if (!silent) startGlobalLoader();
   try {
     const headers = {'Content-Type':'application/json'};
     const token = localStorage.getItem('amigo_token');
@@ -2878,13 +2968,22 @@ async function api(m,u,b){
     if (!r.ok) {
       if (r.status == 401 && !u.startsWith('login')) {
         localStorage.removeItem('amigo_token');
+        SessionCache.clearAll();
         showLogin();
       }
       throw Object.assign(new Error(d.error||'Error'), {status: r.status});
     }
+
+    // Invalidate session cache on mutations to prevent stale records
+    if (['POST', 'PUT', 'DELETE'].includes(m.toUpperCase())) {
+      const seg = u.split('/')[0];
+      SessionCache.remove(seg);
+      SessionCache.remove('counts');
+    }
+
     return d;
   } finally {
-    stopGlobalLoader();
+    if (!silent) stopGlobalLoader();
   }
 }
 window.clientErrorLog = [];
@@ -4434,6 +4533,7 @@ else applyVideoSpeed();
 
 function showLogin(){
   localStorage.removeItem('amigo_token');
+  if (typeof SessionCache !== 'undefined') SessionCache.clearAll();
   if (typeof closeMobileSidebar === 'function') closeMobileSidebar();
   hideOtpLoader();
   me = null;
@@ -4473,7 +4573,7 @@ $('#lbtn').onclick=async()=>{
 };
 $('#forgot').onclick=async()=>{const r=await resetDialog($('#lu').value);if(r){$('#lu').value=r.user;$('#lp').value='';$('#lmsg').innerHTML='<div class="msg ok">Password changed. Log in with your new password.</div>'}};
 $('#lp').onkeydown=e=>{if(e.key=='Enter')$('#lbtn').click()};
-$('#out').onclick=async()=>{if(wu.required&&!wu.submitted&&!confirm("Today's work update is not submitted yet. Log out anyway?"))return;localStorage.removeItem('amigo_token');await api('POST','logout').catch(()=>{});showLogin()};
+$('#out').onclick=async()=>{if(wu.required&&!wu.submitted&&!confirm("Today's work update is not submitted yet. Log out anyway?"))return;localStorage.removeItem('amigo_token');if(typeof SessionCache!=='undefined')SessionCache.clearAll();await api('POST','logout').catch(()=>{});showLogin()};
 $('#pw').onclick=()=>{const o=prompt('Current password:');if(!o)return;const n=prompt('New password (min 8 characters):');if(!n)return;api('POST','password',{oldPassword:o,newPassword:n}).then(()=>say('Password changed',1)).catch(e=>say(e.message))};
 if ($('#supportBtn')) $('#supportBtn').onclick = () => openSupportModal();
 const MENU_GROUPS = [
@@ -4557,18 +4657,38 @@ const COUNT_KEY_MAP = {
   tally: 'vouchers'
 };
 
-async function updateCounts() {
+async function updateCounts(silent = true) {
   try {
-    const c = await api('GET', 'counts');
+    const cached = SessionCache.get('counts');
+    if (cached) {
+      window.counts = cached;
+      renderBadges(cached);
+      setTimeout(() => {
+        api('GET', 'counts', null, true).then(c => {
+          if (JSON.stringify(c) !== JSON.stringify(cached)) {
+            SessionCache.set('counts', c);
+            window.counts = c;
+            renderBadges(c);
+          }
+        }).catch(() => {});
+      }, 100);
+      return;
+    }
+    const c = await api('GET', 'counts', null, silent);
+    SessionCache.set('counts', c);
     window.counts = c;
-    document.querySelectorAll('.nav-count-badge[data-count-key]').forEach(el => {
-      const k = el.dataset.countKey;
-      if (k && c[k] !== undefined) {
-        el.textContent = c[k];
-        el.style.display = 'inline-block';
-      }
-    });
+    renderBadges(c);
   } catch(e) {}
+}
+
+function renderBadges(c) {
+  document.querySelectorAll('.nav-count-badge[data-count-key]').forEach(el => {
+    const k = el.dataset.countKey;
+    if (k && c && c[k] !== undefined) {
+      el.textContent = c[k];
+      el.style.display = 'inline-block';
+    }
+  });
 }
 
 function toggleSidebar(forceMini) {
@@ -4800,9 +4920,10 @@ function go(t) {
   renderNav(t);
   updateCounts();
 
-  // Instant view transition feedback: show elegant loading skeleton if fetching data
+  // If data is already in secure session cache, render immediately (0ms) without showing skeleton
+  const hasCached = SessionCache.get(t);
   const viewEl = $('#view');
-  if (viewEl && !['support'].includes(t)) {
+  if (viewEl && !hasCached && !['support'].includes(t)) {
     const titles = {
       dash: 'Financial Dashboard',
       invoices: 'Tax Invoices',
@@ -4840,7 +4961,32 @@ function go(t) {
 
   ({dash,invoices,settings,ai:aiSettingsView,workupdates,logins,mail,monitoring,sheets:sheetsView,tally:tallyView,sync:syncView,weeklybackup:()=>syncView(true),quotation:()=>docs('quotation'),pi:()=>docs('pi'),po:()=>docs('po'),support:supportView}[t]||(()=>crud(t)))(t).catch?.(e=>say(e.message));
 }
-const load=async t=>{const r=await api('GET',t);cache[t]=r;updateCounts();return r;};
+
+const load = async (t, forceFresh = false) => {
+  if (!forceFresh) {
+    const cached = SessionCache.get(t);
+    if (cached) {
+      cache[t] = cached;
+      // Stale-While-Revalidate: revalidate in the background silently
+      setTimeout(() => {
+        api('GET', t, null, true).then(fresh => {
+          if (JSON.stringify(fresh) !== JSON.stringify(cached)) {
+            SessionCache.set(t, fresh);
+            cache[t] = fresh;
+            updateCounts();
+          }
+        }).catch(() => {});
+      }, 60);
+      return Array.isArray(cached) ? cached.slice() : cached;
+    }
+  }
+
+  const r = await api('GET', t);
+  SessionCache.set(t, r);
+  cache[t] = r;
+  updateCounts();
+  return r;
+};
 // ---- dashboard (admin) ----
 async function dash(){
   if(me.role!='admin') return invoices();
