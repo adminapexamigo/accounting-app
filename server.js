@@ -83,14 +83,17 @@ const sessions = new Map(), TTL = 8 * 3600e3, attempts = new Map();
 const newId = () => crypto.randomBytes(6).toString('hex');
 const cookie = req => Object.fromEntries((req.headers.cookie || '').split(';').map(s => s.trim().split('=')).filter(x => x[0]));
 function session(req) {
-  const c = cookie(req);
-  if (!c.sid) return null;
+  let sid = cookie(req).sid;
+  if (!sid && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+    sid = req.headers.authorization.slice(7).trim();
+  }
+  if (!sid) return null;
   try {
     const jwt = require('jsonwebtoken');
-    const decoded = jwt.verify(c.sid, process.env.JWT_SECRET || 'amigo-accounting-production-jwt-secret-key-2026');
+    const decoded = jwt.verify(sid, process.env.JWT_SECRET || 'amigo-accounting-production-jwt-secret-key-2026');
     if (decoded && decoded.u) return { user: decoded.u, exp: Date.now() + TTL };
   } catch {}
-  const s = sessions.get(c.sid);
+  const s = sessions.get(sid);
   if (!s || s.exp < Date.now()) return null;
   s.exp = Date.now() + TTL;
   return s;
@@ -437,8 +440,9 @@ function startSession(res, u) {
   const now = new Date().toISOString();
   sessions.set(sid, { user: safeUser(u), exp: Date.now() + TTL, loginAt: now });
   db.addLoginAudit({ id: newId(), userId: u.id, username: u.username, loginAt: now }).catch(console.error);
-  res.setHeader('Set-Cookie', `sid=${sid}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${TTL / 1000}${TLS ? '; Secure' : ''}`);
-  return safeUser(u);
+  const secureFlag = (IS_SERVERLESS || TLS) ? '; Secure' : '';
+  res.setHeader('Set-Cookie', `sid=${sid}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${TTL / 1000}${secureFlag}`);
+  return { ...safeUser(u), token: sid };
 }
 const CONTACT_RE = /^\+?[0-9 \-]{7,16}$/;
 function applyFace(o, b, id) { // photo + face descriptor come only through this validated path
@@ -965,7 +969,16 @@ function extractZip(buf) {
 }
 
 // ---------- HTTP helpers ----------
-const send = (res, code, obj) => { res.writeHead(code, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(obj)); };
+const send = (res, code, obj) => {
+  const cookieHeader = res.getHeader('Set-Cookie');
+  const headers = {
+    'Content-Type': 'application/json',
+    'Cache-Control': 'no-store'
+  };
+  if (cookieHeader) headers['Set-Cookie'] = cookieHeader;
+  res.writeHead(code, headers);
+  res.end(JSON.stringify(obj));
+};
 const fail = (code, msg) => Object.assign(new Error(msg), { code });
 const body = req => new Promise((ok, no) => { let d = ''; req.on('data', c => { d += c; if (d.length > 50e6) { req.destroy(); no(fail(413, 'Too large')); } }); req.on('end', () => { try { ok(d ? JSON.parse(d) : {}); } catch { no(fail(400, 'Bad JSON')); } }); });
 const r2 = n => Math.round((+n + Number.EPSILON) * 100) / 100;

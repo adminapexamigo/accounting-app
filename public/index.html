@@ -2275,8 +2275,27 @@ const $=s=>document.querySelector(s),h=s=>String(s??'').replace(/[&<>"']/g,c=>({
 const inr=n=>'₹'+(+n||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}),today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
 const dmy=d=>String(d||'').split('-').reverse().join('-');
 let me,co,cache={};
-async function api(m,u,b){const r=await fetch('/api/'+u,{method:m,headers:{'Content-Type':'application/json'},body:b?JSON.stringify(b):undefined});const d=await r.json().catch(()=>({}));
- if(!r.ok){if(r.status==401&&!u.startsWith('login')){showLogin()}throw Object.assign(new Error(d.error||'Error'),{status:r.status})}return d}
+async function api(m,u,b){
+  const headers = {'Content-Type':'application/json'};
+  const token = localStorage.getItem('amigo_token');
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  const r = await fetch('/api/'+u, {
+    method: m,
+    credentials: 'include',
+    headers,
+    body: b ? JSON.stringify(b) : undefined
+  });
+  const d = await r.json().catch(()=>({}));
+  if (d && d.token) localStorage.setItem('amigo_token', d.token);
+  if (!r.ok) {
+    if (r.status == 401 && !u.startsWith('login')) {
+      localStorage.removeItem('amigo_token');
+      showLogin();
+    }
+    throw Object.assign(new Error(d.error||'Error'), {status: r.status});
+  }
+  return d;
+}
 window.clientErrorLog = [];
 window.addEventListener('error', e => {
   const line = `[${new Date().toLocaleTimeString()}] Error: ${e.message} at ${e.filename || 'inline'}:${e.lineno}:${e.colno}`;
@@ -3823,6 +3842,7 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 else applyVideoSpeed();
 
 function showLogin(){
+  localStorage.removeItem('amigo_token');
   hideOtpLoader();
   me = null;
   wu = { required: false, submitted: true, date: '', alertTime: '17:30', snooze: 0 };
@@ -3861,7 +3881,7 @@ $('#lbtn').onclick=async()=>{
 };
 $('#forgot').onclick=async()=>{const r=await resetDialog($('#lu').value);if(r){$('#lu').value=r.user;$('#lp').value='';$('#lmsg').innerHTML='<div class="msg ok">Password changed. Log in with your new password.</div>'}};
 $('#lp').onkeydown=e=>{if(e.key=='Enter')$('#lbtn').click()};
-$('#out').onclick=async()=>{if(wu.required&&!wu.submitted&&!confirm("Today's work update is not submitted yet. Log out anyway?"))return;await api('POST','logout').catch(()=>{});showLogin()};
+$('#out').onclick=async()=>{if(wu.required&&!wu.submitted&&!confirm("Today's work update is not submitted yet. Log out anyway?"))return;localStorage.removeItem('amigo_token');await api('POST','logout').catch(()=>{});showLogin()};
 $('#pw').onclick=()=>{const o=prompt('Current password:');if(!o)return;const n=prompt('New password (min 8 characters):');if(!n)return;api('POST','password',{oldPassword:o,newPassword:n}).then(()=>say('Password changed',1)).catch(e=>say(e.message))};
 if ($('#supportBtn')) $('#supportBtn').onclick = () => openSupportModal();
 const MENU_GROUPS = [
