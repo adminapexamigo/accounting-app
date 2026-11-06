@@ -863,6 +863,7 @@ label{display:block;font-size:12.5px;color:var(--mute);margin:0 0 5px;font-weigh
   border:none;
 }
 .side.is-mini #who > div:not(:first-child),
+.side.is-mini #whoActiveRow,
 .side.is-mini .who-actions{
   display:none !important;
 }
@@ -1001,6 +1002,26 @@ label{display:block;font-size:12.5px;color:var(--mute);margin:0 0 5px;font-weigh
   align-items:center;
   gap:9px;
   margin-bottom:0;
+}
+.side-user-active-bar{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  padding:5px 8px;
+  background:rgba(16,185,129,0.14);
+  border:1px solid rgba(16,185,129,0.3);
+  border-radius:6px;
+  font-size:11px;
+  font-weight:600;
+  color:#34d399;
+  text-align:center;
+  letter-spacing:0.2px;
+  transition:all 0.2s ease;
+}
+.side-user-active-bar:hover{
+  background:rgba(16,185,129,0.22);
+  border-color:rgba(16,185,129,0.45);
 }
 .side-user-card .who-actions{
   display:flex;
@@ -2763,6 +2784,7 @@ body.mobile-sidebar-open {
       </div>
       <div class="side-user-card">
         <div id="who"></div>
+        <div id="whoActiveRow"></div>
         <div class="who-actions">
           <a id="pw" title="Change your password">🔑 Password</a>
           <a id="out" title="Sign out of your session">🚪 Logout</a>
@@ -4908,7 +4930,34 @@ function start() {
     }
   } catch(e) {}
 
-  $('#who').innerHTML = (me.photo ? `<img src="/api/photo/${me.id}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #818cf8;display:block">` : `<div style="width:34px;height:34px;border-radius:50%;background:#4f46e5;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px">${h((me.fullName||me.username)[0].toUpperCase())}</div>`) + `<div style="min-width:0;flex:1"><div style="font-weight:700;color:#fff;font-size:13px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${h(me.fullName||me.username)}</div><span style="display:inline-block;padding:2px 7px;border-radius:99px;font-size:10.5px;font-weight:600;${roleBadgeStyle};margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="Role: ${h(me.role.toUpperCase())}">${desigLabel}</span></div>` + (me.role === 'employee' ? `<div id="empActiveBadge" style="margin-left:6px;padding:3px 7px;border-radius:6px;background:rgba(16,185,129,0.2);color:#34d399;font-size:10.5px;font-weight:600;white-space:nowrap">⏱️ Active: 0h 0m</div>` : '');
+  const userAvatar = me.photo
+    ? `<img src="/api/photo/${me.id}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid #818cf8;display:block;flex-shrink:0">`
+    : `<div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;box-shadow:0 2px 8px rgba(79,70,229,0.35)">${h((me.fullName||me.username)[0].toUpperCase())}</div>`;
+
+  $('#who').innerHTML = `
+    ${userAvatar}
+    <div style="min-width:0;flex:1;display:flex;flex-direction:column;gap:3px">
+      <div style="font-weight:700;color:#f8fafc;font-size:13.5px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${h(me.fullName || me.username)}">
+        ${h(me.fullName || me.username)}
+      </div>
+      <div>
+        <span style="display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;letter-spacing:0.3px;${roleBadgeStyle};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%" title="Role: ${h(me.role.toUpperCase())}">
+          ${desigLabel}
+        </span>
+      </div>
+    </div>
+  `;
+
+  const activeRow = $('#whoActiveRow');
+  if (activeRow) {
+    if (me.role === 'employee') {
+      activeRow.innerHTML = `<div id="empActiveBadge" class="side-user-active-bar" title="Total active working hours recorded today">⏱️ Active: 0h 0m</div>`;
+      activeRow.style.display = 'block';
+    } else {
+      activeRow.innerHTML = '';
+      activeRow.style.display = 'none';
+    }
+  }
 
   const mobAv = document.getElementById('mobileUserAvatar');
   if (mobAv) {
