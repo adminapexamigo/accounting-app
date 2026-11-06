@@ -2213,7 +2213,17 @@ const handler = async (req, res) => {
     if (db.isDbActive()) {
       await db.refreshCache();
     }
-    const p = new URL(req.url, 'http://x').pathname;
+    let p = new URL(req.url, 'http://x').pathname;
+    const matched = req.headers && (req.headers['x-matched-path'] || req.headers['x-vercel-matched-path'] || req.headers['x-forwarded-uri'] || req.headers['x-original-url']);
+    if (matched && matched.startsWith('/api/')) {
+      p = new URL(matched, 'http://x').pathname;
+    } else if (p.startsWith('/api/index.js') || p.startsWith('/api/[...path]') || p === '/api/index') {
+      try {
+        const u = new URL(req.url, 'http://x');
+        const qp = u.searchParams.get('path');
+        if (qp) p = '/api/' + qp;
+      } catch {}
+    }
     if (p === '/api/cron/check-inactivity') {
       await checkInactivityAlerts();
       return send(res, 200, { ok: true, timestamp: new Date().toISOString() });
