@@ -2,7 +2,13 @@
 // Zero-dependency accounting server: Node built-ins only. Data lives in ./data/*.csv
 const http = require('http'), https = require('https'), net = require('net'), tls = require('tls'), fs = require('fs'), path = require('path'), crypto = require('crypto'), zlib = require('zlib');
 const PORT = +process.env.PORT || 3000, HOST = process.env.HOST || '0.0.0.0';
-const DATA = path.join(__dirname, 'data'), PUB = path.join(__dirname, 'public'), BAK = path.join(__dirname, 'backups'), PHOTOS = path.join(DATA, 'photos'), CERTS = path.join(__dirname, 'certs');
+const IS_SERVERLESS = !!(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+const DATA = IS_SERVERLESS ? path.join('/tmp', 'data') : path.join(__dirname, 'data');
+const PUB = path.join(__dirname, 'public');
+const BAK = IS_SERVERLESS ? path.join('/tmp', 'backups') : path.join(__dirname, 'backups');
+const PHOTOS = path.join(DATA, 'photos');
+const CERTS = path.join(__dirname, 'certs');
+const db = require('./lib/db');
 const FACE_THRESHOLD = +process.env.FACE_THRESHOLD || 0.5; // lower = stricter (face-api default 0.6)
 const tlsOptions = () => { // key.pem + cert.pem, or amigo.pfx + pfx.pass (created by launcher/install.bat)
   try {
@@ -48,13 +54,24 @@ function parseCSV(t) {
 }
 const file = t => path.join(DATA, t + '.csv');
 function readTable(t) {
-  const rows = parseCSV(fs.readFileSync(file(t), 'utf8').replace(/^\uFEFF/, ''));
-  const head = rows.shift() || SCHEMA[t];
-  return rows.map(r => Object.fromEntries(SCHEMA[t].map(k => [k, r[head.indexOf(k)] ?? ''])));
+  if (db.isDbActive()) return db.getCachedTable(t);
+  try {
+    const rows = parseCSV(fs.readFileSync(file(t), 'utf8').replace(/^\uFEFF/, ''));
+    const head = rows.shift() || SCHEMA[t];
+    return rows.map(r => Object.fromEntries(SCHEMA[t].map(k => [k, r[head.indexOf(k)] ?? ''])));
+  } catch { return []; }
 }
 function writeTable(t, list) {
-  const out = [SCHEMA[t].join(',')].concat(list.map(o => SCHEMA[t].map(k => esc(o[k])).join(','))).join('\n') + '\n';
-  const tmp = file(t) + '.tmp'; fs.writeFileSync(tmp, out); fs.renameSync(tmp, file(t)); // atomic replace
+  if (db.isDbActive()) {
+    db.setCachedTable(t, list);
+    db.writeTable(t, list).catch(err => console.error('DB writeTable error:', err.message));
+    return;
+  }
+  try {
+    fs.mkdirSync(DATA, { recursive: true });
+    const out = [SCHEMA[t].join(',')].concat(list.map(o => SCHEMA[t].map(k => esc(o[k])).join(','))).join('\n') + '\n';
+    const tmp = file(t) + '.tmp'; fs.writeFileSync(tmp, out); fs.renameSync(tmp, file(t));
+  } catch {}
 }
 let chain = Promise.resolve(); // serialise all writes so concurrent users cannot corrupt files
 const locked = fn => { const p = chain.then(fn); chain = p.catch(() => {}); return p; };
@@ -65,7 +82,19 @@ const verify = (p, s) => { const [salt, h] = String(s).split(':'); if (!h) retur
 const sessions = new Map(), TTL = 8 * 3600e3, attempts = new Map();
 const newId = () => crypto.randomBytes(6).toString('hex');
 const cookie = req => Object.fromEntries((req.headers.cookie || '').split(';').map(s => s.trim().split('=')).filter(x => x[0]));
-function session(req) { const s = sessions.get(cookie(req).sid); if (!s || s.exp < Date.now()) return null; s.exp = Date.now() + TTL; return s; }
+function session(req) {
+  const c = cookie(req);
+  if (!c.sid) return null;
+  try {
+    const jwt = require('jsonwebtoken');
+    const decoded = jwt.verify(c.sid, process.env.JWT_SECRET || 'amigo-accounting-production-jwt-secret-key-2026');
+    if (decoded && decoded.u) return { user: decoded.u, exp: Date.now() + TTL };
+  } catch {}
+  const s = sessions.get(c.sid);
+  if (!s || s.exp < Date.now()) return null;
+  s.exp = Date.now() + TTL;
+  return s;
+}
 const safeUser = u => ({ id: u.id, username: u.username, fullName: u.fullName || '', role: u.role, designation: u.designation || '', contact: u.contact || '', email: u.email || '', photo: u.photo || '', faceRequired: u.faceRequired || '', otpRequired: u.otpRequired || '', createdAt: u.createdAt });
 const needsFace = u => u.role === 'employee' && mailCfg().faceEmployees !== false; // face check is an allowed way to verify for employees
 // ---- HTML e-mail templates (table layout + inline CSS so Gmail/Outlook render them; logo is embedded as a CID image) ----
@@ -163,6 +192,7 @@ const MONITORING_DEFAULTS = {
 };
 
 function monitoringCfg() {
+  if (db.isDbActive()) return { ...MONITORING_DEFAULTS, ...db.getCachedSetting('monitoring') };
   const f = path.join(DATA, 'monitoring.json');
   try {
     if (fs.existsSync(f)) {
@@ -209,6 +239,7 @@ function getWorkingInactiveMinutes(lastSeenDate, nowDate, cfg) {
 
 const ACTIVITY_FILE = path.join(DATA, 'activity.json');
 function readActivity() {
+  if (db.isDbActive()) return db.getCachedActivity();
   try {
     if (fs.existsSync(ACTIVITY_FILE)) {
       return JSON.parse(fs.readFileSync(ACTIVITY_FILE, 'utf8'));
@@ -218,7 +249,12 @@ function readActivity() {
 }
 
 function writeActivity(data) {
+  if (db.isDbActive()) {
+    db.saveActivity(data).catch(e => console.error('Failed to write activity to db:', e.message));
+    return;
+  }
   try {
+    fs.mkdirSync(DATA, { recursive: true });
     const keys = Object.keys(data).sort();
     if (keys.length > 90) {
       for (let i = 0; i < keys.length - 90; i++) delete data[keys[i]];
@@ -391,9 +427,17 @@ async function sendOtp(p, u) { // e-mails a fresh 6-digit code; returns '' on su
 }
 const dist = (a, b) => Math.sqrt(a.reduce((s, x, i) => s + (x - b[i]) ** 2, 0));
 function startSession(res, u) {
-  const sid = crypto.randomBytes(24).toString('hex'), now = new Date().toISOString(); sessions.set(sid, { user: safeUser(u), exp: Date.now() + TTL, loginAt: now });
-  locked(() => { const L = readTable('logins'); L.push({ id: newId(), userId: u.id, username: u.username, loginAt: now }); writeTable('logins', L.slice(-5000)); }).catch(console.error);
-  res.setHeader('Set-Cookie', `sid=${sid}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${TTL / 1000}${TLS ? '; Secure' : ''}`);
+  let sid;
+  try {
+    const jwt = require('jsonwebtoken');
+    sid = jwt.sign({ u: safeUser(u) }, process.env.JWT_SECRET || 'amigo-accounting-production-jwt-secret-key-2026', { expiresIn: '8h' });
+  } catch {
+    sid = crypto.randomBytes(24).toString('hex');
+  }
+  const now = new Date().toISOString();
+  sessions.set(sid, { user: safeUser(u), exp: Date.now() + TTL, loginAt: now });
+  db.addLoginAudit({ id: newId(), userId: u.id, username: u.username, loginAt: now }).catch(console.error);
+  res.setHeader('Set-Cookie', `sid=${sid}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${TTL / 1000}${TLS ? '; Secure' : ''}`);
   return safeUser(u);
 }
 const CONTACT_RE = /^\+?[0-9 \-]{7,16}$/;
@@ -422,7 +466,11 @@ function checkUser(o, prev, b) { // validate the merged user record
 }
 
 const MAIL_DEFAULTS = { smtpHost: 'smtp.gmail.com', smtpPort: 465, smtpSecure: true, smtpUser: '', smtpPass: '', mailTo: '', supportEmail: '', alertTime: '17:30', otpEmployees: true, otpAdmin: true, faceEmployees: true };
-const mailCfg = () => ({ ...MAIL_DEFAULTS, ...JSON.parse(fs.readFileSync(path.join(DATA, 'mail.json'), 'utf8')) });
+const mailCfg = () => ({
+  ...MAIL_DEFAULTS,
+  ...(db.isDbActive() ? db.getCachedSetting('mail') : (fs.existsSync(path.join(DATA, 'mail.json')) ? JSON.parse(fs.readFileSync(path.join(DATA, 'mail.json'), 'utf8')) : {})),
+  smtpPass: process.env.SMTP_PASS || (db.isDbActive() ? db.getCachedSetting('mail')?.smtpPass : '') || ''
+});
 const EMAIL_RE = /^[^\s@,<>]+@[^\s@,<>]+\.[^\s@,<>]+$/;
 const pad2 = n => String(n).padStart(2, '0');
 const formatDateTimeStamp = (d = new Date()) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}_${pad2(d.getHours())}-${pad2(d.getMinutes())}-${pad2(d.getSeconds())}`;
@@ -580,7 +628,10 @@ const COMPANY_DEFAULTS = { name: 'Your Company Name', address: 'Street, City, St
   quoteTerms: 'Price :-Ex work Pune .\nPacking :- Charges 2%\nDuties Taxes :- GST @ 18% extra\nPayment Terms :- 30% Advance with PO and 70% Against PI readiness of material\nDelivery :- 2-3weeks\nFreight :- To Pay Basis\nValidity :- This offer is valid for 15 days from date of quotation.\nService engineer and workers Loading & boarding is in customer scope.',
   quoteSign: 'Kuldeep Ranbawale\n08605069145\nAmigo Enterprises,Pune\nkuldeep.amigo@gmail.com', poPayment: '100% Against PI', quotePrefix: 'AE/', piPrefix: 'AEPI-', poPrefix: 'AE/',
   groqApiKey: '', groqModel: 'openai/gpt-oss-120b' };
-const company = () => ({ ...COMPANY_DEFAULTS, ...JSON.parse(fs.readFileSync(path.join(DATA, 'company.json'), 'utf8')) });
+const company = () => ({
+  ...COMPANY_DEFAULTS,
+  ...(db.isDbActive() ? db.getCachedSetting('company') : (fs.existsSync(path.join(DATA, 'company.json')) ? JSON.parse(fs.readFileSync(path.join(DATA, 'company.json'), 'utf8')) : {}))
+});
 
 // ---- AI Integration ----
 const WORKING_AI_MODELS = ['openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'qwen/qwen3.8-27b'];
@@ -753,72 +804,77 @@ CRITICAL RULES:
 }
 // ---------- Setup ----------
 function init() {
-  fs.mkdirSync(DATA, { recursive: true }); fs.mkdirSync(BAK, { recursive: true });
-  for (const t in SCHEMA) {
-    if (!fs.existsSync(file(t))) {
-      fs.writeFileSync(file(t), SCHEMA[t].join(',') + '\n');
-    } else {
-      const rows = parseCSV(fs.readFileSync(file(t), 'utf8').replace(/^\uFEFF/, ''));
-      if (rows.length && rows[0].join(',') !== SCHEMA[t].join(',')) {
-        const head = rows[0], dataRows = rows.slice(1);
-        const mapped = dataRows.map(r => Object.fromEntries(SCHEMA[t].map(k => [k, r[head.indexOf(k)] ?? ''])));
-        writeTable(t, mapped);
+  if (IS_SERVERLESS || db.isDbActive()) return;
+  try {
+    fs.mkdirSync(DATA, { recursive: true }); fs.mkdirSync(BAK, { recursive: true });
+    for (const t in SCHEMA) {
+      if (!fs.existsSync(file(t))) {
+        fs.writeFileSync(file(t), SCHEMA[t].join(',') + '\n');
+      } else {
+        const rows = parseCSV(fs.readFileSync(file(t), 'utf8').replace(/^\uFEFF/, ''));
+        if (rows.length && rows[0].join(',') !== SCHEMA[t].join(',')) {
+          const head = rows[0], dataRows = rows.slice(1);
+          const mapped = dataRows.map(r => Object.fromEntries(SCHEMA[t].map(k => [k, r[head.indexOf(k)] ?? ''])));
+          writeTable(t, mapped);
+        }
       }
     }
+    const cf = path.join(DATA, 'company.json');
+    if (!fs.existsSync(cf)) {
+      fs.writeFileSync(cf, JSON.stringify(COMPANY_DEFAULTS, null, 2));
+    } else {
+      try {
+        const cur = JSON.parse(fs.readFileSync(cf, 'utf8'));
+        const bad = ['canopy', 'orpheus', 'gemma', 'deepseek', 'llama-3.3', 'llama-3.1'];
+        if (!cur.groqModel || bad.some(b => (cur.groqModel || '').toLowerCase().includes(b))) {
+          cur.groqModel = 'openai/gpt-oss-120b';
+          fs.writeFileSync(cf, JSON.stringify(cur, null, 2));
+        }
+      } catch {}
+    }
+    const mf = path.join(DATA, 'mail.json'); if (!fs.existsSync(mf)) fs.writeFileSync(mf, JSON.stringify(MAIL_DEFAULTS, null, 2));
+    const existing = readTable('users');
+    if (!existing.some(u => u.role === 'admin')) {
+      const name = existing.some(u => u.username.toLowerCase() === 'admin') ? 'admin2' : 'admin';
+      writeTable('users', existing.concat({ id: newId(), username: name, password: hash('Admin@123'), role: 'admin', createdAt: new Date().toISOString() }));
+      console.log(`\n  No admin account found: created user "${name}" with password "Admin@123" -> CHANGE IT after logging in.\n`);
+    }
+    const exLedgers = readTable('ledgers');
+    if (!exLedgers.length) {
+      const defaultLedgers = [
+        { name: 'Cash', group: 'Cash-in-Hand', openingBalance: '0', balanceType: 'Dr' },
+        { name: 'Bank Account', group: 'Bank Accounts', openingBalance: '0', balanceType: 'Dr' },
+        { name: 'Sales Account', group: 'Sales Accounts', openingBalance: '0', balanceType: 'Cr' },
+        { name: 'Purchase Account', group: 'Purchase Accounts', openingBalance: '0', balanceType: 'Dr' },
+        { name: 'Capital Account', group: 'Capital Account', openingBalance: '0', balanceType: 'Cr' },
+        { name: 'Sundry Debtors', group: 'Sundry Debtors', openingBalance: '0', balanceType: 'Dr' },
+        { name: 'Sundry Creditors', group: 'Sundry Creditors', openingBalance: '0', balanceType: 'Cr' },
+        { name: 'CGST (Duties & Taxes)', group: 'Duties & Taxes', openingBalance: '0', balanceType: 'Cr' },
+        { name: 'SGST (Duties & Taxes)', group: 'Duties & Taxes', openingBalance: '0', balanceType: 'Cr' },
+        { name: 'IGST (Duties & Taxes)', group: 'Duties & Taxes', openingBalance: '0', balanceType: 'Cr' },
+        { name: 'Freight & Site Work Expenses', group: 'Direct Expenses', openingBalance: '0', balanceType: 'Dr' },
+        { name: 'Office Rent & Utilities', group: 'Indirect Expenses', openingBalance: '0', balanceType: 'Dr' },
+        { name: 'Staff Salaries', group: 'Indirect Expenses', openingBalance: '0', balanceType: 'Dr' }
+      ];
+      writeTable('ledgers', defaultLedgers.map(l => ({
+        id: newId(),
+        name: l.name,
+        group: l.group,
+        openingBalance: l.openingBalance,
+        balanceType: l.balanceType,
+        contact: '',
+        phone: '',
+        gstin: '',
+        address: '',
+        createdBy: 'system',
+        createdAt: new Date().toISOString()
+      })));
+    }
+    const dir = path.join(BAK, new Date().toISOString().slice(0, 10)); fs.mkdirSync(dir, { recursive: true });
+    fs.cpSync(DATA, dir, { recursive: true });
+  } catch (err) {
+    console.warn('Init skipped:', err.message);
   }
-  const cf = path.join(DATA, 'company.json');
-  if (!fs.existsSync(cf)) {
-    fs.writeFileSync(cf, JSON.stringify(COMPANY_DEFAULTS, null, 2));
-  } else {
-    try {
-      const cur = JSON.parse(fs.readFileSync(cf, 'utf8'));
-      const bad = ['canopy', 'orpheus', 'gemma', 'deepseek', 'llama-3.3', 'llama-3.1'];
-      if (!cur.groqModel || bad.some(b => (cur.groqModel || '').toLowerCase().includes(b))) {
-        cur.groqModel = 'openai/gpt-oss-120b';
-        fs.writeFileSync(cf, JSON.stringify(cur, null, 2));
-      }
-    } catch {}
-  }
-  const mf = path.join(DATA, 'mail.json'); if (!fs.existsSync(mf)) fs.writeFileSync(mf, JSON.stringify(MAIL_DEFAULTS, null, 2));
-  const existing = readTable('users');
-  if (!existing.some(u => u.role === 'admin')) { // first run, or recovery: no admin left -> recreate the default one (other users are kept)
-    const name = existing.some(u => u.username.toLowerCase() === 'admin') ? 'admin2' : 'admin';
-    writeTable('users', existing.concat({ id: newId(), username: name, password: hash('Admin@123'), role: 'admin', createdAt: new Date().toISOString() }));
-    console.log(`\n  No admin account found: created user "${name}" with password "Admin@123" -> CHANGE IT after logging in.\n`);
-  }
-  const exLedgers = readTable('ledgers');
-  if (!exLedgers.length) {
-    const defaultLedgers = [
-      { name: 'Cash', group: 'Cash-in-Hand', openingBalance: '0', balanceType: 'Dr' },
-      { name: 'Bank Account', group: 'Bank Accounts', openingBalance: '0', balanceType: 'Dr' },
-      { name: 'Sales Account', group: 'Sales Accounts', openingBalance: '0', balanceType: 'Cr' },
-      { name: 'Purchase Account', group: 'Purchase Accounts', openingBalance: '0', balanceType: 'Dr' },
-      { name: 'Capital Account', group: 'Capital Account', openingBalance: '0', balanceType: 'Cr' },
-      { name: 'Sundry Debtors', group: 'Sundry Debtors', openingBalance: '0', balanceType: 'Dr' },
-      { name: 'Sundry Creditors', group: 'Sundry Creditors', openingBalance: '0', balanceType: 'Cr' },
-      { name: 'CGST (Duties & Taxes)', group: 'Duties & Taxes', openingBalance: '0', balanceType: 'Cr' },
-      { name: 'SGST (Duties & Taxes)', group: 'Duties & Taxes', openingBalance: '0', balanceType: 'Cr' },
-      { name: 'IGST (Duties & Taxes)', group: 'Duties & Taxes', openingBalance: '0', balanceType: 'Cr' },
-      { name: 'Freight & Site Work Expenses', group: 'Direct Expenses', openingBalance: '0', balanceType: 'Dr' },
-      { name: 'Office Rent & Utilities', group: 'Indirect Expenses', openingBalance: '0', balanceType: 'Dr' },
-      { name: 'Staff Salaries', group: 'Indirect Expenses', openingBalance: '0', balanceType: 'Dr' }
-    ];
-    writeTable('ledgers', defaultLedgers.map(l => ({
-      id: newId(),
-      name: l.name,
-      group: l.group,
-      openingBalance: l.openingBalance,
-      balanceType: l.balanceType,
-      contact: '',
-      phone: '',
-      gstin: '',
-      address: '',
-      createdBy: 'system',
-      createdAt: new Date().toISOString()
-    })));
-  }
-  const dir = path.join(BAK, new Date().toISOString().slice(0, 10)); fs.mkdirSync(dir, { recursive: true }); // daily backup on start
-  fs.cpSync(DATA, dir, { recursive: true });
 }
 
 // ---------- Zip Archiver & Extractor (Pure Node.js built-ins) ----------
@@ -2136,10 +2192,19 @@ function serve(req, res, p) {
   }
 }
 
-init();
+if (!IS_SERVERLESS) {
+  try { init(); } catch (e) {}
+}
 const handler = async (req, res) => {
   try {
+    if (db.isDbActive()) {
+      await db.refreshCache();
+    }
     const p = new URL(req.url, 'http://x').pathname;
+    if (p === '/api/cron/check-inactivity') {
+      await checkInactivityAlerts();
+      return send(res, 200, { ok: true, timestamp: new Date().toISOString() });
+    }
     if (p.startsWith('/api/')) return await api(req, res, p.slice(5).split('/').filter(Boolean));
     serve(req, res, p);
   } catch (e) {
@@ -2147,16 +2212,20 @@ const handler = async (req, res) => {
     send(res, e.code >= 400 && e.code < 600 ? e.code : 500, { error: e.code ? e.message : 'Server error' });
   }
 };
-let server;
-try { server = TLS ? https.createServer(TLS_OPTS, handler) : http.createServer(handler); }
-catch (e) { console.error('HTTPS could not start (' + e.message + '). Falling back to plain HTTP.'); TLS = false; server = http.createServer(handler); }
-server.on('error', e => { console.error(e.code === 'EADDRINUSE' ? `Port ${PORT} is already in use.` : e.message); process.exit(1); });
-if (process.env.LAUNCHER_PID) setInterval(() => { try { process.kill(+process.env.LAUNCHER_PID, 0); } catch { console.log('Launcher is gone, shutting down.'); process.exit(0); } }, 5000); // never outlive the helper
-setInterval(checkInactivityAlerts, 60000); // Inactivity & offline monitoring checker (runs every minute)
-setTimeout(checkInactivityAlerts, 4000);
-server.listen(PORT, HOST, () => console.log(`Accounting app running: ${TLS ? 'https' : 'http'}://localhost:${PORT}  (LAN: ${TLS ? 'https' : 'http'}://<this-pc-ip>:${PORT})`));
-if (TLS && process.env.HTTP_REDIRECT_PORT) // optional: http://host -> https://host
-  http.createServer((q, r) => {
-    let h = String(q.headers.host || '').replace(/:\d+$/, ''); if (!/^[a-z0-9.\-]+$/i.test(h)) h = 'localhost';
-    r.writeHead(301, { Location: `https://${h}${PORT === 443 ? '' : ':' + PORT}${q.url}` }); r.end();
-  }).on('error', e => console.error('HTTP redirect not started:', e.message)).listen(+process.env.HTTP_REDIRECT_PORT, HOST);
+module.exports = handler;
+
+if (require.main === module && !IS_SERVERLESS) {
+  let server;
+  try { server = TLS ? https.createServer(TLS_OPTS, handler) : http.createServer(handler); }
+  catch (e) { console.error('HTTPS could not start (' + e.message + '). Falling back to plain HTTP.'); TLS = false; server = http.createServer(handler); }
+  server.on('error', e => { console.error(e.code === 'EADDRINUSE' ? `Port ${PORT} is already in use.` : e.message); process.exit(1); });
+  if (process.env.LAUNCHER_PID) setInterval(() => { try { process.kill(+process.env.LAUNCHER_PID, 0); } catch { console.log('Launcher is gone, shutting down.'); process.exit(0); } }, 5000); // never outlive the helper
+  setInterval(checkInactivityAlerts, 60000); // Inactivity & offline monitoring checker (runs every minute)
+  setTimeout(checkInactivityAlerts, 4000);
+  server.listen(PORT, HOST, () => console.log(`Accounting app running: ${TLS ? 'https' : 'http'}://localhost:${PORT}  (LAN: ${TLS ? 'https' : 'http'}://<this-pc-ip>:${PORT})`));
+  if (TLS && process.env.HTTP_REDIRECT_PORT) // optional: http://host -> https://host
+    http.createServer((q, r) => {
+      let h = String(q.headers.host || '').replace(/:\d+$/, ''); if (!/^[a-z0-9.\-]+$/i.test(h)) h = 'localhost';
+      r.writeHead(301, { Location: `https://${h}${PORT === 443 ? '' : ':' + PORT}${q.url}` }); r.end();
+    }).on('error', e => console.error('HTTP redirect not started:', e.message)).listen(+process.env.HTTP_REDIRECT_PORT, HOST);
+}
