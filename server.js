@@ -1205,7 +1205,7 @@ async function api(req, res, parts) {
 
   if (a === 'emp-docs') {
     const targetUserId = id;
-    const docType = parts[3];
+    const docType = sub || parts[2] || parts[3];
     if (!targetUserId || !docType) throw fail(400, 'User ID and document type are required');
 
     if (user.role !== 'admin' && user.id !== targetUserId) {
@@ -1291,7 +1291,7 @@ async function api(req, res, parts) {
       return send(res, 200, { ok: true, doc: docRecord });
     }
 
-    if (m === 'PUT' && parts[4] === 'status') {
+    if (m === 'PUT' && (parts[3] === 'status' || parts[4] === 'status' || parts.includes('status'))) {
       if (user.role !== 'admin') throw fail(403, 'Admin only');
       const b = await body(req);
       const newStatus = b.status === 'Verified' ? 'Verified' : 'Rejected';

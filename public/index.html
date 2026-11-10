@@ -11834,11 +11834,14 @@ async function handleDocFileUpload(e, userId, docType) {
         fileData: base64Data
       });
       say('Successfully uploaded ' + file.name, 1);
-      // Refresh modal
+      // Refresh modal and view
       const modal = $('#docVaultModalOverlay');
       if (modal) {
         modal.remove();
         openDocVaultModal(userId);
+      }
+      if (window.currentViewName === 'myprofile') {
+        myProfileView();
       }
     } catch (err) {
       say('Upload failed: ' + err.message);
