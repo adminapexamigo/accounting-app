@@ -1069,7 +1069,9 @@ const DEFAULT_EMPLOYEE_PERMISSIONS = {
   products:  { view: true, create: true, edit: true, delete: false },
   purchases: { view: false, create: false, edit: false, delete: false },
   ledgers:   { view: true, create: true, edit: true, delete: false },
-  vouchers:  { view: true, create: true, edit: true, delete: false }
+  vouchers:  { view: true, create: true, edit: true, delete: false },
+  salaryslips: { view: true, create: false, edit: false, delete: false },
+  workupdates: { view: true, create: true, edit: true, delete: false }
 };
 
 function hasPermission(user, mod, action) {
@@ -1077,6 +1079,8 @@ function hasPermission(user, mod, action) {
   if (user.role === 'admin') return true;
   if (mod === 'taxinvoice' || mod === 'invoice') mod = 'invoices';
   if (mod === 'docs') mod = 'quotation';
+  if (mod === 'salaryslips') return action === 'view';
+  if (mod === 'workupdates') return true;
   const userPerms = (user.permissions && typeof user.permissions === 'object' && Object.keys(user.permissions).length > 0)
     ? user.permissions
     : DEFAULT_EMPLOYEE_PERMISSIONS;
@@ -2181,7 +2185,7 @@ async function api(req, res, parts) {
   }
   const P = PERM[t];
   if (m === 'GET' && !id) {
-    if (t === 'users' || t === 'purchases' || t === 'logins') {
+    if (t === 'users' || t === 'purchases' || t === 'logins' || t === 'salaryslips' || t === 'workupdates') {
       if (!P.r.includes(user.role)) throw fail(403, 'Not allowed');
     } else if (t === 'docs') {
       if (!hasPermission(user, 'quotation', 'view') && !hasPermission(user, 'pi', 'view') && !hasPermission(user, 'po', 'view')) {
