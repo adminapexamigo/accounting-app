@@ -7,6 +7,7 @@ const DATA = IS_SERVERLESS ? path.join('/tmp', 'data') : path.join(__dirname, 'd
 const PUB = path.join(__dirname, 'public');
 const BAK = IS_SERVERLESS ? path.join('/tmp', 'backups') : path.join(__dirname, 'backups');
 const PHOTOS = path.join(DATA, 'photos');
+const EMP_DOCS = path.join(DATA, 'emp_docs');
 const CERTS = path.join(__dirname, 'certs');
 const db = require('./lib/db');
 const FACE_THRESHOLD = +process.env.FACE_THRESHOLD || 0.5; // lower = stricter (face-api default 0.6)
@@ -21,21 +22,22 @@ const tlsOptions = () => { // key.pem + cert.pem, or amigo.pfx + pfx.pass (creat
 let TLS_OPTS = tlsOptions(), TLS = !!TLS_OPTS;
 
 const SCHEMA = {
-  users: ['id','username','fullName','password','role','designation','contact','email','photo','faceDescriptor','faceRequired','otpRequired','permissions','createdAt'],
+  users: ['id','username','fullName','password','role','designation','contact','email','photo','faceDescriptor','faceRequired','otpRequired','permissions','empId','department','dob','gender','bloodGroup','joiningDate','fatherName','emergencyContact','currentAddress','permanentAddress','aadhaarNo','panNo','uanNo','esicNo','bankName','bankAccountNo','bankIfsc','bankBranch','annualCtc','salaryStructure','leavePolicy','documents','createdAt'],
   clients: ['id','name','email','phone','address','gstin','contact','mobile','createdAt'],
   products: ['id','name','hsn','rate','gst','createdAt'],
   invoices: ['id','number','date','state','taxType','clientId','clientName','clientAddress','clientGstin','clientContact','clientMobile','shipName','shipAddress','shipGstin','shipContact','shipMobile','poNumber','poDate','items','subtotal','tax','total','createdBy','createdAt'],
   purchases: ['id','date','vendor','description','amount','gst','createdBy','createdAt'],
   workupdates: ['id','date','userId','username','fullName','loginTime','submittedAt','work','pending','hours','emailStatus','createdAt'],
   logins: ['id','userId','username','loginAt'],
-  docs: ['id','type','number','date','party','total','data','createdBy','createdAt'], // quotation | pi | po (details as JSON in data)
+  docs: ['id','type','number','date','party','total','data','createdBy','createdAt'],
   sheets: ['id','title','type','date','category','data','createdBy','createdAt'],
   ledgers: ['id','name','group','openingBalance','balanceType','contact','phone','gstin','address','createdBy','createdAt'],
   vouchers: ['id','voucherNo','voucherType','date','narration','entries','total','createdBy','createdAt'],
+  salaryslips: ['id','employeeId','employeeName','month','year','date','designation','department','bankName','bankAccountNo','bankIfsc','panNo','uanNo','totalDays','paidDays','lopDays','basic','hra','conveyance','specialAllowance','grossEarnings','pf','pt','tds','otherDeductions','totalDeductions','netPay','netPayWords','status','createdBy','createdAt'],
 };
 const BOTH = ['admin','employee'], ADMIN = ['admin'];
-const PERM = { clients:{r:BOTH,c:BOTH}, products:{r:BOTH,c:BOTH}, invoices:{r:BOTH,c:BOTH}, purchases:{r:ADMIN,c:ADMIN}, users:{r:ADMIN,c:ADMIN}, workupdates:{r:BOTH,c:BOTH}, logins:{r:ADMIN,c:[]}, docs:{r:BOTH,c:BOTH}, sheets:{r:BOTH,c:BOTH}, ledgers:{r:BOTH,c:BOTH}, vouchers:{r:BOTH,c:BOTH} };
-const REQUIRED = { clients:['name'], products:['name','rate'], purchases:['date','amount'], users:['username','role'], sheets:['title','type'], ledgers:['name','group'], vouchers:['voucherType','date'] };
+const PERM = { clients:{r:BOTH,c:BOTH}, products:{r:BOTH,c:BOTH}, invoices:{r:BOTH,c:BOTH}, purchases:{r:ADMIN,c:ADMIN}, users:{r:ADMIN,c:ADMIN}, workupdates:{r:BOTH,c:BOTH}, logins:{r:ADMIN,c:[]}, docs:{r:BOTH,c:BOTH}, sheets:{r:BOTH,c:BOTH}, ledgers:{r:BOTH,c:BOTH}, vouchers:{r:BOTH,c:BOTH}, salaryslips:{r:BOTH,c:ADMIN} };
+const REQUIRED = { clients:['name'], products:['name','rate'], purchases:['date','amount'], users:['username','role'], sheets:['title','type'], ledgers:['name','group'], vouchers:['voucherType','date'], salaryslips:['employeeId','month','year'] };
 
 // ---------- CSV ----------
 const esc = v => { v = String(v ?? ''); return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
@@ -113,9 +115,29 @@ const safeUser = u => ({
   photo: u.photo || '',
   faceRequired: u.faceRequired || '',
   otpRequired: u.otpRequired || '',
-  permissions: typeof u.permissions === 'object' && u.permissions !== null
-    ? u.permissions
-    : (typeof u.permissions === 'string' ? (() => { try { return JSON.parse(u.permissions || '{}'); } catch { return {}; } })() : {}),
+  permissions: u.permissions || {},
+  empId: u.empId || ('AE-' + String(u.id || '').slice(0, 4).toUpperCase()),
+  department: u.department || 'General',
+  dob: u.dob || '',
+  gender: u.gender || '',
+  bloodGroup: u.bloodGroup || '',
+  joiningDate: u.joiningDate || (u.createdAt ? u.createdAt.slice(0, 10) : ''),
+  fatherName: u.fatherName || '',
+  emergencyContact: u.emergencyContact || '',
+  currentAddress: u.currentAddress || '',
+  permanentAddress: u.permanentAddress || '',
+  aadhaarNo: u.aadhaarNo || '',
+  panNo: u.panNo || '',
+  uanNo: u.uanNo || '',
+  esicNo: u.esicNo || '',
+  bankName: u.bankName || '',
+  bankAccountNo: u.bankAccountNo || '',
+  bankIfsc: u.bankIfsc || '',
+  bankBranch: u.bankBranch || '',
+  annualCtc: u.annualCtc != null ? +u.annualCtc : 0,
+  salaryStructure: u.salaryStructure || null,
+  leavePolicy: u.leavePolicy || { pl: 12, cl: 6, sl: 6, plBalance: 12, clBalance: 6, slBalance: 6 },
+  documents: u.documents || {},
   createdAt: u.createdAt
 });
 const needsFace = u => u.role === 'employee' && mailCfg().faceEmployees !== false; // face check is an allowed way to verify for employees
@@ -1016,12 +1038,14 @@ const clean = (o, t) => {
   const x = {};
   for (const k of SCHEMA[t]) {
     if (o[k] !== undefined && !['id','createdAt','createdBy'].includes(k)) {
-      if (k === 'permissions') {
+      if (['permissions', 'salaryStructure', 'leavePolicy', 'documents'].includes(k)) {
         x[k] = typeof o[k] === 'object' && o[k] !== null
           ? o[k]
           : (typeof o[k] === 'string' ? (() => { try { return JSON.parse(o[k] || '{}'); } catch { return {}; } })() : {});
+      } else if (typeof o[k] === 'number') {
+        x[k] = o[k];
       } else {
-        x[k] = String(o[k]).trim().slice(0, 500);
+        x[k] = String(o[k] ?? '').trim().slice(0, 2000);
       }
     }
   }
@@ -1156,12 +1180,121 @@ async function api(req, res, parts) {
     const sheets = readTable('sheets').length;
     const vouchers = readTable('vouchers').length;
     const ledgers = readTable('ledgers').length;
-    return send(res, 200, { clients, products, invoices, purchases, users, quotation, pi, po, sheets, vouchers, ledgers });
+    const salaryslips = readTable('salaryslips').length;
+    return send(res, 200, { clients, products, invoices, purchases, users, quotation, pi, po, sheets, vouchers, ledgers, salaryslips });
   }
   if (a === 'photo' && m === 'GET') {
     if (!/^[a-f0-9]+$/.test(id || '')) throw fail(404, 'Not found');
     const f = path.join(PHOTOS, id + '.jpg'); if (!fs.existsSync(f)) throw fail(404, 'Not found');
     res.writeHead(200, { 'Content-Type': 'image/jpeg', 'Cache-Control': 'private, max-age=60' }); return fs.createReadStream(f).pipe(res);
+  }
+
+  if (a === 'emp-docs') {
+    const targetUserId = id;
+    const docType = parts[3];
+    if (!targetUserId || !docType) throw fail(400, 'User ID and document type are required');
+
+    if (user.role !== 'admin' && user.id !== targetUserId) {
+      throw fail(403, 'Access denied: You can only view or upload your own documents');
+    }
+
+    const uDir = path.join(EMP_DOCS, targetUserId);
+    fs.mkdirSync(uDir, { recursive: true });
+
+    if (m === 'GET') {
+      const files = fs.existsSync(uDir) ? fs.readdirSync(uDir) : [];
+      const match = files.find(f => f.startsWith(docType + '.') || f === docType);
+      if (!match) throw fail(404, 'Document not uploaded yet');
+      const fPath = path.join(uDir, match);
+      const ext = path.extname(match).toLowerCase();
+      const mime = ext === '.pdf' ? 'application/pdf' : (ext === '.png' ? 'image/png' : (ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 'application/octet-stream'));
+      res.writeHead(200, {
+        'Content-Type': mime,
+        'Content-Disposition': `inline; filename="${match}"`,
+        'Cache-Control': 'private, max-age=120'
+      });
+      return fs.createReadStream(fPath).pipe(res);
+    }
+
+    if (m === 'POST') {
+      const b = await body(req);
+      if (!b.fileData) throw fail(400, 'File data is required');
+      const origName = String(b.fileName || (docType + '.pdf')).replace(/[^a-zA-Z0-9._-]/g, '_');
+      const ext = path.extname(origName) || '.pdf';
+      const cleanDocType = docType.replace(/[^a-zA-Z0-9_-]/g, '');
+      const saveFileName = cleanDocType + ext;
+      const fPath = path.join(uDir, saveFileName);
+
+      let buf;
+      if (b.fileData.includes(',')) {
+        buf = Buffer.from(b.fileData.split(',')[1], 'base64');
+      } else {
+        buf = Buffer.from(b.fileData, 'base64');
+      }
+      fs.writeFileSync(fPath, buf);
+
+      const docRecord = {
+        docType: cleanDocType,
+        fileName: origName,
+        fileSize: buf.length,
+        status: 'Uploaded',
+        uploadedAt: new Date().toISOString()
+      };
+
+      await locked(async () => {
+        const L = readTable('users');
+        const u = L.find(x => x.id === targetUserId);
+        if (u) {
+          if (!u.documents || typeof u.documents !== 'object') {
+            try { u.documents = typeof u.documents === 'string' ? JSON.parse(u.documents) : {}; } catch { u.documents = {}; }
+          }
+          u.documents[cleanDocType] = docRecord;
+          if (db.isDbActive()) {
+            await db.saveRecord('users', u);
+            db.setCachedTable('users', L);
+          } else {
+            await writeTable('users', L);
+          }
+        }
+      });
+
+      return send(res, 200, { ok: true, doc: docRecord });
+    }
+
+    if (m === 'PUT' && parts[4] === 'status') {
+      if (user.role !== 'admin') throw fail(403, 'Admin only');
+      const b = await body(req);
+      const newStatus = b.status === 'Verified' ? 'Verified' : 'Rejected';
+      const note = String(b.note || '').slice(0, 300);
+
+      let updatedDoc = null;
+      await locked(async () => {
+        const L = readTable('users');
+        const u = L.find(x => x.id === targetUserId);
+        if (u) {
+          if (!u.documents || typeof u.documents !== 'object') {
+            try { u.documents = typeof u.documents === 'string' ? JSON.parse(u.documents) : {}; } catch { u.documents = {}; }
+          }
+          if (!u.documents[docType]) u.documents[docType] = { docType, status: newStatus };
+          u.documents[docType].status = newStatus;
+          u.documents[docType].verifiedAt = new Date().toISOString();
+          u.documents[docType].verifiedBy = user.username;
+          if (note) u.documents[docType].note = note;
+          updatedDoc = u.documents[docType];
+
+          if (db.isDbActive()) {
+            await db.saveRecord('users', u);
+            db.setCachedTable('users', L);
+          } else {
+            await writeTable('users', L);
+          }
+        }
+      });
+
+      return send(res, 200, { ok: true, doc: updatedDoc });
+    }
+
+    throw fail(405, 'Method not allowed');
   }
   if (a === 'password' && m === 'POST') {
     const b = await body(req); if (String(b.newPassword || '').length < 8) throw fail(400, 'New password must be at least 8 characters');
@@ -2035,6 +2168,9 @@ async function api(req, res, parts) {
     if (t === 'users') L = L.map(safeUser);
     if (t === 'docs' && user.role !== 'admin') L = L.filter(x => hasPermission(user, x.type, 'view'));
     if (t === 'workupdates' && user.role !== 'admin') L = L.filter(x => x.userId === user.id);
+    if (t === 'salaryslips' && user.role !== 'admin') {
+      L = L.filter(x => x.employeeId === user.id || String(x.employeeName || '').toLowerCase() === String(user.fullName || user.username).toLowerCase());
+    }
     return send(res, 200, L);
   }
   if (m === 'POST' && !id) {
@@ -2054,6 +2190,7 @@ async function api(req, res, parts) {
       else if (t === 'sheets') o = buildSheet(b, L, user);
       else if (t === 'ledgers') o = buildLedger(b, L, user);
       else if (t === 'vouchers') o = buildVoucher(b, L, user);
+      else if (t === 'salaryslips') o = buildSalarySlip(b, L, user);
       else {
         o = clean(b, t);
         for (const k of REQUIRED[t] || []) if (!o[k]) throw fail(400, k + ' is required');
@@ -2170,6 +2307,16 @@ async function api(req, res, parts) {
           }
           return L[i];
         }
+        if (t === 'salaryslips') {
+          Object.assign(L[i], buildSalarySlip(b, L, user, L[i]));
+          if (db.isDbActive()) {
+            await db.saveRecord(t, L[i]);
+            db.setCachedTable(t, L);
+          } else {
+            await writeTable(t, L);
+          }
+          return L[i];
+        }
         const o = clean(b, t);
         if (t === 'users') {
           delete o.password;
@@ -2217,6 +2364,54 @@ function nextDocNumber(type, date, L) { // e.g. AEPI-26-27-011, AE/26-27/30 (fin
   const n = Math.max(0, ...L.filter(x => x.type === type && x.number.startsWith(base)).map(x => parseInt(x.number.slice(base.length)) || 0)) + 1;
   return base + String(n).padStart(pad, '0');
 }
+function buildSalarySlip(b, L, user, existing) {
+  const basic = +b.basic || 0;
+  const hra = +b.hra || 0;
+  const conv = +b.conveyance || 0;
+  const special = +b.specialAllowance || 0;
+  const gross = +b.grossEarnings || (basic + hra + conv + special);
+  const pf = +b.pf || 0;
+  const pt = +b.pt || 0;
+  const tds = +b.tds || 0;
+  const otherDed = +b.otherDeductions || 0;
+  const totalDed = +b.totalDeductions || (pf + pt + tds + otherDed);
+  const net = Math.max(0, Math.round(gross - totalDed));
+
+  return {
+    id: existing?.id || b.id || newId(),
+    employeeId: String(b.employeeId || '').trim(),
+    employeeName: String(b.employeeName || '').trim(),
+    month: String(b.month || '').padStart(2, '0'),
+    year: String(b.year || new Date().getFullYear()),
+    date: b.date || new Date().toISOString().slice(0, 10),
+    designation: String(b.designation || '').slice(0, 100),
+    department: String(b.department || '').slice(0, 100),
+    bankName: String(b.bankName || '').slice(0, 100),
+    bankAccountNo: String(b.bankAccountNo || '').slice(0, 50),
+    bankIfsc: String(b.bankIfsc || '').slice(0, 20),
+    panNo: String(b.panNo || '').slice(0, 20),
+    uanNo: String(b.uanNo || '').slice(0, 30),
+    totalDays: +b.totalDays || 30,
+    paidDays: +b.paidDays || 30,
+    lopDays: +b.lopDays || 0,
+    basic,
+    hra,
+    conveyance: conv,
+    specialAllowance: special,
+    grossEarnings: gross,
+    pf,
+    pt,
+    tds,
+    otherDeductions: otherDed,
+    totalDeductions: totalDed,
+    netPay: net,
+    netPayWords: String(b.netPayWords || '').slice(0, 200),
+    status: b.status || 'Published',
+    createdBy: user.username,
+    createdAt: existing?.createdAt || new Date().toISOString()
+  };
+}
+
 function buildDoc(b, L, user, existing) {
   const type = existing ? existing.type : b.type;
   if (!DOCP[type]) throw fail(400, 'Invalid document type');
@@ -2428,6 +2623,7 @@ const handler = async (req, res) => {
     try {
       fs.mkdirSync(DATA, { recursive: true });
       fs.mkdirSync(PHOTOS, { recursive: true });
+      fs.mkdirSync(EMP_DOCS, { recursive: true });
     } catch {}
     if (db.isDbActive()) {
       await db.refreshCache();

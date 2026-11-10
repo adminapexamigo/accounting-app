@@ -1,0 +1,1 @@
+id,employeeId,employeeName,month,year,date,designation,department,bankName,bankAccountNo,bankIfsc,panNo,uanNo,totalDays,paidDays,lopDays,basic,hra,conveyance,specialAllowance,grossEarnings,pf,pt,tds,otherDeductions,totalDeductions,netPay,netPayWords,status,createdBy,createdAt

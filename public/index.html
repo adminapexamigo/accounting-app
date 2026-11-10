@@ -2808,6 +2808,129 @@ body.mobile-sidebar-open {
   filter: brightness(1.15) !important;
   transition: transform 0.1s ease, opacity 0.1s ease !important;
 }
+
+/* ===== EMPLOYEE ONBOARDING & PAYSLIP STYLES ===== */
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+  #payslipPrintModal, #payslipPrintModal *, #payslipPrintArea, #payslipPrintArea * {
+    visibility: visible !important;
+  }
+  #payslipPrintModal {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    background: #fff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+  .payslip-no-print {
+    display: none !important;
+  }
+  @page {
+    size: A4 portrait;
+    margin: 10mm 12mm;
+  }
+}
+
+.hr-badge-pending {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.hr-badge-verified {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.hr-badge-rejected {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.hr-badge-missing {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.emp-doc-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  transition: all 0.2s ease;
+}
+.emp-doc-card:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.onboard-step-pill {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  color: #64748b;
+  background: #f1f5f9;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.onboard-step-pill.active {
+  background: #4f46e5;
+  color: #ffffff;
+  border-color: #4338ca;
+  box-shadow: 0 2px 6px rgba(79,70,229,0.3);
+}
+
+.ctc-calc-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 16px;
+}
+
 </style></head><body>
 
 <!-- Top Animated Progress Bar -->
@@ -5068,6 +5191,17 @@ const MENU_GROUPS = [
     ]
   },
   {
+    id: 'hr',
+    label: 'HR & Payroll',
+    icon: '👔',
+    items: [
+      ['employees', 'Employee Directory', '👥', 1],
+      ['payroll', 'Payroll & Salary Slips', '💵', 1],
+      ['myprofile', 'My Profile & Docs', '📋', 0, 'empOnly'],
+      ['mypayslips', 'My Payslips', '💵', 0, 'empOnly']
+    ]
+  },
+  {
     id: 'operations',
     label: 'Work & Operations',
     icon: '✍️',
@@ -5105,7 +5239,9 @@ const COUNT_KEY_MAP = {
   clients: 'clients',
   products: 'products',
   users: 'users',
-  tally: 'vouchers'
+  tally: 'vouchers',
+  salaryslips: 'salaryslips',
+  payroll: 'salaryslips'
 };
 
 async function updateCounts(silent = true) {
@@ -5182,6 +5318,7 @@ function renderNav(activeTab) {
   $('#nav').innerHTML = visibleGroups.map(g => {
     const validItems = g.items.filter(item => {
     if (item[3] && me.role !== 'admin') return false;
+    if (item[4] === 'empOnly' && me.role === 'admin') return false;
     if (['invoices','quotation','pi','po','sheets','purchases','clients','products'].includes(item[0])) {
       return can(item[0], 'view');
     }
@@ -5450,6 +5587,10 @@ function go(t) {
       sheets: 'Excel Spreadsheets',
       tally: 'Tally Accounting & Vouchers',
       users: 'User Management',
+      employees: 'Employee Directory & Onboarding',
+      payroll: 'Payroll & Salary Slips',
+      myprofile: 'My Profile & Documents',
+      mypayslips: 'My Payslips',
       settings: 'Company Profile',
       mail: 'Email Settings',
       monitoring: 'Employee Activity & Audit',
@@ -5473,7 +5614,7 @@ function go(t) {
     `;
   }
 
-  ({dash,invoices,settings,ai:aiSettingsView,workupdates,logins,mail,monitoring,sheets:sheetsView,tally:tallyView,sync:syncView,weeklybackup:()=>syncView(true),quotation:()=>docs('quotation'),pi:()=>docs('pi'),po:()=>docs('po'),support:supportView}[t]||(()=>crud(t)))(t).catch?.(e=>say(e.message));
+  ({dash,invoices,settings,ai:aiSettingsView,workupdates,logins,mail,monitoring,sheets:sheetsView,tally:tallyView,sync:syncView,weeklybackup:()=>syncView(true),quotation:()=>docs('quotation'),pi:()=>docs('pi'),po:()=>docs('po'),support:supportView,employees:employeesView,payroll:payrollView,myprofile:myProfileView,mypayslips:myPayslipsView}[t]||(()=>crud(t)))(t).catch?.(e=>say(e.message));
 }
 
 const load = async (t, forceFresh = false) => {
@@ -10783,6 +10924,1857 @@ function openPermissionsModal(user, onSaved) {
       say('Failed to save permissions: ' + err.message);
     }
   };
+}
+
+
+// =========================================================================
+// EMPLOYEE ONBOARDING, DOCUMENT VAULT, CTC STRUCTURE & PAYROLL SYSTEM
+// =========================================================================
+
+const STANDARD_DOC_TYPES = [
+  { key: 'aadhaar', label: 'Aadhaar Card', desc: 'Front & Back photo or PDF', required: true, icon: '🪪' },
+  { key: 'pan', label: 'PAN Card', desc: 'Permanent Account Number Card', required: true, icon: '💳' },
+  { key: 'bank', label: 'Bank Account Proof', desc: 'Cancelled Cheque or Bank Passbook copy', required: true, icon: '🏦' },
+  { key: 'ssc', label: '10th / SSC Certificate', desc: 'Board Passing Certificate or Marksheet', required: true, icon: '📜' },
+  { key: 'hsc', label: '12th / HSC / Diploma', desc: 'Higher Secondary or Diploma Certificate', required: true, icon: '🎓' },
+  { key: 'degree', label: 'Graduation Degree', desc: 'Bachelor Degree or Final Year Marksheet', required: true, icon: '🏛️' },
+  { key: 'pg', label: 'Post Graduation / Other', desc: 'Master Degree / Technical Certifications', required: false, icon: '📜' },
+  { key: 'experience', label: 'Previous Experience / Relieving', desc: 'Relieving letter & past payslips', required: false, icon: '💼' }
+];
+
+function calcCtcBreakdown(annualCtcInput) {
+  const annual = Math.max(0, +annualCtcInput || 0);
+  const monthly = Math.round(annual / 12);
+  const basic = Math.round(monthly * 0.50);
+  const hra = Math.round(basic * 0.40);
+  const conv = monthly >= 20000 ? 1600 : (monthly > 10000 ? 800 : 0);
+  const special = Math.max(0, monthly - basic - hra - conv);
+  const gross = basic + hra + conv + special;
+  const pf = basic >= 15000 ? 1800 : Math.round(basic * 0.12);
+  const pt = 200;
+  const tds = monthly > 60000 ? Math.round((monthly - 50000) * 0.10) : 0;
+  const totalDed = pf + pt + tds;
+  const net = Math.max(0, gross - totalDed);
+  return {
+    annualCtc: annual,
+    monthlyCtc: monthly,
+    basic,
+    hra,
+    conveyance: conv,
+    specialAllowance: special,
+    grossEarnings: gross,
+    pf,
+    pt,
+    tds,
+    otherDeductions: 0,
+    totalDeductions: totalDed,
+    netPay: net
+  };
+}
+
+// -------------------------------------------------------------------------
+// 1. ADMIN: EMPLOYEE DIRECTORY & ONBOARDING VIEW
+// -------------------------------------------------------------------------
+async function employeesView() {
+  if (me.role !== 'admin') {
+    say('Access denied: Admin only');
+    return go('dash');
+  }
+
+  const [usersList, slipsList] = await Promise.all([
+    api('GET', 'users'),
+    api('GET', 'salaryslips').catch(() => [])
+  ]);
+
+  const view = $('#view');
+  if (!view) return;
+
+  const totalEmps = usersList.length;
+  const regularEmps = usersList.filter(u => u.role === 'employee');
+  const totalMonthlyPayroll = usersList.reduce((acc, u) => acc + (u.annualCtc ? Math.round(u.annualCtc / 12) : 0), 0);
+  
+  let totalDocsUploaded = 0;
+  let totalDocsVerified = 0;
+  usersList.forEach(u => {
+    const docs = u.documents || {};
+    STANDARD_DOC_TYPES.forEach(dt => {
+      if (docs[dt.key]) {
+        totalDocsUploaded++;
+        if (docs[dt.key].status === 'Verified') totalDocsVerified++;
+      }
+    });
+  });
+
+  view.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:20px">
+      <div>
+        <h2 style="margin:0 0 4px;font-size:22px;color:#1e293b;font-weight:700">👥 Employee Directory & Onboarding</h2>
+        <p style="margin:0;font-size:13px;color:#64748b">Manage employee onboarding, KYC & academic documents, CTC salary structures, and leave policies</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <button class="btn ghost" onclick="go('payroll')" style="padding:8px 16px;display:flex;align-items:center;gap:6px">
+          <span>💵 Payroll & Payslips</span>
+        </button>
+        <button class="btn" onclick="openOnboardModal(null)" style="background:#4f46e5;border-color:#4338ca;color:#fff;padding:8px 18px;font-weight:700;display:flex;align-items:center;gap:6px">
+          <span>+ Onboard New Employee</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Stat Summary Cards -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-bottom:22px">
+      <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;display:flex;align-items:center;gap:14px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+        <div style="width:44px;height:44px;border-radius:10px;background:#e0e7ff;color:#4338ca;display:flex;align-items:center;justify-content:center;font-size:22px">👥</div>
+        <div>
+          <div style="font-size:12px;color:#64748b;font-weight:600">Total Staff</div>
+          <div style="font-size:20px;font-weight:700;color:#1e293b">${totalEmps} <span style="font-size:12px;color:#64748b;font-weight:400">(${regularEmps.length} Employees)</span></div>
+        </div>
+      </div>
+
+      <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;display:flex;align-items:center;gap:14px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+        <div style="width:44px;height:44px;border-radius:10px;background:#d1fae5;color:#065f46;display:flex;align-items:center;justify-content:center;font-size:22px">💰</div>
+        <div>
+          <div style="font-size:12px;color:#64748b;font-weight:600">Est. Monthly Payroll</div>
+          <div style="font-size:20px;font-weight:700;color:#059669">₹ ${totalMonthlyPayroll.toLocaleString('en-IN')}</div>
+        </div>
+      </div>
+
+      <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;display:flex;align-items:center;gap:14px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+        <div style="width:44px;height:44px;border-radius:10px;background:#fef3c7;color:#92400e;display:flex;align-items:center;justify-content:center;font-size:22px">📁</div>
+        <div>
+          <div style="font-size:12px;color:#64748b;font-weight:600">Document Vault</div>
+          <div style="font-size:20px;font-weight:700;color:#d97706">${totalDocsVerified} / ${totalDocsUploaded} <span style="font-size:11px;font-weight:500;color:#64748b">Verified</span></div>
+        </div>
+      </div>
+
+      <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;display:flex;align-items:center;gap:14px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+        <div style="width:44px;height:44px;border-radius:10px;background:#f3e8ff;color:#7e22ce;display:flex;align-items:center;justify-content:center;font-size:22px">💵</div>
+        <div>
+          <div style="font-size:12px;color:#64748b;font-weight:600">Salary Slips Issued</div>
+          <div style="font-size:20px;font-weight:700;color:#7e22ce">${slipsList.length}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search & Filter Bar -->
+    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:260px">
+        <span style="font-size:16px;color:#94a3b8">🔍</span>
+        <input type="text" id="empSearchInput" placeholder="Search by name, employee ID, username, department, designation..." style="border:none;outline:none;width:100%;font-size:13px;color:#1e293b">
+      </div>
+      <div style="font-size:12px;color:#64748b;font-weight:500">
+        Showing <span id="empCountDisplay">${usersList.length}</span> staff members
+      </div>
+    </div>
+
+    <!-- Employee Table Container -->
+    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.04)">
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;text-align:left;font-size:13px" id="empDirectoryTable">
+          <thead>
+            <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;color:#475569;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:0.4px">
+              <th style="padding:12px 16px">Staff Member</th>
+              <th style="padding:12px 14px">Role & Dept</th>
+              <th style="padding:12px 14px">Joining Date</th>
+              <th style="padding:12px 14px">Annual CTC</th>
+              <th style="padding:12px 14px">Documents Status</th>
+              <th style="padding:12px 16px;text-align:right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="empDirectoryTbody">
+            ${renderEmployeeTableRows(usersList)}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  // Search filter handler
+  const searchInput = $('#empSearchInput');
+  if (searchInput) {
+    searchInput.oninput = () => {
+      const q = searchInput.value.toLowerCase().trim();
+      const filtered = usersList.filter(u => {
+        const full = (u.fullName || '').toLowerCase();
+        const uname = (u.username || '').toLowerCase();
+        const empid = (u.empId || '').toLowerCase();
+        const dept = (u.department || '').toLowerCase();
+        const desig = (u.designation || '').toLowerCase();
+        return full.includes(q) || uname.includes(q) || empid.includes(q) || dept.includes(q) || desig.includes(q);
+      });
+      const tbody = $('#empDirectoryTbody');
+      if (tbody) tbody.innerHTML = renderEmployeeTableRows(filtered);
+      const cnt = $('#empCountDisplay');
+      if (cnt) cnt.textContent = filtered.length;
+    };
+  }
+}
+
+function renderEmployeeTableRows(list) {
+  if (!list.length) {
+    return `<tr><td colspan="6" style="padding:40px;text-align:center;color:#94a3b8;font-size:14px">No employee records match your search</td></tr>`;
+  }
+
+  return list.map(u => {
+    const avatar = u.photo
+      ? `<img src="/api/photo/${u.id}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid #818cf8;flex-shrink:0">`
+      : `<div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0">${h((u.fullName||u.username)[0].toUpperCase())}</div>`;
+
+    const empIdStr = u.empId || ('AE-' + String(u.id || '').slice(0, 4).toUpperCase());
+    const roleBadge = u.role === 'admin'
+      ? `<span style="background:#e0e7ff;color:#4338ca;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700">Admin</span>`
+      : `<span style="background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700">Employee</span>`;
+
+    const ctcStr = u.annualCtc ? ('₹ ' + (+u.annualCtc).toLocaleString('en-IN') + ' /yr') : '<span style="color:#94a3b8">Not Set</span>';
+    const monthlyNet = u.salaryStructure?.netPay ? ('₹ ' + (+u.salaryStructure.netPay).toLocaleString('en-IN') + '/mo') : '';
+
+    // Calculate document progress
+    const docs = u.documents || {};
+    let reqUploaded = 0;
+    let reqVerified = 0;
+    const reqTotal = STANDARD_DOC_TYPES.filter(d => d.required).length;
+    STANDARD_DOC_TYPES.filter(d => d.required).forEach(d => {
+      if (docs[d.key]) {
+        reqUploaded++;
+        if (docs[d.key].status === 'Verified') reqVerified++;
+      }
+    });
+
+    let docBadgeClass = 'hr-badge-missing';
+    let docBadgeText = `${reqUploaded}/${reqTotal} Uploaded`;
+    if (reqVerified === reqTotal) {
+      docBadgeClass = 'hr-badge-verified';
+      docBadgeText = `✔ All ${reqTotal} Verified`;
+    } else if (reqUploaded > 0) {
+      docBadgeClass = 'hr-badge-pending';
+      docBadgeText = `${reqUploaded}/${reqTotal} (${reqVerified} Verified)`;
+    }
+
+    return `
+      <tr style="border-bottom:1px solid #f1f5f9;transition:background 0.15s ease" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+        <td style="padding:12px 16px">
+          <div style="display:flex;align-items:center;gap:12px">
+            ${avatar}
+            <div>
+              <div style="font-weight:700;color:#1e293b;font-size:14px">${h(u.fullName || u.username)}</div>
+              <div style="font-size:12px;color:#64748b;display:flex;align-items:center;gap:6px">
+                <span style="font-family:monospace;font-weight:600;color:#4f46e5">${h(empIdStr)}</span>
+                <span>•</span>
+                <span>@${h(u.username)}</span>
+              </div>
+            </div>
+          </div>
+        </td>
+        <td style="padding:12px 14px">
+          <div style="font-weight:600;color:#334155">${h(u.designation || (u.role === 'admin' ? 'Administrator' : 'Staff'))}</div>
+          <div style="font-size:11.5px;color:#64748b;display:flex;align-items:center;gap:6px;margin-top:2px">
+            ${roleBadge}
+            <span>${h(u.department || 'General')}</span>
+          </div>
+        </td>
+        <td style="padding:12px 14px;color:#475569;font-size:12.5px">
+          ${u.joiningDate ? h(u.joiningDate) : '<span style="color:#94a3b8">—</span>'}
+        </td>
+        <td style="padding:12px 14px">
+          <div style="font-weight:700;color:#1e293b">${ctcStr}</div>
+          ${monthlyNet ? `<div style="font-size:11px;color:#059669;font-weight:600">Net: ${monthlyNet}</div>` : ''}
+        </td>
+        <td style="padding:12px 14px">
+          <span class="${docBadgeClass}">${docBadgeText}</span>
+        </td>
+        <td style="padding:12px 16px;text-align:right">
+          <div style="display:inline-flex;align-items:center;gap:6px">
+            <button class="btn ghost" onclick="openDocVaultModal('${u.id}')" title="Document Vault (Aadhaar, PAN, Bank, Degrees)" style="padding:5px 9px;font-size:12px">
+              📁 Vault
+            </button>
+            <button class="btn ghost" onclick="openOnboardModal('${u.id}')" title="Edit Profile, CTC & Leave Policy" style="padding:5px 9px;font-size:12px">
+              ✏️ Edit
+            </button>
+            <button class="btn ghost" onclick="openGenerateSlipModal('${u.id}')" title="Generate Monthly Salary Slip" style="padding:5px 9px;font-size:12px;color:#4f46e5">
+              💵 Payslip
+            </button>
+            <button class="btn ghost" onclick="openUserPermModal('${u.id}')" title="Configure Module Access Permissions" style="padding:5px 9px;font-size:12px">
+              🔒
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+async function openUserPermModal(userId) {
+  const users = await api('GET', 'users');
+  const user = users.find(u => u.id === userId);
+  if (user && typeof openPermModal === 'function') {
+    openPermModal(user, () => employeesView());
+  } else {
+    say('User not found');
+  }
+}
+
+// -------------------------------------------------------------------------
+// 2. ONBOARD / EDIT EMPLOYEE MODAL (PERSONAL, KYC, CTC, LEAVE)
+// -------------------------------------------------------------------------
+async function openOnboardModal(userId) {
+  let user = null;
+  if (userId) {
+    const list = await api('GET', 'users');
+    user = list.find(u => u.id === userId);
+    if (!user) return say('User not found');
+  }
+
+  const isEdit = !!user;
+  const ctc = user?.salaryStructure || (user?.annualCtc ? calcCtcBreakdown(user.annualCtc) : calcCtcBreakdown(0));
+  const leave = user?.leavePolicy || { pl: 12, cl: 6, sl: 6, plBalance: 12, clBalance: 6, slBalance: 6 };
+
+  const overlay = document.createElement('div');
+  overlay.className = 'mail-modal-overlay';
+  overlay.id = 'onboardModalOverlay';
+
+  overlay.innerHTML = `
+    <div class="mail-modal-card" style="width:780px;max-width:96vw;max-height:92vh;display:flex;flex-direction:column">
+      <!-- Modal Header -->
+      <div class="mail-modal-header" style="padding:16px 20px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;background:#f8fafc">
+        <div>
+          <h3 style="margin:0;font-size:18px;font-weight:700;color:#1e293b">${isEdit ? '✏️ Edit Employee Profile & CTC' : '👤 Onboard New Employee'}</h3>
+          <p style="margin:2px 0 0;font-size:12px;color:#64748b">${isEdit ? ('Update details for ' + (user.fullName || user.username)) : 'Enter employee personal info, KYC, salary breakdown and leave entitlements'}</p>
+        </div>
+        <button type="button" id="closeOnboardModal" style="background:none;border:none;font-size:24px;cursor:pointer;color:#94a3b8;line-height:1">×</button>
+      </div>
+
+      <!-- Navigation Step Pills -->
+      <div style="display:flex;gap:8px;padding:12px 20px;border-bottom:1px solid #f1f5f9;background:#ffffff;overflow-x:auto">
+        <div class="onboard-step-pill active" data-tab="tab-personal">👤 1. Personal & Role</div>
+        <div class="onboard-step-pill" data-tab="tab-kyc">🏦 2. KYC & Banking</div>
+        <div class="onboard-step-pill" data-tab="tab-ctc">💰 3. CTC & Salary</div>
+        <div class="onboard-step-pill" data-tab="tab-leave">🏖️ 4. Leave Policy</div>
+      </div>
+
+      <!-- Modal Body (Scrollable) -->
+      <form id="onboardForm" style="flex:1;overflow-y:auto;padding:20px;margin:0">
+        <!-- TAB 1: PERSONAL & ROLE -->
+        <div id="tab-personal" class="onboard-tab-pane">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Full Name *</label>
+              <input type="text" id="ob_fullName" required value="${h(user?.fullName || '')}" placeholder="e.g. Rahul Sharma" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+            </div>
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Employee Code / ID</label>
+              <input type="text" id="ob_empId" value="${h(user?.empId || '')}" placeholder="Auto-generated if blank (e.g. AE-1001)" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Login Username *</label>
+              <input type="text" id="ob_username" required value="${h(user?.username || '')}" ${isEdit ? 'readonly style="background:#f1f5f9;cursor:not-allowed"' : ''} placeholder="e.g. rahul.sharma" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+            </div>
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Password ${isEdit ? '(Leave blank to keep existing)' : '*'}</label>
+              <input type="password" id="ob_password" ${isEdit ? '' : 'required'} placeholder="${isEdit ? '••••••••' : 'Enter login password'}" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">System Role *</label>
+              <select id="ob_role" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+                <option value="employee" ${user?.role === 'employee' ? 'selected' : ''}>Employee (Staff Member)</option>
+                <option value="admin" ${user?.role === 'admin' ? 'selected' : ''}>Admin (Full System Access)</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Designation *</label>
+              <input type="text" id="ob_designation" required value="${h(user?.designation || '')}" placeholder="e.g. Sales Executive, Senior Accountant" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Department</label>
+              <input type="text" id="ob_department" value="${h(user?.department || 'Sales')}" placeholder="e.g. Sales, Accounts, Operations, IT" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+            </div>
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Date of Joining</label>
+              <input type="date" id="ob_joiningDate" value="${h(user?.joiningDate || new Date().toISOString().slice(0, 10))}" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px">
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Date of Birth</label>
+              <input type="date" id="ob_dob" value="${h(user?.dob || '')}" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+            </div>
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Gender</label>
+              <select id="ob_gender" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+                <option value="">Select Gender</option>
+                <option value="Male" ${user?.gender === 'Male' ? 'selected' : ''}>Male</option>
+                <option value="Female" ${user?.gender === 'Female' ? 'selected' : ''}>Female</option>
+                <option value="Other" ${user?.gender === 'Other' ? 'selected' : ''}>Other</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Blood Group</label>
+              <input type="text" id="ob_bloodGroup" value="${h(user?.bloodGroup || '')}" placeholder="e.g. O+, B+, A+" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Contact Number</label>
+              <input type="text" id="ob_contact" value="${h(user?.contact || '')}" placeholder="10-digit mobile number" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+            </div>
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Email Address</label>
+              <input type="email" id="ob_email" value="${h(user?.email || '')}" placeholder="e.g. rahul@amigoenterprises.com" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Father's / Guardian's Name</label>
+              <input type="text" id="ob_fatherName" value="${h(user?.fatherName || '')}" placeholder="Father's full name" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+            </div>
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Emergency Contact (Name & Phone)</label>
+              <input type="text" id="ob_emergencyContact" value="${h(user?.emergencyContact || '')}" placeholder="e.g. Priya Sharma - 9876543210" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Current Residential Address</label>
+              <textarea id="ob_currentAddress" rows="2" placeholder="Street address, city, state, pin" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">${h(user?.currentAddress || '')}</textarea>
+            </div>
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Permanent Address</label>
+              <textarea id="ob_permanentAddress" rows="2" placeholder="Permanent home town address" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">${h(user?.permanentAddress || '')}</textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: KYC & BANKING -->
+        <div id="tab-kyc" class="onboard-tab-pane" style="display:none">
+          <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:12.5px;color:#1e40af">
+            💡 Statutory KYC and banking credentials are printed on monthly payslips and used for bank direct deposits.
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Aadhaar Card Number</label>
+              <input type="text" id="ob_aadhaarNo" maxlength="14" value="${h(user?.aadhaarNo || '')}" placeholder="XXXX-XXXX-XXXX" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+            </div>
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">PAN Card Number</label>
+              <input type="text" id="ob_panNo" maxlength="10" value="${h(user?.panNo || '')}" placeholder="ABCDE1234F" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;text-transform:uppercase">
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">UAN (Provident Fund) Number</label>
+              <input type="text" id="ob_uanNo" value="${h(user?.uanNo || '')}" placeholder="12-digit Universal Account Number" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+            </div>
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">ESIC Insurance Number</label>
+              <input type="text" id="ob_esicNo" value="${h(user?.esicNo || '')}" placeholder="17-digit ESIC code (optional)" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Bank Name</label>
+              <input type="text" id="ob_bankName" value="${h(user?.bankName || '')}" placeholder="e.g. HDFC Bank, ICICI Bank, SBI" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+            </div>
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Bank Account Number</label>
+              <input type="text" id="ob_bankAccountNo" value="${h(user?.bankAccountNo || '')}" placeholder="Account number for salary credit" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Bank IFSC Code</label>
+              <input type="text" id="ob_bankIfsc" value="${h(user?.bankIfsc || '')}" placeholder="e.g. HDFC0001234" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;text-transform:uppercase">
+            </div>
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Bank Branch Name</label>
+              <input type="text" id="ob_bankBranch" value="${h(user?.bankBranch || '')}" placeholder="e.g. Andheri East, Mumbai" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: CTC & SALARY BREAKDOWN -->
+        <div id="tab-ctc" class="onboard-tab-pane" style="display:none">
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <div style="flex:1;min-width:240px">
+              <label style="display:block;font-size:12px;font-weight:700;color:#1e293b;margin-bottom:4px">Total Annual CTC (₹ per year)</label>
+              <input type="number" id="ob_annualCtc" value="${user?.annualCtc || 0}" placeholder="e.g. 600000" style="width:100%;box-sizing:border-box;padding:10px 14px;border:2px solid #6366f1;border-radius:6px;font-size:16px;font-weight:700;color:#1e293b">
+            </div>
+            <button type="button" id="ob_autoCalcCtcBtn" class="btn" style="background:#4f46e5;color:#fff;padding:10px 16px;font-weight:600;margin-top:18px">
+              ⚡ Auto Calculate Breakdown
+            </button>
+          </div>
+
+          <!-- Live Breakdown Grid -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <!-- Monthly Earnings Box -->
+            <div class="ctc-calc-card">
+              <div style="font-size:13px;font-weight:700;color:#065f46;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
+                <span>📈 Monthly Earnings</span>
+                <span id="dispMonthlyGross" style="font-size:14px;font-weight:700">₹ ${ctc.grossEarnings.toLocaleString('en-IN')}</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div>
+                  <label style="font-size:11px;color:#64748b">Basic Salary (50%)</label>
+                  <input type="number" id="ob_basic" value="${ctc.basic}" class="ob-calc-input" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:12.5px">
+                </div>
+                <div>
+                  <label style="font-size:11px;color:#64748b">House Rent Allowance (HRA 40% of Basic)</label>
+                  <input type="number" id="ob_hra" value="${ctc.hra}" class="ob-calc-input" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:12.5px">
+                </div>
+                <div>
+                  <label style="font-size:11px;color:#64748b">Conveyance Allowance</label>
+                  <input type="number" id="ob_conveyance" value="${ctc.conveyance}" class="ob-calc-input" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:12.5px">
+                </div>
+                <div>
+                  <label style="font-size:11px;color:#64748b">Special Allowance (Balance to Gross)</label>
+                  <input type="number" id="ob_specialAllowance" value="${ctc.specialAllowance}" class="ob-calc-input" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:12.5px">
+                </div>
+              </div>
+            </div>
+
+            <!-- Monthly Deductions Box -->
+            <div class="ctc-calc-card">
+              <div style="font-size:13px;font-weight:700;color:#991b1b;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
+                <span>📉 Monthly Deductions</span>
+                <span id="dispMonthlyDed" style="font-size:14px;font-weight:700">₹ ${ctc.totalDeductions.toLocaleString('en-IN')}</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div>
+                  <label style="font-size:11px;color:#64748b">Provident Fund (PF - 12% of Basic, max 1800)</label>
+                  <input type="number" id="ob_pf" value="${ctc.pf}" class="ob-calc-input" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:12.5px">
+                </div>
+                <div>
+                  <label style="font-size:11px;color:#64748b">Professional Tax (PT - standard 200)</label>
+                  <input type="number" id="ob_pt" value="${ctc.pt}" class="ob-calc-input" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:12.5px">
+                </div>
+                <div>
+                  <label style="font-size:11px;color:#64748b">TDS / Income Tax</label>
+                  <input type="number" id="ob_tds" value="${ctc.tds || 0}" class="ob-calc-input" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:12.5px">
+                </div>
+                <div>
+                  <label style="font-size:11px;color:#64748b">Other Deductions</label>
+                  <input type="number" id="ob_otherDed" value="${ctc.otherDeductions || 0}" class="ob-calc-input" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:12.5px">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Net In-Hand Highlight Banner -->
+          <div style="background:linear-gradient(135deg,#ecfdf5 0%,#d1fae5 100%);border:2px solid #10b981;border-radius:10px;padding:14px 18px;margin-top:16px;display:flex;align-items:center;justify-content:space-between">
+            <div>
+              <div style="font-size:12px;font-weight:700;color:#065f46;text-transform:uppercase;letter-spacing:0.5px">Estimated Monthly Take-Home (Net In-Hand)</div>
+              <div style="font-size:11.5px;color:#047857">Amount credited to employee bank account each month</div>
+            </div>
+            <div style="font-size:24px;font-weight:800;color:#065f46" id="dispMonthlyNet">
+              ₹ ${ctc.netPay.toLocaleString('en-IN')}
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 4: LEAVE POLICY -->
+        <div id="tab-leave" class="onboard-tab-pane" style="display:none">
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:12.5px;color:#475569">
+            🏖️ Define annual leave quotas and current balances for this employee.
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px">
+            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px">
+              <div style="font-weight:700;color:#1e293b;font-size:13px;margin-bottom:8px">🌴 Paid Leave (PL / Annual Leave)</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div>
+                  <label style="font-size:11px;color:#64748b">Annual Quota</label>
+                  <input type="number" id="ob_plQuota" value="${leave.pl || 12}" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+                </div>
+                <div>
+                  <label style="font-size:11px;color:#64748b">Current Balance</label>
+                  <input type="number" id="ob_plBalance" value="${leave.plBalance !== undefined ? leave.plBalance : 12}" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+                </div>
+              </div>
+            </div>
+
+            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px">
+              <div style="font-weight:700;color:#1e293b;font-size:13px;margin-bottom:8px">☕ Casual Leave (CL)</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div>
+                  <label style="font-size:11px;color:#64748b">Annual Quota</label>
+                  <input type="number" id="ob_clQuota" value="${leave.cl || 6}" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+                </div>
+                <div>
+                  <label style="font-size:11px;color:#64748b">Current Balance</label>
+                  <input type="number" id="ob_clBalance" value="${leave.clBalance !== undefined ? leave.clBalance : 6}" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px">
+            <div style="font-weight:700;color:#1e293b;font-size:13px;margin-bottom:8px">🤒 Sick Leave (SL / Medical)</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:400px">
+              <div>
+                <label style="font-size:11px;color:#64748b">Annual Quota</label>
+                <input type="number" id="ob_slQuota" value="${leave.sl || 6}" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+              </div>
+              <div>
+                <label style="font-size:11px;color:#64748b">Current Balance</label>
+                <input type="number" id="ob_slBalance" value="${leave.slBalance !== undefined ? leave.slBalance : 6}" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="mail-modal-footer" style="padding:16px 0 0;margin-top:16px;border-top:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between">
+          <button type="button" class="btn ghost" id="cancelOnboardModal">Cancel</button>
+          <button type="submit" class="btn" id="saveOnboardModal" style="background:#4f46e5;border-color:#4338ca;color:#fff;padding:8px 24px;font-weight:700">
+            💾 ${isEdit ? 'Save Changes' : 'Onboard Employee'}
+          </button>
+        </div>
+      </form>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  // Tab switching
+  overlay.querySelectorAll('.onboard-step-pill').forEach(pill => {
+    pill.onclick = () => {
+      overlay.querySelectorAll('.onboard-step-pill').forEach(p => p.classList.remove('active'));
+      overlay.querySelectorAll('.onboard-tab-pane').forEach(p => p.style.display = 'none');
+      pill.classList.add('active');
+      const pane = overlay.querySelector('#' + pill.dataset.tab);
+      if (pane) pane.style.display = 'block';
+    };
+  });
+
+  // Auto calculate CTC breakdown
+  const recomputeNet = () => {
+    const basic = +overlay.querySelector('#ob_basic').value || 0;
+    const hra = +overlay.querySelector('#ob_hra').value || 0;
+    const conv = +overlay.querySelector('#ob_conveyance').value || 0;
+    const special = +overlay.querySelector('#ob_specialAllowance').value || 0;
+    const gross = basic + hra + conv + special;
+    const pf = +overlay.querySelector('#ob_pf').value || 0;
+    const pt = +overlay.querySelector('#ob_pt').value || 0;
+    const tds = +overlay.querySelector('#ob_tds').value || 0;
+    const otherDed = +overlay.querySelector('#ob_otherDed').value || 0;
+    const ded = pf + pt + tds + otherDed;
+    const net = Math.max(0, gross - ded);
+
+    overlay.querySelector('#dispMonthlyGross').textContent = '₹ ' + gross.toLocaleString('en-IN');
+    overlay.querySelector('#dispMonthlyDed').textContent = '₹ ' + ded.toLocaleString('en-IN');
+    overlay.querySelector('#dispMonthlyNet').textContent = '₹ ' + net.toLocaleString('en-IN');
+  };
+
+  overlay.querySelectorAll('.ob-calc-input').forEach(inp => {
+    inp.oninput = recomputeNet;
+  });
+
+  overlay.querySelector('#ob_autoCalcCtcBtn').onclick = () => {
+    const annual = +overlay.querySelector('#ob_annualCtc').value || 0;
+    const br = calcCtcBreakdown(annual);
+    overlay.querySelector('#ob_basic').value = br.basic;
+    overlay.querySelector('#ob_hra').value = br.hra;
+    overlay.querySelector('#ob_conveyance').value = br.conveyance;
+    overlay.querySelector('#ob_specialAllowance').value = br.specialAllowance;
+    overlay.querySelector('#ob_pf').value = br.pf;
+    overlay.querySelector('#ob_pt').value = br.pt;
+    overlay.querySelector('#ob_tds').value = br.tds;
+    overlay.querySelector('#ob_otherDed').value = 0;
+    recomputeNet();
+    say('Computed standard CTC breakdown for ₹ ' + annual.toLocaleString('en-IN'), 1);
+  };
+
+  const closeModal = () => overlay.remove();
+  overlay.querySelector('#closeOnboardModal').onclick = closeModal;
+  overlay.querySelector('#cancelOnboardModal').onclick = closeModal;
+
+  // Submit handler
+  overlay.querySelector('#onboardForm').onsubmit = async (e) => {
+    e.preventDefault();
+    const saveBtn = overlay.querySelector('#saveOnboardModal');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving…';
+
+    const basic = +overlay.querySelector('#ob_basic').value || 0;
+    const hra = +overlay.querySelector('#ob_hra').value || 0;
+    const conv = +overlay.querySelector('#ob_conveyance').value || 0;
+    const special = +overlay.querySelector('#ob_specialAllowance').value || 0;
+    const pf = +overlay.querySelector('#ob_pf').value || 0;
+    const pt = +overlay.querySelector('#ob_pt').value || 0;
+    const tds = +overlay.querySelector('#ob_tds').value || 0;
+    const otherDed = +overlay.querySelector('#ob_otherDed').value || 0;
+    const gross = basic + hra + conv + special;
+    const ded = pf + pt + tds + otherDed;
+    const net = Math.max(0, gross - ded);
+
+    const salaryStructure = {
+      basic,
+      hra,
+      conveyance: conv,
+      specialAllowance: special,
+      grossEarnings: gross,
+      pf,
+      pt,
+      tds,
+      otherDeductions: otherDed,
+      totalDeductions: ded,
+      netPay: net
+    };
+
+    const leavePolicy = {
+      pl: +overlay.querySelector('#ob_plQuota').value || 12,
+      plBalance: +overlay.querySelector('#ob_plBalance').value || 12,
+      cl: +overlay.querySelector('#ob_clQuota').value || 6,
+      clBalance: +overlay.querySelector('#ob_clBalance').value || 6,
+      sl: +overlay.querySelector('#ob_slQuota').value || 6,
+      slBalance: +overlay.querySelector('#ob_slBalance').value || 6
+    };
+
+    const payload = {
+      fullName: overlay.querySelector('#ob_fullName').value.trim(),
+      empId: overlay.querySelector('#ob_empId').value.trim(),
+      username: overlay.querySelector('#ob_username').value.trim(),
+      role: overlay.querySelector('#ob_role').value,
+      designation: overlay.querySelector('#ob_designation').value.trim(),
+      department: overlay.querySelector('#ob_department').value.trim(),
+      joiningDate: overlay.querySelector('#ob_joiningDate').value,
+      dob: overlay.querySelector('#ob_dob').value,
+      gender: overlay.querySelector('#ob_gender').value,
+      bloodGroup: overlay.querySelector('#ob_bloodGroup').value.trim(),
+      contact: overlay.querySelector('#ob_contact').value.trim(),
+      email: overlay.querySelector('#ob_email').value.trim(),
+      fatherName: overlay.querySelector('#ob_fatherName').value.trim(),
+      emergencyContact: overlay.querySelector('#ob_emergencyContact').value.trim(),
+      currentAddress: overlay.querySelector('#ob_currentAddress').value.trim(),
+      permanentAddress: overlay.querySelector('#ob_permanentAddress').value.trim(),
+      aadhaarNo: overlay.querySelector('#ob_aadhaarNo').value.trim(),
+      panNo: overlay.querySelector('#ob_panNo').value.trim().toUpperCase(),
+      uanNo: overlay.querySelector('#ob_uanNo').value.trim(),
+      esicNo: overlay.querySelector('#ob_esicNo').value.trim(),
+      bankName: overlay.querySelector('#ob_bankName').value.trim(),
+      bankAccountNo: overlay.querySelector('#ob_bankAccountNo').value.trim(),
+      bankIfsc: overlay.querySelector('#ob_bankIfsc').value.trim().toUpperCase(),
+      bankBranch: overlay.querySelector('#ob_bankBranch').value.trim(),
+      annualCtc: +overlay.querySelector('#ob_annualCtc').value || (gross * 12),
+      salaryStructure,
+      leavePolicy
+    };
+
+    const pw = overlay.querySelector('#ob_password').value;
+    if (pw) payload.password = pw;
+
+    try {
+      if (isEdit) {
+        await api('PUT', 'users/' + user.id, payload);
+        say('Employee profile updated successfully', 1);
+      } else {
+        await api('POST', 'users', payload);
+        say('New employee onboarded successfully', 1);
+      }
+      closeModal();
+      employeesView();
+    } catch (err) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = '💾 ' + (isEdit ? 'Save Changes' : 'Onboard Employee');
+      say('Error: ' + err.message);
+    }
+  };
+}
+
+// -------------------------------------------------------------------------
+// 3. DOCUMENT VAULT MODAL (AADHAAR, PAN, BANK, DEGREES)
+// -------------------------------------------------------------------------
+async function openDocVaultModal(userId) {
+  const users = await api('GET', 'users');
+  const user = users.find(u => u.id === userId);
+  if (!user) return say('User not found');
+
+  const docs = user.documents || {};
+  const isAdmin = me.role === 'admin';
+
+  const overlay = document.createElement('div');
+  overlay.className = 'mail-modal-overlay';
+  overlay.id = 'docVaultModalOverlay';
+
+  const renderDocCards = () => {
+    return STANDARD_DOC_TYPES.map(dt => {
+      const doc = docs[dt.key];
+      let statusBadge = '<span class="hr-badge-missing">Not Uploaded</span>';
+      if (doc) {
+        if (doc.status === 'Verified') {
+          statusBadge = '<span class="hr-badge-verified">✔ Verified</span>';
+        } else if (doc.status === 'Rejected') {
+          statusBadge = '<span class="hr-badge-rejected" title="' + h(doc.note || 'Rejected') + '">❌ Rejected</span>';
+        } else {
+          statusBadge = '<span class="hr-badge-pending">⏳ Uploaded (Pending Verification)</span>';
+        }
+      }
+
+      const uploadDateStr = doc?.uploadedAt ? (new Date(doc.uploadedAt).toLocaleDateString('en-IN')) : '';
+      const fileSizeStr = doc?.fileSize ? (Math.round(doc.fileSize / 1024) + ' KB') : '';
+
+      return `
+        <div class="emp-doc-card">
+          <div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1">
+            <div style="font-size:24px;flex-shrink:0">${dt.icon}</div>
+            <div style="min-width:0;flex:1">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-weight:700;color:#1e293b;font-size:13.5px">${dt.label}</span>
+                ${dt.required ? '<span style="color:#ef4444;font-size:12px;font-weight:700">*</span>' : '<span style="color:#94a3b8;font-size:11px">(Optional)</span>'}
+                ${statusBadge}
+              </div>
+              <div style="font-size:11.5px;color:#64748b">${dt.desc}</div>
+              ${doc ? `<div style="font-size:11px;color:#059669;margin-top:2px">Uploaded: ${h(doc.fileName || 'Document')} (${fileSizeStr}) on ${uploadDateStr} ${doc.verifiedBy ? '• Verified by ' + h(doc.verifiedBy) : ''}</div>` : ''}
+              ${doc?.status === 'Rejected' && doc?.note ? `<div style="font-size:11px;color:#dc2626;margin-top:2px;font-weight:500">Reason: ${h(doc.note)}</div>` : ''}
+            </div>
+          </div>
+
+          <!-- Document Action Controls -->
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+            ${doc ? `
+              <button class="btn ghost" onclick="openDocPreview('${user.id}', '${dt.key}', '${h(doc.fileName || dt.label)}')" style="padding:5px 10px;font-size:12px;display:flex;align-items:center;gap:4px">
+                <span>👁️ View</span>
+              </button>
+            ` : ''}
+
+            <!-- File Upload Input -->
+            <label class="btn ghost" style="padding:5px 10px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;margin:0">
+              <span>${doc ? '🔄 Replace' : '📤 Upload'}</span>
+              <input type="file" accept=".pdf,.png,.jpg,.jpeg" style="display:none" onchange="handleDocFileUpload(event, '${user.id}', '${dt.key}')">
+            </label>
+
+            ${isAdmin && doc && doc.status !== 'Verified' ? `
+              <button class="btn" onclick="verifyEmployeeDoc('${user.id}', '${dt.key}', 'Verified')" style="background:#10b981;border-color:#059669;color:#fff;padding:5px 9px;font-size:11.5px;font-weight:700">
+                ✔ Verify
+              </button>
+            ` : ''}
+
+            ${isAdmin && doc && doc.status !== 'Rejected' ? `
+              <button class="btn ghost" onclick="verifyEmployeeDoc('${user.id}', '${dt.key}', 'Rejected')" style="color:#ef4444;padding:5px 9px;font-size:11.5px">
+                ❌ Reject
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+  };
+
+  overlay.innerHTML = `
+    <div class="mail-modal-card" style="width:740px;max-width:96vw;max-height:90vh;display:flex;flex-direction:column">
+      <div class="mail-modal-header" style="padding:16px 20px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;background:#f8fafc">
+        <div>
+          <h3 style="margin:0;font-size:18px;font-weight:700;color:#1e293b">📁 Employee Document Vault</h3>
+          <p style="margin:2px 0 0;font-size:12px;color:#64748b">Aadhaar, PAN, Bank Account Proof, 10th, 12th & Graduation Certificates for ${h(user.fullName || user.username)}</p>
+        </div>
+        <button type="button" id="closeDocVaultModal" style="background:none;border:none;font-size:24px;cursor:pointer;color:#94a3b8;line-height:1">×</button>
+      </div>
+
+      <div style="flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:10px" id="docVaultCardsContainer">
+        ${renderDocCards()}
+      </div>
+
+      <div class="mail-modal-footer" style="padding:12px 20px;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end">
+        <button type="button" class="btn" id="doneDocVaultModal" style="padding:7px 20px">Done</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  const closeModal = () => {
+    overlay.remove();
+    if (window.currentViewName === 'employees') employeesView();
+    if (window.currentViewName === 'myprofile') myProfileView();
+  };
+  overlay.querySelector('#closeDocVaultModal').onclick = closeModal;
+  overlay.querySelector('#doneDocVaultModal').onclick = closeModal;
+}
+
+async function handleDocFileUpload(e, userId, docType) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  if (file.size > 10 * 1024 * 1024) {
+    return say('File size exceeds 10MB limit');
+  }
+
+  say('Reading and uploading ' + file.name + '…');
+  const reader = new FileReader();
+  reader.onload = async () => {
+    try {
+      const base64Data = reader.result;
+      const res = await api('POST', 'emp-docs/' + userId + '/' + docType, {
+        fileName: file.name,
+        fileData: base64Data
+      });
+      say('Successfully uploaded ' + file.name, 1);
+      // Refresh modal
+      const modal = $('#docVaultModalOverlay');
+      if (modal) {
+        modal.remove();
+        openDocVaultModal(userId);
+      }
+    } catch (err) {
+      say('Upload failed: ' + err.message);
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+async function verifyEmployeeDoc(userId, docType, status) {
+  let note = '';
+  if (status === 'Rejected') {
+    note = prompt('Please enter rejection reason (e.g. Blurry photo, name mismatch):') || '';
+    if (!note) return;
+  }
+  try {
+    await api('PUT', 'emp-docs/' + userId + '/' + docType + '/status', { status, note });
+    say('Document ' + status.toLowerCase() + ' successfully', 1);
+    const modal = $('#docVaultModalOverlay');
+    if (modal) {
+      modal.remove();
+      openDocVaultModal(userId);
+    }
+  } catch (err) {
+    say('Failed to update status: ' + err.message);
+  }
+}
+
+// -------------------------------------------------------------------------
+// 4. DOCUMENT PREVIEW MODAL
+// -------------------------------------------------------------------------
+function openDocPreview(userId, docType, title) {
+  const overlay = document.createElement('div');
+  overlay.className = 'mail-modal-overlay';
+  overlay.id = 'docPreviewOverlay';
+
+  const docUrl = '/api/emp-docs/' + userId + '/' + docType;
+
+  overlay.innerHTML = `
+    <div class="mail-modal-card" style="width:850px;max-width:96vw;height:88vh;display:flex;flex-direction:column">
+      <div class="mail-modal-header" style="padding:14px 20px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;background:#f8fafc">
+        <div>
+          <h3 style="margin:0;font-size:16px;font-weight:700;color:#1e293b">📄 ${h(title)}</h3>
+          <span style="font-size:11px;color:#64748b">Employee Verification Document</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <a href="${docUrl}" target="_blank" download class="btn ghost" style="padding:4px 10px;font-size:12px;text-decoration:none">
+            ⬇️ Download File
+          </a>
+          <button type="button" id="closeDocPreviewModal" style="background:none;border:none;font-size:24px;cursor:pointer;color:#94a3b8;line-height:1">×</button>
+        </div>
+      </div>
+      <div style="flex:1;background:#334155;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center">
+        <iframe src="${docUrl}" style="width:100%;height:100%;border:none;background:#ffffff" title="Document Preview"></iframe>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  overlay.querySelector('#closeDocPreviewModal').onclick = () => overlay.remove();
+}
+
+// -------------------------------------------------------------------------
+// 5. ADMIN: PAYROLL & SALARY SLIPS VIEW
+// -------------------------------------------------------------------------
+async function payrollView() {
+  if (me.role !== 'admin') {
+    say('Access denied: Admin only');
+    return go('dash');
+  }
+
+  const [usersList, slipsList] = await Promise.all([
+    api('GET', 'users'),
+    api('GET', 'salaryslips').catch(() => [])
+  ]);
+
+  const view = $('#view');
+  if (!view) return;
+
+  const now = new Date();
+  const curMonth = String(now.getMonth() + 1).padStart(2, '0');
+  const curYear = String(now.getFullYear());
+
+  window.payrollSelectedMonth = window.payrollSelectedMonth || curMonth;
+  window.payrollSelectedYear = window.payrollSelectedYear || curYear;
+
+  const monthNames = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+  const filteredSlips = slipsList.filter(s => s.month === window.payrollSelectedMonth && String(s.year) === String(window.payrollSelectedYear));
+
+  const totalGross = filteredSlips.reduce((acc, s) => acc + (+s.grossEarnings || 0), 0);
+  const totalNet = filteredSlips.reduce((acc, s) => acc + (+s.netPay || 0), 0);
+  const totalDeductions = filteredSlips.reduce((acc, s) => acc + (+s.totalDeductions || 0), 0);
+
+  view.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:20px">
+      <div>
+        <h2 style="margin:0 0 4px;font-size:22px;color:#1e293b;font-weight:700">💵 Payroll Register & Salary Slips</h2>
+        <p style="margin:0;font-size:13px;color:#64748b">Batch generate and print corporate Indian salary slips with earnings, PF, PT, TDS deductions</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <button class="btn ghost" onclick="go('employees')" style="padding:8px 16px;display:flex;align-items:center;gap:6px">
+          <span>👥 Employee Directory</span>
+        </button>
+        <button class="btn" id="batchGenBtn" style="background:#059669;border-color:#047857;color:#fff;padding:8px 16px;font-weight:700;display:flex;align-items:center;gap:6px">
+          <span>⚡ 1-Click Batch Generate</span>
+        </button>
+        <button class="btn" onclick="openGenerateSlipModal(null)" style="background:#4f46e5;border-color:#4338ca;color:#fff;padding:8px 18px;font-weight:700;display:flex;align-items:center;gap:6px">
+          <span>+ Generate Single Slip</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Month & Year Filter Bar -->
+    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <span style="font-weight:700;color:#1e293b;font-size:14px">Select Payroll Period:</span>
+        <select id="payrollMonthSelect" style="padding:6px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;font-weight:600;color:#334155">
+          ${[1,2,3,4,5,6,7,8,9,10,11,12].map(m => {
+            const mStr = String(m).padStart(2, '0');
+            return `<option value="${mStr}" ${mStr === window.payrollSelectedMonth ? 'selected' : ''}>${monthNames[m]}</option>`;
+          }).join('')}
+        </select>
+        <select id="payrollYearSelect" style="padding:6px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;font-weight:600;color:#334155">
+          ${[2024, 2025, 2026, 2027, 2028].map(y => {
+            return `<option value="${y}" ${String(y) === window.payrollSelectedYear ? 'selected' : ''}>${y}</option>`;
+          }).join('')}
+        </select>
+      </div>
+
+      <div style="font-size:13px;color:#64748b">
+        Generated: <strong style="color:#1e293b">${filteredSlips.length}</strong> of ${usersList.length} staff
+      </div>
+    </div>
+
+    <!-- Monthly Summary Stat Cards -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-bottom:22px">
+      <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+        <div style="font-size:12px;color:#64748b;font-weight:600">Total Gross Earnings</div>
+        <div style="font-size:22px;font-weight:700;color:#1e293b;margin-top:2px">₹ ${totalGross.toLocaleString('en-IN')}</div>
+      </div>
+
+      <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+        <div style="font-size:12px;color:#64748b;font-weight:600">Total Deductions (PF/PT/TDS)</div>
+        <div style="font-size:22px;font-weight:700;color:#dc2626;margin-top:2px">₹ ${totalDeductions.toLocaleString('en-IN')}</div>
+      </div>
+
+      <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+        <div style="font-size:12px;color:#64748b;font-weight:600">Net Take-Home Disbursed</div>
+        <div style="font-size:22px;font-weight:700;color:#059669;margin-top:2px">₹ ${totalNet.toLocaleString('en-IN')}</div>
+      </div>
+
+      <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+        <div style="font-size:12px;color:#64748b;font-weight:600">Period</div>
+        <div style="font-size:20px;font-weight:700;color:#4f46e5;margin-top:2px">${monthNames[+window.payrollSelectedMonth]} ${window.payrollSelectedYear}</div>
+      </div>
+    </div>
+
+    <!-- Salary Slips Table -->
+    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.04)">
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;text-align:left;font-size:13px">
+          <thead>
+            <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;color:#475569;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:0.4px">
+              <th style="padding:12px 16px">Employee</th>
+              <th style="padding:12px 14px">Designation</th>
+              <th style="padding:12px 14px">Working Days</th>
+              <th style="padding:12px 14px">Gross Pay</th>
+              <th style="padding:12px 14px">Deductions</th>
+              <th style="padding:12px 14px">Net Pay</th>
+              <th style="padding:12px 16px;text-align:right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${filteredSlips.length ? filteredSlips.map(s => `
+              <tr style="border-bottom:1px solid #f1f5f9;transition:background 0.15s ease" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+                <td style="padding:12px 16px">
+                  <div style="font-weight:700;color:#1e293b">${h(s.employeeName)}</div>
+                  <div style="font-size:11px;color:#64748b">${h(s.department || 'General')}</div>
+                </td>
+                <td style="padding:12px 14px;color:#475569">${h(s.designation || 'Staff')}</td>
+                <td style="padding:12px 14px;font-size:12px;color:#475569">
+                  <span>Paid: ${s.paidDays || 30}/${s.totalDays || 30}</span>
+                  ${s.lopDays ? `<span style="color:#ef4444;margin-left:4px">(${s.lopDays} LOP)</span>` : ''}
+                </td>
+                <td style="padding:12px 14px;font-weight:600;color:#1e293b">₹ ${(+s.grossEarnings).toLocaleString('en-IN')}</td>
+                <td style="padding:12px 14px;color:#dc2626">₹ ${(+s.totalDeductions).toLocaleString('en-IN')}</td>
+                <td style="padding:12px 14px;font-weight:800;color:#059669;font-size:14px">₹ ${(+s.netPay).toLocaleString('en-IN')}</td>
+                <td style="padding:12px 16px;text-align:right">
+                  <div style="display:inline-flex;align-items:center;gap:6px">
+                    <button class="btn ghost" onclick="showSalarySlip(${JSON.stringify(s).replace(/"/g, '&quot;')})" style="padding:5px 10px;font-size:12px;color:#4f46e5;font-weight:600">
+                      🖨️ View & Print
+                    </button>
+                    <button class="btn ghost" onclick="openGenerateSlipModal('${s.employeeId}', ${JSON.stringify(s).replace(/"/g, '&quot;')})" style="padding:5px 9px;font-size:12px">
+                      ✏️ Edit
+                    </button>
+                    <button class="btn ghost" onclick="deleteSalarySlip('${s.id}')" style="padding:5px 9px;font-size:12px;color:#ef4444">
+                      🗑️
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            `).join('') : `
+              <tr>
+                <td colspan="7" style="padding:48px 16px;text-align:center;color:#94a3b8">
+                  <div style="font-size:32px;margin-bottom:8px">💵</div>
+                  <div style="font-size:15px;font-weight:600;color:#64748b">No salary slips generated for ${monthNames[+window.payrollSelectedMonth]} ${window.payrollSelectedYear}</div>
+                  <div style="font-size:12.5px;color:#94a3b8;margin-top:4px">Click "1-Click Batch Generate" to automatically create slips for all active employees.</div>
+                </td>
+              </tr>
+            `}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  // Select handlers
+  $('#payrollMonthSelect').onchange = (e) => {
+    window.payrollSelectedMonth = e.target.value;
+    payrollView();
+  };
+  $('#payrollYearSelect').onchange = (e) => {
+    window.payrollSelectedYear = e.target.value;
+    payrollView();
+  };
+
+  // Batch generate
+  $('#batchGenBtn').onclick = async () => {
+    if (!confirm(`Generate salary slips for ALL staff for ${monthNames[+window.payrollSelectedMonth]} ${window.payrollSelectedYear}?`)) return;
+    
+    const m = window.payrollSelectedMonth;
+    const y = window.payrollSelectedYear;
+    const daysInMonth = new Date(+y, +m, 0).getDate();
+
+    say('Batch generating salary slips for ' + usersList.length + ' staff…');
+    let generatedCount = 0;
+
+    for (const u of usersList) {
+      // If slip already exists for this employee and period, skip or update
+      const existing = slipsList.find(s => (s.employeeId === u.id || s.employeeName === (u.fullName || u.username)) && s.month === m && String(s.year) === String(y));
+      if (existing) continue;
+
+      const br = u.salaryStructure || (u.annualCtc ? calcCtcBreakdown(u.annualCtc) : calcCtcBreakdown(0));
+      const netPayWords = rupeeWords(br.netPay);
+
+      const slipPayload = {
+        employeeId: u.id,
+        employeeName: u.fullName || u.username,
+        month: m,
+        year: y,
+        date: new Date().toISOString().slice(0, 10),
+        designation: u.designation || 'Staff',
+        department: u.department || 'General',
+        bankName: u.bankName || '',
+        bankAccountNo: u.bankAccountNo || '',
+        bankIfsc: u.bankIfsc || '',
+        panNo: u.panNo || '',
+        uanNo: u.uanNo || '',
+        totalDays: daysInMonth,
+        paidDays: daysInMonth,
+        lopDays: 0,
+        basic: br.basic,
+        hra: br.hra,
+        conveyance: br.conveyance,
+        specialAllowance: br.specialAllowance,
+        grossEarnings: br.grossEarnings,
+        pf: br.pf,
+        pt: br.pt,
+        tds: br.tds,
+        otherDeductions: 0,
+        totalDeductions: br.totalDeductions,
+        netPay: br.netPay,
+        netPayWords: netPayWords,
+        status: 'Published'
+      };
+
+      try {
+        await api('POST', 'salaryslips', slipPayload);
+        generatedCount++;
+      } catch (e) {
+        console.error('Error generating slip for ' + u.username, e);
+      }
+    }
+
+    say(`Batch generation completed! ${generatedCount} salary slips created.`, 1);
+    payrollView();
+  };
+}
+
+async function deleteSalarySlip(id) {
+  if (!confirm('Are you sure you want to delete this salary slip?')) return;
+  try {
+    await api('DELETE', 'salaryslips/' + id);
+    say('Salary slip deleted', 1);
+    payrollView();
+  } catch (e) {
+    say('Delete failed: ' + e.message);
+  }
+}
+
+// -------------------------------------------------------------------------
+// 6. GENERATE / EDIT SINGLE SALARY SLIP MODAL
+// -------------------------------------------------------------------------
+async function openGenerateSlipModal(selectedEmpId, existingSlip) {
+  const users = await api('GET', 'users');
+  const now = new Date();
+  const curMonth = window.payrollSelectedMonth || String(now.getMonth() + 1).padStart(2, '0');
+  const curYear = window.payrollSelectedYear || String(now.getFullYear());
+  const monthNames = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+  const overlay = document.createElement('div');
+  overlay.className = 'mail-modal-overlay';
+  overlay.id = 'slipModalOverlay';
+
+  const isEdit = !!existingSlip;
+  let targetEmp = users.find(u => u.id === (existingSlip ? existingSlip.employeeId : selectedEmpId)) || users[0];
+
+  const br = existingSlip ? {
+    basic: existingSlip.basic,
+    hra: existingSlip.hra,
+    conveyance: existingSlip.conveyance,
+    specialAllowance: existingSlip.specialAllowance,
+    grossEarnings: existingSlip.grossEarnings,
+    pf: existingSlip.pf,
+    pt: existingSlip.pt,
+    tds: existingSlip.tds,
+    otherDeductions: existingSlip.otherDeductions || 0,
+    totalDeductions: existingSlip.totalDeductions,
+    netPay: existingSlip.netPay
+  } : (targetEmp?.salaryStructure || (targetEmp?.annualCtc ? calcCtcBreakdown(targetEmp.annualCtc) : calcCtcBreakdown(0)));
+
+  overlay.innerHTML = `
+    <div class="mail-modal-card" style="width:720px;max-width:96vw;max-height:92vh;display:flex;flex-direction:column">
+      <div class="mail-modal-header" style="padding:16px 20px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;background:#f8fafc">
+        <div>
+          <h3 style="margin:0;font-size:18px;font-weight:700;color:#1e293b">${isEdit ? '✏️ Edit Salary Slip' : '💵 Generate Salary Slip'}</h3>
+          <p style="margin:2px 0 0;font-size:12px;color:#64748b">Prepare monthly earnings and deduction payslip for employee</p>
+        </div>
+        <button type="button" id="closeSlipModal" style="background:none;border:none;font-size:24px;cursor:pointer;color:#94a3b8;line-height:1">×</button>
+      </div>
+
+      <form id="slipForm" style="flex:1;overflow-y:auto;padding:20px;margin:0">
+        <div style="display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:12px;margin-bottom:14px">
+          <div>
+            <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Employee *</label>
+            <select id="slipEmpSelect" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+              ${users.map(u => `<option value="${u.id}" ${u.id === targetEmp?.id ? 'selected' : ''}>${h(u.fullName || u.username)} (${h(u.designation || 'Staff')})</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Month</label>
+            <select id="slipMonthSelect" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+              ${[1,2,3,4,5,6,7,8,9,10,11,12].map(m => {
+                const mStr = String(m).padStart(2, '0');
+                return `<option value="${mStr}" ${mStr === (existingSlip ? existingSlip.month : curMonth) ? 'selected' : ''}>${monthNames[m]}</option>`;
+              }).join('')}
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Year</label>
+            <input type="number" id="slipYearInput" value="${existingSlip ? existingSlip.year : curYear}" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
+          <div>
+            <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Total Working Days</label>
+            <input type="number" id="slipTotalDays" value="${existingSlip?.totalDays || 30}" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+          </div>
+          <div>
+            <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Paid Days</label>
+            <input type="number" id="slipPaidDays" value="${existingSlip?.paidDays || 30}" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+          </div>
+          <div>
+            <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Loss of Pay (LOP Days)</label>
+            <input type="number" id="slipLopDays" value="${existingSlip?.lopDays || 0}" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+          </div>
+        </div>
+
+        <!-- Breakdown side-by-side -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+          <div class="ctc-calc-card">
+            <div style="font-size:13px;font-weight:700;color:#065f46;margin-bottom:8px">Earnings (₹)</div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <div>
+                <label style="font-size:11px;color:#64748b">Basic Salary</label>
+                <input type="number" id="sl_basic" value="${br.basic}" class="sl-calc-input" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+              </div>
+              <div>
+                <label style="font-size:11px;color:#64748b">HRA</label>
+                <input type="number" id="sl_hra" value="${br.hra}" class="sl-calc-input" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+              </div>
+              <div>
+                <label style="font-size:11px;color:#64748b">Conveyance Allowance</label>
+                <input type="number" id="sl_conveyance" value="${br.conveyance}" class="sl-calc-input" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+              </div>
+              <div>
+                <label style="font-size:11px;color:#64748b">Special Allowance</label>
+                <input type="number" id="sl_special" value="${br.specialAllowance}" class="sl-calc-input" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+              </div>
+            </div>
+          </div>
+
+          <div class="ctc-calc-card">
+            <div style="font-size:13px;font-weight:700;color:#991b1b;margin-bottom:8px">Deductions (₹)</div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <div>
+                <label style="font-size:11px;color:#64748b">Provident Fund (PF)</label>
+                <input type="number" id="sl_pf" value="${br.pf}" class="sl-calc-input" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+              </div>
+              <div>
+                <label style="font-size:11px;color:#64748b">Professional Tax (PT)</label>
+                <input type="number" id="sl_pt" value="${br.pt}" class="sl-calc-input" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+              </div>
+              <div>
+                <label style="font-size:11px;color:#64748b">TDS / Income Tax</label>
+                <input type="number" id="sl_tds" value="${br.tds || 0}" class="sl-calc-input" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+              </div>
+              <div>
+                <label style="font-size:11px;color:#64748b">Other Deductions</label>
+                <input type="number" id="sl_otherDed" value="${br.otherDeductions || 0}" class="sl-calc-input" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Net Pay Box -->
+        <div style="background:#ecfdf5;border:2px solid #10b981;border-radius:10px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#065f46;text-transform:uppercase">Net Payable Amount</div>
+            <div style="font-size:12px;color:#047857;font-style:italic" id="sl_wordsText">${rupeeWords(br.netPay)}</div>
+          </div>
+          <div style="font-size:22px;font-weight:800;color:#065f46" id="sl_netDisplay">
+            ₹ ${br.netPay.toLocaleString('en-IN')}
+          </div>
+        </div>
+
+        <div class="mail-modal-footer" style="padding:16px 0 0;margin-top:16px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between">
+          <button type="button" class="btn ghost" id="cancelSlipModal">Cancel</button>
+          <button type="submit" class="btn" id="saveSlipModal" style="background:#4f46e5;border-color:#4338ca;color:#fff;padding:8px 24px;font-weight:700">
+            💾 ${isEdit ? 'Update Slip' : 'Generate & Save Slip'}
+          </button>
+        </div>
+      </form>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  const recompute = () => {
+    const basic = +overlay.querySelector('#sl_basic').value || 0;
+    const hra = +overlay.querySelector('#sl_hra').value || 0;
+    const conv = +overlay.querySelector('#sl_conveyance').value || 0;
+    const special = +overlay.querySelector('#sl_special').value || 0;
+    const gross = basic + hra + conv + special;
+
+    const pf = +overlay.querySelector('#sl_pf').value || 0;
+    const pt = +overlay.querySelector('#sl_pt').value || 0;
+    const tds = +overlay.querySelector('#sl_tds').value || 0;
+    const otherDed = +overlay.querySelector('#sl_otherDed').value || 0;
+    const ded = pf + pt + tds + otherDed;
+    const net = Math.max(0, gross - ded);
+
+    overlay.querySelector('#sl_netDisplay').textContent = '₹ ' + net.toLocaleString('en-IN');
+    overlay.querySelector('#sl_wordsText').textContent = rupeeWords(net);
+  };
+
+  overlay.querySelectorAll('.sl-calc-input').forEach(i => i.oninput = recompute);
+
+  overlay.querySelector('#slipEmpSelect').onchange = (e) => {
+    targetEmp = users.find(u => u.id === e.target.value);
+    if (targetEmp) {
+      const empBr = targetEmp.salaryStructure || (targetEmp.annualCtc ? calcCtcBreakdown(targetEmp.annualCtc) : calcCtcBreakdown(0));
+      overlay.querySelector('#sl_basic').value = empBr.basic;
+      overlay.querySelector('#sl_hra').value = empBr.hra;
+      overlay.querySelector('#sl_conveyance').value = empBr.conveyance;
+      overlay.querySelector('#sl_special').value = empBr.specialAllowance;
+      overlay.querySelector('#sl_pf').value = empBr.pf;
+      overlay.querySelector('#sl_pt').value = empBr.pt;
+      overlay.querySelector('#sl_tds').value = empBr.tds;
+      overlay.querySelector('#sl_otherDed').value = 0;
+      recompute();
+    }
+  };
+
+  const closeModal = () => overlay.remove();
+  overlay.querySelector('#closeSlipModal').onclick = closeModal;
+  overlay.querySelector('#cancelSlipModal').onclick = closeModal;
+
+  overlay.querySelector('#slipForm').onsubmit = async (e) => {
+    e.preventDefault();
+    const saveBtn = overlay.querySelector('#saveSlipModal');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving…';
+
+    const basic = +overlay.querySelector('#sl_basic').value || 0;
+    const hra = +overlay.querySelector('#sl_hra').value || 0;
+    const conv = +overlay.querySelector('#sl_conveyance').value || 0;
+    const special = +overlay.querySelector('#sl_special').value || 0;
+    const pf = +overlay.querySelector('#sl_pf').value || 0;
+    const pt = +overlay.querySelector('#sl_pt').value || 0;
+    const tds = +overlay.querySelector('#sl_tds').value || 0;
+    const otherDed = +overlay.querySelector('#sl_otherDed').value || 0;
+    const gross = basic + hra + conv + special;
+    const ded = pf + pt + tds + otherDed;
+    const net = Math.max(0, gross - ded);
+
+    const payload = {
+      employeeId: targetEmp.id,
+      employeeName: targetEmp.fullName || targetEmp.username,
+      month: overlay.querySelector('#slipMonthSelect').value,
+      year: overlay.querySelector('#slipYearInput').value,
+      date: new Date().toISOString().slice(0, 10),
+      designation: targetEmp.designation || 'Staff',
+      department: targetEmp.department || 'General',
+      bankName: targetEmp.bankName || '',
+      bankAccountNo: targetEmp.bankAccountNo || '',
+      bankIfsc: targetEmp.bankIfsc || '',
+      panNo: targetEmp.panNo || '',
+      uanNo: targetEmp.uanNo || '',
+      totalDays: +overlay.querySelector('#slipTotalDays').value || 30,
+      paidDays: +overlay.querySelector('#slipPaidDays').value || 30,
+      lopDays: +overlay.querySelector('#slipLopDays').value || 0,
+      basic,
+      hra,
+      conveyance: conv,
+      specialAllowance: special,
+      grossEarnings: gross,
+      pf,
+      pt,
+      tds,
+      otherDeductions: otherDed,
+      totalDeductions: ded,
+      netPay: net,
+      netPayWords: rupeeWords(net),
+      status: 'Published'
+    };
+
+    try {
+      if (isEdit) {
+        await api('PUT', 'salaryslips/' + existingSlip.id, payload);
+        say('Salary slip updated successfully', 1);
+      } else {
+        await api('POST', 'salaryslips', payload);
+        say('Salary slip created successfully', 1);
+      }
+      closeModal();
+      payrollView();
+    } catch (err) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = '💾 ' + (isEdit ? 'Update Slip' : 'Generate & Save Slip');
+      say('Error: ' + err.message);
+    }
+  };
+}
+
+// -------------------------------------------------------------------------
+// 7. PRINTABLE STANDARD CORPORATE INDIAN PAYSLIP MODAL
+// -------------------------------------------------------------------------
+function showSalarySlip(slip) {
+  const monthNames = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const monthLabel = monthNames[+slip.month] || slip.month;
+
+  const co = company();
+
+  const overlay = document.createElement('div');
+  overlay.className = 'mail-modal-overlay';
+  overlay.id = 'payslipPrintModal';
+
+  overlay.innerHTML = `
+    <div class="mail-modal-card" style="width:820px;max-width:98vw;max-height:96vh;display:flex;flex-direction:column;background:#ffffff">
+      <!-- Action Toolbar (Hidden during print) -->
+      <div class="payslip-no-print" style="padding:12px 20px;background:#1e293b;color:#fff;display:flex;align-items:center;justify-content:space-between">
+        <div style="font-size:14px;font-weight:700">🖨️ Payslip Preview & Print</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="btn" onclick="window.print()" style="background:#10b981;border-color:#059669;color:#fff;padding:6px 18px;font-weight:700;display:flex;align-items:center;gap:6px">
+            <span>🖨️ Print / Save PDF</span>
+          </button>
+          <button type="button" id="closePayslipModal" style="background:none;border:none;font-size:24px;cursor:pointer;color:#94a3b8;line-height:1">×</button>
+        </div>
+      </div>
+
+      <!-- Printable Area -->
+      <div id="payslipPrintArea" style="flex:1;overflow-y:auto;padding:30px 36px;color:#000;font-family:'Segoe UI',Arial,Helvetica,sans-serif;background:#ffffff">
+        
+        <!-- Header -->
+        <div style="border-bottom:2px solid #0f172a;padding-bottom:14px;margin-bottom:16px;display:flex;align-items:flex-start;justify-content:space-between">
+          <div>
+            <div style="font-size:24px;font-weight:800;color:#0f2b48;letter-spacing:0.5px">${h(co.name || 'AMIGO ENTERPRISES')}</div>
+            <div style="font-size:11.5px;color:#334155;margin-top:3px;max-width:440px;line-height:1.4">${h(co.address || 'Plot No. 12, Amigo Industrial Estate, MIDC, Pune, Maharashtra 411018')}</div>
+            <div style="font-size:11px;color:#475569;margin-top:4px">
+              ${co.gstin ? '<strong>GSTIN:</strong> ' + h(co.gstin) + ' • ' : ''}
+              ${co.pan ? '<strong>PAN:</strong> ' + h(co.pan) + ' • ' : ''}
+              <strong>Email:</strong> ${h(co.email || 'kuldeep.amigo@gmail.com')}
+            </div>
+          </div>
+          <div style="text-align:right">
+            <div style="display:inline-block;border:2px solid #0f2b48;padding:6px 14px;border-radius:6px;background:#f8fafc">
+              <div style="font-size:13px;font-weight:800;color:#0f2b48;text-transform:uppercase">PAYSLIP</div>
+              <div style="font-size:12px;font-weight:700;color:#475569">${monthLabel} ${h(slip.year)}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Employee Metadata Grid -->
+        <table style="width:100%;border-collapse:collapse;margin-bottom:16px;border:1px solid #cbd5e1;font-size:12px">
+          <tbody>
+            <tr style="border-bottom:1px solid #e2e8f0">
+              <td style="width:20%;padding:6px 10px;font-weight:700;background:#f8fafc;color:#475569">Employee Name</td>
+              <td style="width:30%;padding:6px 10px;font-weight:700;color:#0f172a">${h(slip.employeeName)}</td>
+              <td style="width:20%;padding:6px 10px;font-weight:700;background:#f8fafc;color:#475569">Bank Name</td>
+              <td style="width:30%;padding:6px 10px;color:#0f172a">${h(slip.bankName || '—')}</td>
+            </tr>
+            <tr style="border-bottom:1px solid #e2e8f0">
+              <td style="padding:6px 10px;font-weight:700;background:#f8fafc;color:#475569">Designation</td>
+              <td style="padding:6px 10px;color:#0f172a">${h(slip.designation || 'Staff')}</td>
+              <td style="padding:6px 10px;font-weight:700;background:#f8fafc;color:#475569">Bank A/C No.</td>
+              <td style="padding:6px 10px;color:#0f172a;font-family:monospace;font-weight:600">${h(slip.bankAccountNo || '—')}</td>
+            </tr>
+            <tr style="border-bottom:1px solid #e2e8f0">
+              <td style="padding:6px 10px;font-weight:700;background:#f8fafc;color:#475569">Department</td>
+              <td style="padding:6px 10px;color:#0f172a">${h(slip.department || 'General')}</td>
+              <td style="padding:6px 10px;font-weight:700;background:#f8fafc;color:#475569">Bank IFSC</td>
+              <td style="padding:6px 10px;color:#0f172a;font-family:monospace">${h(slip.bankIfsc || '—')}</td>
+            </tr>
+            <tr style="border-bottom:1px solid #e2e8f0">
+              <td style="padding:6px 10px;font-weight:700;background:#f8fafc;color:#475569">PAN Number</td>
+              <td style="padding:6px 10px;color:#0f172a;font-family:monospace">${h(slip.panNo || '—')}</td>
+              <td style="padding:6px 10px;font-weight:700;background:#f8fafc;color:#475569">UAN / PF No.</td>
+              <td style="padding:6px 10px;color:#0f172a;font-family:monospace">${h(slip.uanNo || '—')}</td>
+            </tr>
+            <tr>
+              <td style="padding:6px 10px;font-weight:700;background:#f8fafc;color:#475569">Total Days in Month</td>
+              <td style="padding:6px 10px;color:#0f172a">${h(slip.totalDays || 30)} Days</td>
+              <td style="padding:6px 10px;font-weight:700;background:#f8fafc;color:#475569">Paid Days / LOP</td>
+              <td style="padding:6px 10px;color:#0f172a"><strong>${h(slip.paidDays || 30)}</strong> Paid ${slip.lopDays ? ' / ' + slip.lopDays + ' LOP' : ''}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Earnings vs Deductions Table -->
+        <table style="width:100%;border-collapse:collapse;margin-bottom:16px;border:1px solid #0f172a;font-size:12px">
+          <thead>
+            <tr style="background:#0f2b48;color:#ffffff;text-transform:uppercase;font-size:11.5px;letter-spacing:0.5px">
+              <th style="padding:8px 12px;text-align:left;width:35%;border-right:1px solid #334155">EARNINGS</th>
+              <th style="padding:8px 12px;text-align:right;width:15%;border-right:1px solid #cbd5e1">AMOUNT (₹)</th>
+              <th style="padding:8px 12px;text-align:left;width:35%;border-right:1px solid #334155">DEDUCTIONS</th>
+              <th style="padding:8px 12px;text-align:right;width:15%">AMOUNT (₹)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid #e2e8f0">
+              <td style="padding:6px 12px;border-right:1px solid #e2e8f0">Basic Salary</td>
+              <td style="padding:6px 12px;text-align:right;border-right:1px solid #cbd5e1;font-weight:600">${(+slip.basic || 0).toFixed(2)}</td>
+              <td style="padding:6px 12px;border-right:1px solid #e2e8f0">Provident Fund (PF / EPF)</td>
+              <td style="padding:6px 12px;text-align:right;font-weight:600">${(+slip.pf || 0).toFixed(2)}</td>
+            </tr>
+            <tr style="border-bottom:1px solid #e2e8f0">
+              <td style="padding:6px 12px;border-right:1px solid #e2e8f0">House Rent Allowance (HRA)</td>
+              <td style="padding:6px 12px;text-align:right;border-right:1px solid #cbd5e1;font-weight:600">${(+slip.hra || 0).toFixed(2)}</td>
+              <td style="padding:6px 12px;border-right:1px solid #e2e8f0">Professional Tax (PT)</td>
+              <td style="padding:6px 12px;text-align:right;font-weight:600">${(+slip.pt || 0).toFixed(2)}</td>
+            </tr>
+            <tr style="border-bottom:1px solid #e2e8f0">
+              <td style="padding:6px 12px;border-right:1px solid #e2e8f0">Conveyance Allowance</td>
+              <td style="padding:6px 12px;text-align:right;border-right:1px solid #cbd5e1;font-weight:600">${(+slip.conveyance || 0).toFixed(2)}</td>
+              <td style="padding:6px 12px;border-right:1px solid #e2e8f0">Income Tax (TDS)</td>
+              <td style="padding:6px 12px;text-align:right;font-weight:600">${(+slip.tds || 0).toFixed(2)}</td>
+            </tr>
+            <tr style="border-bottom:1px solid #e2e8f0">
+              <td style="padding:6px 12px;border-right:1px solid #e2e8f0">Special Allowance</td>
+              <td style="padding:6px 12px;text-align:right;border-right:1px solid #cbd5e1;font-weight:600">${(+slip.specialAllowance || 0).toFixed(2)}</td>
+              <td style="padding:6px 12px;border-right:1px solid #e2e8f0">Other Deductions / LOP</td>
+              <td style="padding:6px 12px;text-align:right;font-weight:600">${(+slip.otherDeductions || 0).toFixed(2)}</td>
+            </tr>
+            <!-- Total Row -->
+            <tr style="background:#f8fafc;font-weight:700;border-top:1px solid #0f172a">
+              <td style="padding:8px 12px;border-right:1px solid #e2e8f0">TOTAL GROSS EARNINGS</td>
+              <td style="padding:8px 12px;text-align:right;border-right:1px solid #cbd5e1;color:#0f2b48">₹ ${(+slip.grossEarnings || 0).toFixed(2)}</td>
+              <td style="padding:8px 12px;border-right:1px solid #e2e8f0">TOTAL DEDUCTIONS</td>
+              <td style="padding:8px 12px;text-align:right;color:#dc2626">₹ ${(+slip.totalDeductions || 0).toFixed(2)}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Net Take Home Pay Highlight Box -->
+        <div style="border:2px solid #0f2b48;border-radius:6px;padding:12px 18px;margin-bottom:24px;background:#f1f5f9;display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#0f2b48;text-transform:uppercase;letter-spacing:0.5px">NET TAKE-HOME SALARY</div>
+            <div style="font-size:12px;color:#334155;margin-top:2px">
+              <strong>In Words:</strong> ${h(slip.netPayWords || rupeeWords(slip.netPay))}
+            </div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:24px;font-weight:800;color:#0f2b48">₹ ${(+slip.netPay || 0).toLocaleString('en-IN')}.00</div>
+          </div>
+        </div>
+
+        <!-- Signatures & Declaration -->
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:40px;padding-top:16px">
+          <div style="text-align:center;width:200px">
+            <div style="border-bottom:1px dashed #64748b;height:30px;margin-bottom:6px"></div>
+            <div style="font-size:11px;font-weight:700;color:#475569">Employee Signature</div>
+          </div>
+
+          <div style="text-align:center;width:240px">
+            <div style="height:30px;margin-bottom:6px;display:flex;align-items:center;justify-content:center">
+              ${co.stamp ? `<img src="${co.stamp}" style="max-height:45px;max-width:140px">` : '<span style="font-weight:700;color:#0f2b48">AMIGO ENTERPRISES</span>'}
+            </div>
+            <div style="border-top:1px dashed #64748b;padding-top:4px">
+              <div style="font-size:11px;font-weight:700;color:#475569">Authorized Signatory</div>
+              <div style="font-size:10px;color:#94a3b8">For ${h(co.name || 'Amigo Enterprises')}</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="text-align:center;font-size:10px;color:#94a3b8;margin-top:30px;border-top:1px solid #f1f5f9;padding-top:8px">
+          This is a computer-generated salary slip and does not require an ink signature. Generated on ${new Date().toLocaleDateString('en-IN')}.
+        </div>
+
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  overlay.querySelector('#closePayslipModal').onclick = () => overlay.remove();
+}
+
+// -------------------------------------------------------------------------
+// 8. EMPLOYEE SELF-SERVICE: MY PROFILE & DOCUMENTS VIEW
+// -------------------------------------------------------------------------
+async function myProfileView() {
+  const meFresh = await api('GET', 'me');
+  window.me = meFresh;
+  const view = $('#view');
+  if (!view) return;
+
+  const empIdStr = me.empId || ('AE-' + String(me.id || '').slice(0, 4).toUpperCase());
+  const leave = me.leavePolicy || { pl: 12, cl: 6, sl: 6, plBalance: 12, clBalance: 6, slBalance: 6 };
+  const ctc = me.salaryStructure || (me.annualCtc ? calcCtcBreakdown(me.annualCtc) : null);
+  const docs = me.documents || {};
+
+  const avatar = me.photo
+    ? `<img src="/api/photo/${me.id}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid #818cf8;box-shadow:0 4px 14px rgba(0,0,0,0.1)">`
+    : `<div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:26px;box-shadow:0 4px 14px rgba(79,70,229,0.3)">${h((me.fullName||me.username)[0].toUpperCase())}</div>`;
+
+  view.innerHTML = `
+    <!-- Profile Header Banner -->
+    <div style="background:linear-gradient(135deg,#1e1b4b 0%,#312e81 100%);border-radius:14px;padding:24px 28px;color:#fff;margin-bottom:22px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:18px">
+      <div style="display:flex;align-items:center;gap:18px">
+        ${avatar}
+        <div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <h2 style="margin:0;font-size:22px;font-weight:800;color:#f8fafc">${h(me.fullName || me.username)}</h2>
+            <span style="background:rgba(255,255,255,0.15);padding:2px 10px;border-radius:99px;font-size:11px;font-weight:700;letter-spacing:0.4px">${h(empIdStr)}</span>
+          </div>
+          <div style="font-size:13.5px;color:#c7d2fe;margin-top:4px">
+            <span>${h(me.designation || 'Staff Member')}</span> • <span>${h(me.department || 'General')}</span>
+          </div>
+          <div style="font-size:12px;color:#a5b4fc;margin-top:4px">
+            Joining Date: ${h(me.joiningDate || '—')} • Email: ${h(me.email || '—')} • Contact: ${h(me.contact || '—')}
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px">
+        <button class="btn" onclick="openDocVaultModal('${me.id}')" style="background:#4f46e5;color:#fff;font-weight:700;padding:8px 18px;display:flex;align-items:center;gap:6px">
+          <span>📁 Manage My Documents</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Leave Balances & Banking Grid -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:22px">
+      <!-- Leave Entitlement Card -->
+      <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:18px;box-shadow:0 1px 4px rgba(0,0,0,0.04)">
+        <div style="font-size:14px;font-weight:700;color:#1e293b;margin-bottom:14px;display:flex;align-items:center;gap:8px">
+          <span>🏖️</span>
+          <span>My Leave Balances</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;text-align:center">
+          <div style="background:#eff6ff;border:1px solid #dbeafe;border-radius:8px;padding:12px 8px">
+            <div style="font-size:22px;font-weight:800;color:#1d4ed8">${leave.plBalance !== undefined ? leave.plBalance : 12}</div>
+            <div style="font-size:11px;font-weight:600;color:#3b82f6;margin-top:2px">Paid Leave (PL)</div>
+            <div style="font-size:10px;color:#64748b">Quota: ${leave.pl || 12}</div>
+          </div>
+          <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:12px 8px">
+            <div style="font-size:22px;font-weight:800;color:#b45309">${leave.clBalance !== undefined ? leave.clBalance : 6}</div>
+            <div style="font-size:11px;font-weight:600;color:#d97706;margin-top:2px">Casual Leave (CL)</div>
+            <div style="font-size:10px;color:#64748b">Quota: ${leave.cl || 6}</div>
+          </div>
+          <div style="background:#fee2e2;border:1px solid #fecaca;border-radius:8px;padding:12px 8px">
+            <div style="font-size:22px;font-weight:800;color:#b91c1c">${leave.slBalance !== undefined ? leave.slBalance : 6}</div>
+            <div style="font-size:11px;font-weight:600;color:#dc2626;margin-top:2px">Sick Leave (SL)</div>
+            <div style="font-size:10px;color:#64748b">Quota: ${leave.sl || 6}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bank Details Card -->
+      <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:18px;box-shadow:0 1px 4px rgba(0,0,0,0.04)">
+        <div style="font-size:14px;font-weight:700;color:#1e293b;margin-bottom:12px;display:flex;align-items:center;gap:8px">
+          <span>🏦</span>
+          <span>Salary Account & Statutory KYC</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:12.5px">
+          <div style="display:flex;justify-content:space-between;border-bottom:1px solid #f1f5f9;padding-bottom:4px">
+            <span style="color:#64748b">Bank Name:</span>
+            <span style="font-weight:600;color:#1e293b">${h(me.bankName || 'Not configured')}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;border-bottom:1px solid #f1f5f9;padding-bottom:4px">
+            <span style="color:#64748b">Account Number:</span>
+            <span style="font-weight:600;color:#1e293b;font-family:monospace">${me.bankAccountNo ? '••••' + me.bankAccountNo.slice(-4) : '—'}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;border-bottom:1px solid #f1f5f9;padding-bottom:4px">
+            <span style="color:#64748b">IFSC Code:</span>
+            <span style="font-weight:600;color:#1e293b;font-family:monospace">${h(me.bankIfsc || '—')}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <span style="color:#64748b">PAN Number:</span>
+            <span style="font-weight:600;color:#1e293b;font-family:monospace">${h(me.panNo || '—')}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Document Upload Vault Section -->
+    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,0.04)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div>
+          <h3 style="margin:0;font-size:16px;font-weight:700;color:#1e293b">📑 My KYC & Academic Documents</h3>
+          <p style="margin:2px 0 0;font-size:12px;color:#64748b">Upload copies of your Aadhaar card, PAN card, Bank cancelled cheque, and degree certificates</p>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        ${STANDARD_DOC_TYPES.map(dt => {
+          const doc = docs[dt.key];
+          let statusBadge = '<span class="hr-badge-missing">Not Uploaded</span>';
+          if (doc) {
+            if (doc.status === 'Verified') {
+              statusBadge = '<span class="hr-badge-verified">✔ Verified by Admin</span>';
+            } else if (doc.status === 'Rejected') {
+              statusBadge = '<span class="hr-badge-rejected" title="' + h(doc.note || 'Rejected') + '">❌ Rejected - Please re-upload</span>';
+            } else {
+              statusBadge = '<span class="hr-badge-pending">⏳ Uploaded (Pending Admin Verification)</span>';
+            }
+          }
+
+          return `
+            <div class="emp-doc-card">
+              <div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1">
+                <div style="font-size:22px">${dt.icon}</div>
+                <div style="min-width:0;flex:1">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <span style="font-weight:700;color:#1e293b;font-size:13.5px">${dt.label}</span>
+                    ${dt.required ? '<span style="color:#ef4444;font-size:12px;font-weight:700">*</span>' : '<span style="color:#94a3b8;font-size:11px">(Optional)</span>'}
+                    ${statusBadge}
+                  </div>
+                  <div style="font-size:11.5px;color:#64748b">${dt.desc}</div>
+                  ${doc ? `<div style="font-size:11px;color:#059669;margin-top:2px">Uploaded: ${h(doc.fileName)}</div>` : ''}
+                  ${doc?.status === 'Rejected' && doc?.note ? `<div style="font-size:11px;color:#dc2626;margin-top:2px;font-weight:600">Admin Note: ${h(doc.note)}</div>` : ''}
+                </div>
+              </div>
+
+              <div style="display:flex;align-items:center;gap:8px">
+                ${doc ? `
+                  <button class="btn ghost" onclick="openDocPreview('${me.id}', '${dt.key}', '${h(doc.fileName || dt.label)}')" style="padding:5px 10px;font-size:12px">
+                    👁️ View
+                  </button>
+                ` : ''}
+                <label class="btn ghost" style="padding:5px 12px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;margin:0">
+                  <span>${doc ? '🔄 Replace File' : '📤 Upload File'}</span>
+                  <input type="file" accept=".pdf,.png,.jpg,.jpeg" style="display:none" onchange="handleDocFileUpload(event, '${me.id}', '${dt.key}')">
+                </label>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+// -------------------------------------------------------------------------
+// 9. EMPLOYEE SELF-SERVICE: MY PAYSLIPS VIEW
+// -------------------------------------------------------------------------
+async function myPayslipsView() {
+  const slips = await api('GET', 'salaryslips').catch(() => []);
+  const view = $('#view');
+  if (!view) return;
+
+  const monthNames = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+  view.innerHTML = `
+    <div style="margin-bottom:20px">
+      <h2 style="margin:0 0 4px;font-size:22px;color:#1e293b;font-weight:700">💵 My Monthly Salary Slips</h2>
+      <p style="margin:0;font-size:13px;color:#64748b">View, print, or download your official monthly payslips</p>
+    </div>
+
+    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.04)">
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;text-align:left;font-size:13px">
+          <thead>
+            <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;color:#475569;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:0.4px">
+              <th style="padding:12px 16px">Month & Year</th>
+              <th style="padding:12px 14px">Working Days</th>
+              <th style="padding:12px 14px">Gross Earnings</th>
+              <th style="padding:12px 14px">Total Deductions</th>
+              <th style="padding:12px 14px">Net Take-Home Pay</th>
+              <th style="padding:12px 16px;text-align:right">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${slips.length ? slips.map(s => `
+              <tr style="border-bottom:1px solid #f1f5f9;transition:background 0.15s ease" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+                <td style="padding:12px 16px;font-weight:700;color:#1e293b">
+                  ${monthNames[+s.month]} ${h(s.year)}
+                </td>
+                <td style="padding:12px 14px;color:#475569">
+                  <span>${s.paidDays || 30} / ${s.totalDays || 30} Paid</span>
+                  ${s.lopDays ? `<span style="color:#ef4444;font-size:11px;margin-left:4px">(${s.lopDays} LOP)</span>` : ''}
+                </td>
+                <td style="padding:12px 14px;font-weight:600;color:#1e293b">₹ ${(+s.grossEarnings).toLocaleString('en-IN')}</td>
+                <td style="padding:12px 14px;color:#dc2626">₹ ${(+s.totalDeductions).toLocaleString('en-IN')}</td>
+                <td style="padding:12px 14px;font-weight:800;color:#059669;font-size:14px">₹ ${(+s.netPay).toLocaleString('en-IN')}</td>
+                <td style="padding:12px 16px;text-align:right">
+                  <button class="btn ghost" onclick="showSalarySlip(${JSON.stringify(s).replace(/"/g, '&quot;')})" style="padding:6px 14px;font-size:12px;color:#4f46e5;font-weight:700">
+                    🖨️ View & Print Payslip
+                  </button>
+                </td>
+              </tr>
+            `).join('') : `
+              <tr>
+                <td colspan="6" style="padding:48px 16px;text-align:center;color:#94a3b8">
+                  <div style="font-size:32px;margin-bottom:8px">💵</div>
+                  <div style="font-size:15px;font-weight:600;color:#64748b">No salary slips published yet</div>
+                  <div style="font-size:12.5px;color:#94a3b8;margin-top:4px">Your monthly payslips will appear here once generated and published by the Accounts Admin.</div>
+                </td>
+              </tr>
+            `}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
 }
 
 </script></body></html>

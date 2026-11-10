@@ -163,7 +163,42 @@ CREATE TABLE IF NOT EXISTS public.vouchers (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 12. APP SETTINGS (Company, SMTP Mail, Employee Monitoring, Sync) TABLE
+-- 12. SALARY SLIPS (Monthly Corporate Payslips) TABLE
+CREATE TABLE IF NOT EXISTS public.salaryslips (
+    id TEXT PRIMARY KEY,
+    employee_id TEXT NOT NULL,
+    employee_name TEXT,
+    month TEXT NOT NULL,
+    year TEXT NOT NULL,
+    date TEXT,
+    designation TEXT,
+    department TEXT,
+    bank_name TEXT,
+    bank_account_no TEXT,
+    bank_ifsc TEXT,
+    pan_no TEXT,
+    uan_no TEXT,
+    total_days NUMERIC DEFAULT 30,
+    paid_days NUMERIC DEFAULT 30,
+    lop_days NUMERIC DEFAULT 0,
+    basic NUMERIC DEFAULT 0,
+    hra NUMERIC DEFAULT 0,
+    conveyance NUMERIC DEFAULT 0,
+    special_allowance NUMERIC DEFAULT 0,
+    gross_earnings NUMERIC DEFAULT 0,
+    pf NUMERIC DEFAULT 0,
+    pt NUMERIC DEFAULT 0,
+    tds NUMERIC DEFAULT 0,
+    other_deductions NUMERIC DEFAULT 0,
+    total_deductions NUMERIC DEFAULT 0,
+    net_pay NUMERIC DEFAULT 0,
+    net_pay_words TEXT,
+    status TEXT DEFAULT 'Published',
+    created_by TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 13. APP SETTINGS (Company, SMTP Mail, Employee Monitoring, Sync) TABLE
 CREATE TABLE IF NOT EXISTS public.app_settings (
     key TEXT PRIMARY KEY,
     value JSONB NOT NULL,
@@ -197,6 +232,7 @@ CREATE INDEX IF NOT EXISTS idx_workupdates_date_user ON public.workupdates(date,
 CREATE INDEX IF NOT EXISTS idx_logins_user_loginat ON public.logins(user_id, login_at);
 CREATE INDEX IF NOT EXISTS idx_activity_date_user ON public.activity_logs(date, user_id);
 CREATE INDEX IF NOT EXISTS idx_ledgers_name ON public.ledgers(name);
+CREATE INDEX IF NOT EXISTS idx_salaryslips_emp_period ON public.salaryslips(employee_id, month, year);
 
 -- ====================================================================
 -- ROW LEVEL SECURITY (RLS)
@@ -213,6 +249,7 @@ ALTER TABLE public.docs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sheets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.ledgers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.vouchers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.salaryslips ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.app_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.activity_logs ENABLE ROW LEVEL SECURITY;
 
@@ -223,7 +260,7 @@ DECLARE
 BEGIN
   FOR tbl IN 
     SELECT tablename FROM pg_tables WHERE schemaname = 'public' 
-    AND tablename IN ('users','clients','products','invoices','purchases','workupdates','logins','docs','sheets','ledgers','vouchers','app_settings','activity_logs')
+    AND tablename IN ('users','clients','products','invoices','purchases','workupdates','logins','docs','sheets','ledgers','vouchers','salaryslips','app_settings','activity_logs')
   LOOP
     EXECUTE format('DROP POLICY IF EXISTS "Service role full access" ON public.%I;', tbl);
     EXECUTE format('CREATE POLICY "Service role full access" ON public.%I FOR ALL USING (true) WITH CHECK (true);', tbl);
