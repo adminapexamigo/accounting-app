@@ -93,6 +93,13 @@ function session(req) {
   if (!sid && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
     sid = req.headers.authorization.slice(7).trim();
   }
+  if (!sid) {
+    try {
+      const u = new URL(req.url, 'http://x');
+      const tokenQ = u.searchParams.get('token');
+      if (tokenQ) sid = tokenQ;
+    } catch {}
+  }
   if (!sid) return null;
   try {
     const jwt = require('jsonwebtoken');
@@ -1222,8 +1229,11 @@ async function api(req, res, parts) {
         const fPath = path.join(uDir, match);
         const ext = path.extname(match).toLowerCase();
         const mime = ext === '.pdf' ? 'application/pdf' : (ext === '.png' ? 'image/png' : (ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 'application/octet-stream'));
+        const stat = fs.statSync(fPath);
         res.writeHead(200, {
+          'Content-Length': stat.size,
           'Content-Type': mime,
+          'Accept-Ranges': 'bytes',
           'Content-Disposition': `inline; filename="${match}"`,
           'Cache-Control': 'private, max-age=120'
         });
@@ -1238,7 +1248,9 @@ async function api(req, res, parts) {
       const buf = Buffer.from(raw.includes(',') ? raw.split(',')[1] : raw, 'base64');
       const mime = raw.startsWith('data:image/png') ? 'image/png' : (raw.startsWith('data:image/jpeg') ? 'image/jpeg' : 'application/pdf');
       res.writeHead(200, {
+        'Content-Length': buf.length,
         'Content-Type': mime,
+        'Accept-Ranges': 'bytes',
         'Content-Disposition': `inline; filename="${doc.fileName || (docType + '.pdf')}"`,
         'Cache-Control': 'private, max-age=120'
       });

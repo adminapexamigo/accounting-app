@@ -11872,12 +11872,14 @@ async function verifyEmployeeDoc(userId, docType, status) {
 // -------------------------------------------------------------------------
 // 4. DOCUMENT PREVIEW MODAL
 // -------------------------------------------------------------------------
-function openDocPreview(userId, docType, title) {
+async function openDocPreview(userId, docType, title) {
   const overlay = document.createElement('div');
   overlay.className = 'mail-modal-overlay';
   overlay.id = 'docPreviewOverlay';
 
-  const docUrl = '/api/emp-docs/' + userId + '/' + docType;
+  const token = localStorage.getItem('amigo_token') || '';
+  const tokenParam = token ? ('?token=' + encodeURIComponent(token)) : '';
+  const rawUrl = '/api/emp-docs/' + userId + '/' + docType + tokenParam;
 
   overlay.innerHTML = `
     <div class="mail-modal-card" style="width:850px;max-width:96vw;height:88vh;display:flex;flex-direction:column">
@@ -11887,20 +11889,67 @@ function openDocPreview(userId, docType, title) {
           <span style="font-size:11px;color:#64748b">Employee Verification Document</span>
         </div>
         <div style="display:flex;align-items:center;gap:10px">
-          <a href="${docUrl}" target="_blank" download class="btn ghost" style="padding:4px 10px;font-size:12px;text-decoration:none">
+          <a id="docPreviewDownloadBtn" href="${rawUrl}" target="_blank" download="${h(title || 'document')}" class="btn ghost" style="padding:4px 10px;font-size:12px;text-decoration:none">
             ⬇️ Download File
           </a>
           <button type="button" id="closeDocPreviewModal" style="background:none;border:none;font-size:24px;cursor:pointer;color:#94a3b8;line-height:1">×</button>
         </div>
       </div>
-      <div style="flex:1;background:#334155;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center">
-        <iframe src="${docUrl}" style="width:100%;height:100%;border:none;background:#ffffff" title="Document Preview"></iframe>
+      <div id="docViewerBox" style="flex:1;background:#1e293b;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;color:#fff">
+        <div style="text-align:center">
+          <div style="font-size:28px;margin-bottom:8px">⏳</div>
+          <div style="font-size:13px;color:#94a3b8">Loading document preview…</div>
+        </div>
       </div>
     </div>
   `;
 
   document.body.appendChild(overlay);
   overlay.querySelector('#closeDocPreviewModal').onclick = () => overlay.remove();
+
+  try {
+    const headers = {};
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+    const res = await fetch('/api/emp-docs/' + userId + '/' + docType + tokenParam, {
+      credentials: 'include',
+      headers
+    });
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => ({}));
+      throw new Error(errJson.error || ('Failed to load document (HTTP ' + res.status + ')'));
+    }
+    const contentType = (res.headers.get('content-type') || '').toLowerCase();
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+
+    const dlBtn = overlay.querySelector('#docPreviewDownloadBtn');
+    if (dlBtn) dlBtn.href = blobUrl;
+
+    const box = overlay.querySelector('#docViewerBox');
+    if (!box) return;
+
+    if (contentType.startsWith('image/')) {
+      box.innerHTML = `<img src="${blobUrl}" style="max-width:100%;max-height:100%;object-fit:contain;background:#ffffff;box-shadow:0 4px 14px rgba(0,0,0,0.25)" alt="Document Preview">`;
+    } else {
+      box.innerHTML = `<iframe src="${blobUrl}" style="width:100%;height:100%;border:none;background:#ffffff" title="Document Preview"></iframe>`;
+    }
+  } catch (err) {
+    const box = overlay.querySelector('#docViewerBox');
+    if (box) {
+      box.innerHTML = `
+        <div style="text-align:center;padding:24px;color:#f87171">
+          <div style="font-size:32px;margin-bottom:8px">⚠️</div>
+          <div style="font-size:15px;font-weight:700">Unable to display preview</div>
+          <div style="font-size:12.5px;color:#cbd5e1;margin-top:6px">${h(err.message)}</div>
+          <div style="margin-top:14px">
+            <a href="${rawUrl}" target="_blank" download class="btn" style="background:#4f46e5;color:#fff;padding:6px 16px;text-decoration:none">
+              ⬇️ Click to Download File Directly
+            </a>
+          </div>
+        </div>
+      `;
+    }
+  }
 }
 
 // -------------------------------------------------------------------------
