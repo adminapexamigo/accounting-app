@@ -104,42 +104,49 @@ function session(req) {
   s.exp = Date.now() + TTL;
   return s;
 }
-const safeUser = u => ({
-  id: u.id,
-  username: u.username,
-  fullName: u.fullName || '',
-  role: u.role,
-  designation: u.designation || '',
-  contact: u.contact || '',
-  email: u.email || '',
-  photo: u.photo || '',
-  faceRequired: u.faceRequired || '',
-  otpRequired: u.otpRequired || '',
-  permissions: u.permissions || {},
-  empId: u.empId || ('AE-' + String(u.id || '').slice(0, 4).toUpperCase()),
-  department: u.department || 'General',
-  dob: u.dob || '',
-  gender: u.gender || '',
-  bloodGroup: u.bloodGroup || '',
-  joiningDate: u.joiningDate || (u.createdAt ? u.createdAt.slice(0, 10) : ''),
-  fatherName: u.fatherName || '',
-  emergencyContact: u.emergencyContact || '',
-  currentAddress: u.currentAddress || '',
-  permanentAddress: u.permanentAddress || '',
-  aadhaarNo: u.aadhaarNo || '',
-  panNo: u.panNo || '',
-  uanNo: u.uanNo || '',
-  esicNo: u.esicNo || '',
-  bankName: u.bankName || '',
-  bankAccountNo: u.bankAccountNo || '',
-  bankIfsc: u.bankIfsc || '',
-  bankBranch: u.bankBranch || '',
-  annualCtc: u.annualCtc != null ? +u.annualCtc : 0,
-  salaryStructure: u.salaryStructure || null,
-  leavePolicy: u.leavePolicy || { pl: 12, cl: 6, sl: 6, plBalance: 12, clBalance: 6, slBalance: 6 },
-  documents: u.documents || {},
-  createdAt: u.createdAt
-});
+const safeUser = u => {
+  const perms = typeof u.permissions === 'object' && u.permissions !== null
+    ? u.permissions
+    : (typeof u.permissions === 'string' ? (() => { try { return JSON.parse(u.permissions || '{}'); } catch { return {}; } })() : {});
+  const prof = perms.profile || {};
+  const joinDate = u.joiningDate || prof.joiningDate || (u.createdAt ? (typeof u.createdAt === 'string' ? u.createdAt.slice(0, 10) : new Date(u.createdAt).toISOString().slice(0, 10)) : '');
+  return {
+    id: u.id,
+    username: u.username,
+    fullName: u.fullName || u.full_name || '',
+    role: u.role,
+    designation: u.designation || prof.designation || '',
+    contact: u.contact || prof.contact || '',
+    email: u.email || prof.email || '',
+    photo: u.photo || '',
+    faceRequired: u.faceRequired || '',
+    otpRequired: u.otpRequired || '',
+    permissions: perms,
+    empId: u.empId || prof.empId || ('AE-' + String(u.id || '').slice(0, 4).toUpperCase()),
+    department: u.department || prof.department || 'General',
+    dob: u.dob || prof.dob || '',
+    gender: u.gender || prof.gender || '',
+    bloodGroup: u.bloodGroup || prof.bloodGroup || '',
+    joiningDate: joinDate,
+    fatherName: u.fatherName || prof.fatherName || '',
+    emergencyContact: u.emergencyContact || prof.emergencyContact || '',
+    currentAddress: u.currentAddress || prof.currentAddress || '',
+    permanentAddress: u.permanentAddress || prof.permanentAddress || '',
+    aadhaarNo: u.aadhaarNo || prof.aadhaarNo || '',
+    panNo: u.panNo || prof.panNo || '',
+    uanNo: u.uanNo || prof.uanNo || '',
+    esicNo: u.esicNo || prof.esicNo || '',
+    bankName: u.bankName || prof.bankName || '',
+    bankAccountNo: u.bankAccountNo || prof.bankAccountNo || '',
+    bankIfsc: u.bankIfsc || prof.bankIfsc || '',
+    bankBranch: u.bankBranch || prof.bankBranch || '',
+    annualCtc: u.annualCtc != null ? +u.annualCtc : (prof.annualCtc != null ? +prof.annualCtc : 0),
+    salaryStructure: u.salaryStructure || prof.salaryStructure || null,
+    leavePolicy: u.leavePolicy || prof.leavePolicy || { pl: 12, cl: 6, sl: 6, plBalance: 12, clBalance: 6, slBalance: 6 },
+    documents: u.documents || prof.documents || {},
+    createdAt: u.createdAt
+  };
+};
 const needsFace = u => u.role === 'employee' && mailCfg().faceEmployees !== false; // face check is an allowed way to verify for employees
 // ---- HTML e-mail templates (table layout + inline CSS so Gmail/Outlook render them; logo is embedded as a CID image) ----
 const hx = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1166,7 +1173,10 @@ async function api(req, res, parts) {
   const s = session(req); if (!s) throw fail(401, 'Please log in');
   const user = s.user;
   if (a === 'logout' && m === 'POST') { sessions.delete(cookie(req).sid); res.setHeader('Set-Cookie', 'sid=; Max-Age=0; Path=/'); return send(res, 200, {}); }
-  if (a === 'me') return send(res, 200, user);
+  if (a === 'me') {
+    const fresh = readTable('users').find(x => x.id === user.id);
+    return send(res, 200, fresh ? safeUser(fresh) : safeUser(user));
+  }
   if (a === 'counts' && m === 'GET') {
     const clients = readTable('clients').length;
     const products = readTable('products').length;
@@ -1204,16 +1214,31 @@ async function api(req, res, parts) {
     if (m === 'GET') {
       const files = fs.existsSync(uDir) ? fs.readdirSync(uDir) : [];
       const match = files.find(f => f.startsWith(docType + '.') || f === docType);
-      if (!match) throw fail(404, 'Document not uploaded yet');
-      const fPath = path.join(uDir, match);
-      const ext = path.extname(match).toLowerCase();
-      const mime = ext === '.pdf' ? 'application/pdf' : (ext === '.png' ? 'image/png' : (ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 'application/octet-stream'));
+      if (match) {
+        const fPath = path.join(uDir, match);
+        const ext = path.extname(match).toLowerCase();
+        const mime = ext === '.pdf' ? 'application/pdf' : (ext === '.png' ? 'image/png' : (ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 'application/octet-stream'));
+        res.writeHead(200, {
+          'Content-Type': mime,
+          'Content-Disposition': `inline; filename="${match}"`,
+          'Cache-Control': 'private, max-age=120'
+        });
+        return fs.createReadStream(fPath).pipe(res);
+      }
+      // If not on ephemeral disk (serverless), stream from DB document record
+      const u = readTable('users').find(x => x.id === targetUserId);
+      const docs = u ? (u.documents || (u.permissions?.profile?.documents) || {}) : {};
+      const doc = docs[docType];
+      if (!doc || !doc.dataUrl) throw fail(404, 'Document not uploaded yet');
+      const raw = doc.dataUrl;
+      const buf = Buffer.from(raw.includes(',') ? raw.split(',')[1] : raw, 'base64');
+      const mime = raw.startsWith('data:image/png') ? 'image/png' : (raw.startsWith('data:image/jpeg') ? 'image/jpeg' : 'application/pdf');
       res.writeHead(200, {
         'Content-Type': mime,
-        'Content-Disposition': `inline; filename="${match}"`,
+        'Content-Disposition': `inline; filename="${doc.fileName || (docType + '.pdf')}"`,
         'Cache-Control': 'private, max-age=120'
       });
-      return fs.createReadStream(fPath).pipe(res);
+      return res.end(buf);
     }
 
     if (m === 'POST') {
@@ -1238,7 +1263,8 @@ async function api(req, res, parts) {
         fileName: origName,
         fileSize: buf.length,
         status: 'Uploaded',
-        uploadedAt: new Date().toISOString()
+        uploadedAt: new Date().toISOString(),
+        dataUrl: b.fileData // persists in Supabase so available across serverless lambdas
       };
 
       await locked(async () => {

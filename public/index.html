@@ -3626,8 +3626,18 @@ function startLiveSyncPolling() {
             SessionCache.remove('counts');
             anyUpdated = true;
             const cur = window.currentViewName;
-            if (cur === table || (table === 'docs' && ['quotation', 'pi', 'po'].includes(cur)) || (['ledgers', 'vouchers'].includes(table) && cur === 'tally')) {
-              load(table, true).then(() => { if (window.currentViewName === cur) go(cur); });
+            if (cur === table || (table === 'docs' && ['quotation', 'pi', 'po'].includes(cur)) || (['ledgers', 'vouchers'].includes(table) && cur === 'tally') || (table === 'users' && ['employees', 'myprofile'].includes(cur)) || (table === 'salaryslips' && ['payroll', 'mypayslips'].includes(cur))) {
+              if (cur === 'myprofile') {
+                myProfileView();
+              } else if (cur === 'mypayslips') {
+                myPayslipsView();
+              } else if (cur === 'payroll') {
+                payrollView();
+              } else if (cur === 'employees') {
+                employeesView();
+              } else {
+                load(table, true).then(() => { if (window.currentViewName === cur) go(cur); });
+              }
             }
           }
           lastKnownRevisions[table] = rev;
@@ -12561,7 +12571,8 @@ function showSalarySlip(slip) {
 // 8. EMPLOYEE SELF-SERVICE: MY PROFILE & DOCUMENTS VIEW
 // -------------------------------------------------------------------------
 async function myProfileView() {
-  const meFresh = await api('GET', 'me');
+  SessionCache.remove('me');
+  const meFresh = await api('GET', 'me', null, true);
   window.me = meFresh;
   const view = $('#view');
   if (!view) return;
@@ -12717,7 +12728,8 @@ async function myProfileView() {
 // 9. EMPLOYEE SELF-SERVICE: MY PAYSLIPS VIEW
 // -------------------------------------------------------------------------
 async function myPayslipsView() {
-  const slips = await api('GET', 'salaryslips').catch(() => []);
+  SessionCache.remove('salaryslips');
+  const slips = await api('GET', 'salaryslips', null, true).catch(() => []);
   const view = $('#view');
   if (!view) return;
 
