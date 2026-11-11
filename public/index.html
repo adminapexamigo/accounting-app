@@ -3706,7 +3706,8 @@ async function api(m,u,b,silent=false){
         SessionCache.clearAll();
         showLogin();
       }
-      throw Object.assign(new Error(d.error||'Error'), {status: r.status});
+      const errMsg = d.error || (r.status === 413 ? 'Attachment is too large (exceeds server limit)' : (r.status === 504 ? 'Request timed out' : (r.status ? `Server error (HTTP ${r.status})` : 'Network error')));
+      throw Object.assign(new Error(errMsg), {status: r.status});
     }
 
     // Invalidate session cache on mutations to prevent stale records & sync tabs
@@ -15994,7 +15995,6 @@ async function generateCataloguePdfBlob() {
       display: flex !important;
       flex-direction: column !important;
       justify-content: space-between !important;
-      page-break-after: always !important;
       position: relative !important;
       overflow: hidden !important;
     }
@@ -16021,7 +16021,83 @@ async function generateCataloguePdfBlob() {
     .cat-client-logo { max-width: 100% !important; max-height: 100% !important; object-fit: contain !important; }
     .cat-card-del-btn, .cat-product-card-add, .cat-photo-replace-btn, .cat-no-print { display: none !important; }
   `;
-  return await generatePdfFromHtml(pagesHtml, css, 'Amigo_Enterprises_Company_Catalogue.pdf');
+
+  // Create temporary container for capturing page-by-page (optimized lightweight PDF generation < 1MB)
+  const captureBox = document.createElement('div');
+  captureBox.id = 'catPdfCaptureBox';
+  captureBox.style.cssText = 'position:fixed;top:0;left:0;width:700px;min-width:700px;max-width:700px;margin:0;padding:0;background:#ffffff;color:#000000;box-sizing:border-box;z-index:99998;visibility:visible;pointer-events:none;';
+  captureBox.innerHTML = `
+    <style>${css}</style>
+    <div id="catPagesWrap" style="width:700px;min-width:700px;max-width:700px;margin:0;padding:0;background:#ffffff;">
+      ${pagesHtml}
+    </div>
+  `;
+  document.body.append(captureBox);
+
+  try {
+    const imgs = Array.from(captureBox.querySelectorAll('img'));
+    if (imgs.length) {
+      await Promise.all(imgs.map(im => {
+        if (im.complete) return Promise.resolve();
+        return new Promise(r => { im.onload = r; im.onerror = r; });
+      }));
+    }
+    await new Promise(r => setTimeout(r, 120));
+
+    const pageEls = Array.from(captureBox.querySelectorAll('.cat-page'));
+    if (!pageEls.length) throw new Error('No catalogue pages found to render');
+
+    const jsPDFClass = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+    if (!jsPDFClass) throw new Error('PDF generator library (jsPDF) is not loaded.');
+
+    const pdf = new jsPDFClass({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4',
+      compress: true
+    });
+
+    const pageWidth = pdf.internal.pageSize.getWidth(); // 210 mm
+    const pageHeight = pdf.internal.pageSize.getHeight(); // 297 mm
+    const marginX = 8;
+    const marginY = 8;
+    const maxW = pageWidth - (marginX * 2); // 194 mm
+    const maxH = pageHeight - (marginY * 2); // 281 mm
+
+    for (let i = 0; i < pageEls.length; i++) {
+      if (i > 0) pdf.addPage();
+      const pEl = pageEls[i];
+      const canvas = await window.html2canvas(pEl, {
+        scale: 1.25,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        width: 700,
+        height: 990
+      });
+      const imgData = canvas.toDataURL('image/jpeg', 0.80);
+      const imgW = maxW;
+      const imgH = Math.min(maxH, (canvas.height * imgW) / canvas.width);
+      const posX = (pageWidth - imgW) / 2;
+      const posY = (pageHeight - imgH) / 2;
+      pdf.addImage(imgData, 'JPEG', posX, posY, imgW, imgH, undefined, 'FAST');
+    }
+
+    const pdfUri = pdf.output('datauristring');
+    const base64 = pdfUri && pdfUri.includes(',') ? pdfUri.split(',')[1] : pdfUri;
+    if (!base64 || base64.length < 500) {
+      throw new Error('PDF output is too small or blank');
+    }
+
+    return {
+      name: 'Amigo_Enterprises_Company_Catalogue.pdf',
+      type: 'application/pdf',
+      base64
+    };
+  } finally {
+    captureBox.remove();
+  }
 }
 
 async function openSendCatalogueProfileModal(defaultClient = null) {
