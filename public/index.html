@@ -3301,19 +3301,45 @@ function getEffectivePermissions(user) {
     if (!effective.quotation.scope) effective.quotation.scope = 'own';
     effective.catalogue = Object.assign({}, effective.catalogue || {}, { view: true, edit: true });
     effective.dash = { view: false };
+    effective.hr = { view: false, manage: false };
     effective.invoices = Object.assign({}, effective.invoices || {}, { view: true, create: true, edit: true, mail: true });
+    effective.purchases = Object.assign({}, effective.purchases || {}, { view: true, create: true, edit: true });
   }
 
   if (normDes === 'service engineer' || user.username === 'Mahesh') {
-    if (effective.quotation) effective.quotation.scope = 'own';
-    if (effective.po) effective.po.scope = 'own';
-    if (effective.pi) effective.pi.scope = 'own';
+    if (!effective.quotation) effective.quotation = { view: true, create: true, edit: true, delete: false, mail: true };
+    effective.quotation.scope = 'own';
+    if (!effective.po) effective.po = { view: true, create: true, edit: true, delete: false, mail: true };
+    effective.po.scope = 'own';
+    if (!effective.pi) effective.pi = { view: true, create: true, edit: true, delete: false, mail: true };
+    effective.pi.scope = 'own';
+    effective.invoices = { view: false, create: false, edit: false, delete: false, mail: false };
+    effective.sheets = { view: false, create: false, edit: false, delete: false, mail: false };
+    effective.purchases = { view: false, create: false, edit: false, delete: false };
+    effective.ledgers = { view: false, create: false, edit: false, delete: false };
+    effective.vouchers = { view: false, create: false, edit: false, delete: false };
+    effective.tally = { view: false, create: false, edit: false, delete: false };
+    effective.dash = { view: false };
+    effective.hr = { view: false, manage: false };
+    effective.catalogue = { view: true, edit: false };
   }
 
   if (normDes === 'sales executive' || user.username === 'Ashwini') {
-    if (effective.quotation) effective.quotation.scope = 'own';
-    if (effective.po) effective.po.scope = 'own';
-    if (effective.pi) effective.pi.scope = 'own';
+    if (!effective.quotation) effective.quotation = { view: true, create: true, edit: true, delete: false, mail: true };
+    effective.quotation.scope = 'own';
+    if (!effective.po) effective.po = { view: true, create: true, edit: true, delete: false, mail: true };
+    effective.po.scope = 'own';
+    if (!effective.pi) effective.pi = { view: true, create: true, edit: true, delete: false, mail: true };
+    effective.pi.scope = 'own';
+    effective.invoices = { view: false, create: false, edit: false, delete: false, mail: false };
+    effective.sheets = { view: false, create: false, edit: false, delete: false, mail: false };
+    effective.purchases = { view: false, create: false, edit: false, delete: false };
+    effective.ledgers = { view: false, create: false, edit: false, delete: false };
+    effective.vouchers = { view: false, create: false, edit: false, delete: false };
+    effective.tally = { view: false, create: false, edit: false, delete: false };
+    effective.dash = { view: false };
+    effective.hr = { view: false, manage: false };
+    effective.catalogue = { view: true, edit: false };
   }
 
   return effective;
@@ -4106,7 +4132,7 @@ const tmf=i=>i?new Date(i).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-
 async function workupdates(){const[L,st]=await Promise.all([api('GET','workupdates'),api('GET','workupdates/today')]);wu={...wu,...st};drawBanner();const adm=me.role=='admin';
  L.sort((a,b)=>b.submittedAt.localeCompare(a.submittedAt));
  const form=adm?'':st.submitted?'<div class="msg ok">✓ Today\'s update is submitted. Thank you!</div>':`<div class="card"><h3>Today's work update — ${dmy(st.date)}</h3><div class="field-label-ai"><label style="margin:0">What work did you do today? *</label><button type="button" class="btn-ai-assist" onclick="openAiMenu('wk','workupdate',this)">✨ AI Assist <span style="font-size:9px">▼</span></button></div><textarea id="wk" rows="5" placeholder="e.g. Created 3 invoices, followed up with client X, updated stock list…"></textarea><br><br><div class="grid"><div><div class="field-label-ai"><label style="margin:0">Pending / blockers (optional)</label><button type="button" class="btn-ai-assist" onclick="openAiMenu('wp','workupdate',this)">✨ AI Assist <span style="font-size:9px">▼</span></button></div><textarea id="wp" rows="2"></textarea></div><div><label>Hours worked (optional)</label><input id="wh" type="number" min="0" max="24" step="0.5"></div></div><br><button class="btn" id="wsub">Submit &amp; email update</button></div>`;
- $('#view').innerHTML=`<h1>${adm?'Daily work updates':'My work update'}</h1>${form}<div class="card" style="overflow:auto"><table><tr><th>Date</th>${adm?'<th>Employee</th>':''}<th>Login</th><th>Submitted</th><th>Hrs</th><th>Work done</th><th>Pending</th><th>Email</th>${t==='users'?(adm?'<th>Actions</th>':''):((can(t,'edit')||can(t,'delete'))?'<th>Actions</th>':'')}</tr>${L.map(r=>`<tr><td>${dmy(r.date)}</td>${adm?`<td>${h(r.fullName||r.username)}</td>`:''}<td>${tmf(r.loginTime)}</td><td>${tmf(r.submittedAt)}</td><td>${h(r.hours)}</td><td style="white-space:pre-wrap;max-width:320px">${h(r.work)}</td><td style="white-space:pre-wrap;max-width:200px">${h(r.pending)}</td><td>${h(r.emailStatus)}</td>${adm?`<td class="n" style="white-space:nowrap"><button class="btn ghost sm" data-r="${r.id}">Resend email</button> <button class="btn red sm" data-d="${r.id}">Delete</button></td>`:''}</tr>`).join('')||'<tr><td>No updates yet</td></tr>'}</table></div>`;
+ $('#view').innerHTML=`<h1>${adm?'Daily work updates':'My work update'}</h1>${form}<div class="card" style="overflow:auto"><table><tr><th>Date</th>${adm?'<th>Employee</th>':''}<th>Login</th><th>Submitted</th><th>Hrs</th><th>Work done</th><th>Pending</th><th>Email</th>${adm?'<th>Actions</th>':''}</tr>${L.map(r=>`<tr><td>${dmy(r.date)}</td>${adm?`<td>${h(r.fullName||r.username)}</td>`:''}<td>${tmf(r.loginTime)}</td><td>${tmf(r.submittedAt)}</td><td>${h(r.hours)}</td><td style="white-space:pre-wrap;max-width:320px">${h(r.work)}</td><td style="white-space:pre-wrap;max-width:200px">${h(r.pending)}</td><td>${h(r.emailStatus)}</td>${adm?`<td class="n" style="white-space:nowrap"><button class="btn ghost sm" data-r="${r.id}">Resend email</button> <button class="btn red sm" data-d="${r.id}">Delete</button></td>`:''}</tr>`).join('')||'<tr><td>No updates yet</td></tr>'}</table></div>`;
  if($('#wsub'))$('#wsub').onclick=async e=>{e.target.disabled=true;e.target.textContent='Submitting…';try{const r=await api('POST','workupdates',{work:$('#wk').value,pending:$('#wp').value,hours:$('#wh').value});wu.submitted=true;await workupdates();say(/^sent/.test(r.emailStatus)?'Update submitted and emailed.':'Update saved, but the email did not go out ('+r.emailStatus+'). The admin can resend it.',/^sent/.test(r.emailStatus))}catch(er){e.target.disabled=false;e.target.textContent='Submit & email update';say(er.message)}};
  $('#view').onclick=async e=>{const d=e.target.dataset;try{if(d.r){e.target.textContent='Sending…';const r=await api('POST','workupdates/'+d.r+'/resend');await workupdates();say('Email: '+r.emailStatus,/^sent/.test(r.emailStatus))}if(d.d&&confirm('Delete this update?')){await api('DELETE','workupdates/'+d.d);workupdates()}}catch(er){say(er.message)}}}
 async function logins(){const L=(await api('GET','logins')).sort((a,b)=>b.loginAt.localeCompare(a.loginAt)).slice(0,300);
@@ -5843,6 +5869,7 @@ function renderNav(activeTab) {
       if (['employees', 'payroll', 'leaves'].includes(item[0])) {
         return me.role === 'admin' || isOpsExec || can(item[0], 'view');
       }
+      if (item[0] === 'weeklybackup' && me.role !== 'admin' && !isOpsExec) return false;
       if (item[3] && me.role !== 'admin' && !isOpsExec) return false;
       if (item[4] === 'empOnly' && me.role === 'admin') return false;
       if (['invoices','quotation','pi','po','sheets','purchases','clients','products','catalogue','tally'].includes(item[0])) {

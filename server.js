@@ -1402,19 +1402,45 @@ function getEffectivePermissions(user) {
     if (!effective.quotation.scope) effective.quotation.scope = 'own';
     effective.catalogue = Object.assign({}, effective.catalogue || {}, { view: true, edit: true });
     effective.dash = { view: false };
+    effective.hr = { view: false, manage: false };
     effective.invoices = Object.assign({}, effective.invoices || {}, { view: true, create: true, edit: true, mail: true });
+    effective.purchases = Object.assign({}, effective.purchases || {}, { view: true, create: true, edit: true });
   }
 
   if (normDes === 'service engineer' || user.username === 'Mahesh') {
-    if (effective.quotation) effective.quotation.scope = 'own';
-    if (effective.po) effective.po.scope = 'own';
-    if (effective.pi) effective.pi.scope = 'own';
+    if (!effective.quotation) effective.quotation = { view: true, create: true, edit: true, delete: false, mail: true };
+    effective.quotation.scope = 'own';
+    if (!effective.po) effective.po = { view: true, create: true, edit: true, delete: false, mail: true };
+    effective.po.scope = 'own';
+    if (!effective.pi) effective.pi = { view: true, create: true, edit: true, delete: false, mail: true };
+    effective.pi.scope = 'own';
+    effective.invoices = { view: false, create: false, edit: false, delete: false, mail: false };
+    effective.sheets = { view: false, create: false, edit: false, delete: false, mail: false };
+    effective.purchases = { view: false, create: false, edit: false, delete: false };
+    effective.ledgers = { view: false, create: false, edit: false, delete: false };
+    effective.vouchers = { view: false, create: false, edit: false, delete: false };
+    effective.tally = { view: false, create: false, edit: false, delete: false };
+    effective.dash = { view: false };
+    effective.hr = { view: false, manage: false };
+    effective.catalogue = { view: true, edit: false };
   }
 
   if (normDes === 'sales executive' || user.username === 'Ashwini') {
-    if (effective.quotation) effective.quotation.scope = 'own';
-    if (effective.po) effective.po.scope = 'own';
-    if (effective.pi) effective.pi.scope = 'own';
+    if (!effective.quotation) effective.quotation = { view: true, create: true, edit: true, delete: false, mail: true };
+    effective.quotation.scope = 'own';
+    if (!effective.po) effective.po = { view: true, create: true, edit: true, delete: false, mail: true };
+    effective.po.scope = 'own';
+    if (!effective.pi) effective.pi = { view: true, create: true, edit: true, delete: false, mail: true };
+    effective.pi.scope = 'own';
+    effective.invoices = { view: false, create: false, edit: false, delete: false, mail: false };
+    effective.sheets = { view: false, create: false, edit: false, delete: false, mail: false };
+    effective.purchases = { view: false, create: false, edit: false, delete: false };
+    effective.ledgers = { view: false, create: false, edit: false, delete: false };
+    effective.vouchers = { view: false, create: false, edit: false, delete: false };
+    effective.tally = { view: false, create: false, edit: false, delete: false };
+    effective.dash = { view: false };
+    effective.hr = { view: false, manage: false };
+    effective.catalogue = { view: true, edit: false };
   }
 
   return effective;
