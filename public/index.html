@@ -4997,23 +4997,7 @@ function quoteHTML(doc,d,w){
  const items=Array.isArray(d.items)?d.items:[];
 
  const termsList=String(d.terms||'').split('\n').filter(x=>x.trim());
- const termsHtml=termsList.map((t,i)=>`<div class="qtm">${i+1})&nbsp;&nbsp; ${h(t)}</div>`).join('');
  const sg=String(d.sign||'').split('\n').map((l,i)=>i<3?`<b>${emailize(l)}</b>`:emailize(l)).join('<br>');
- const termsAndSignHtml=`
-   <div class="qtc">Terms &amp; Conditions</div>
-   ${termsHtml}
-   <div class="qy">Your Faithfully,</div>
-   <div class="qs">${sg}</div>
- `;
-
- // Height calculations (standard A4 printable height ~ 960px)
- const getItemRowHeight=itm=>{
-   const lines=Math.max(1,String(itm.desc||'').split('\n').length);
-   return 24+(lines*14);
- };
- const totalItemsHeight=items.reduce((sum,itm)=>sum+getItemRowHeight(itm),0);
- const termsAndSignHeight=(termsList.length?(30+termsList.length*17):0)+(d.sign?100:0);
- const singlePageTotalHeight=95+155+60+totalItemsHeight+termsAndSignHeight;
 
  const renderTableRows=(chunkItems,startIdx,isLastChunk)=>{
    let rowsHtml=chunkItems.map((x,i)=>{
@@ -5022,14 +5006,15 @@ function quoteHTML(doc,d,w){
    }).join('');
 
    if(isLastChunk){
-     rowsHtml+=`<tr style="height:40px"><td class="c"></td><td style="font-weight:bold">&nbsp;TOTAL</td><td></td><td></td><td class="r" style="font-weight:bold">${fm(d.total)}</td></tr>`;
+     rowsHtml+=`<tr style="height:38px"><td class="c"></td><td style="font-weight:bold">&nbsp;TOTAL</td><td></td><td></td><td class="r" style="font-weight:bold">${fm(d.total)}</td></tr>`;
    }
    return rowsHtml;
  };
 
- // === CASE 1: EVERYTHING FITS ON 1 PAGE ===
- if(singlePageTotalHeight<=920){
+ // === RULE 1: IF LINE ITEMS <= 2 -> FIXED TO A SINGLE PAGE ===
+ if(items.length<=2){
    const tableRows=renderTableRows(items,0,true);
+   const termsHtml=termsList.map((t,i)=>`<div class="qtm">${i+1})&nbsp;&nbsp; ${h(t)}</div>`).join('');
    const p1Content=`${hdr}
      <div class="qt">QUOTATION</div>
      <table class="qd"><tr><td class="f">To,</td><td class="r">Date –&nbsp; ${sd(doc.date)}</td></tr></table>
@@ -5049,35 +5034,53 @@ function quoteHTML(doc,d,w){
          ${tableRows}
        </tbody>
      </table>
-     ${termsAndSignHtml}`;
+     <div class="qtc">Terms &amp; Conditions</div>
+     ${termsHtml}
+     <div class="qy">Your Faithfully,</div>
+     <div class="qs">${sg}</div>`;
    return `<div class="dd qq"><div class="qpage" style="page-break-after:auto;border-bottom:none;margin-bottom:0;padding-bottom:0">${p1Content}</div></div>`;
  }
 
- // === CASE 2: MULTI-PAGE FLOW (When data exceeds 1 page) ===
- let p1Limit=5;
- if(items.length<=8) p1Limit=Math.ceil(items.length/2);
- else if(items.length<=12) p1Limit=6;
- else p1Limit=7;
-
- const chunks=[];
- chunks.push(items.slice(0,p1Limit));
- let cur=p1Limit;
- const contLimit=8;
- while(cur<items.length){
-   chunks.push(items.slice(cur,cur+contLimit));
-   cur+=contLimit;
+ // === RULE 2: MORE THAN 2 LINE ITEMS -> SPLIT ONTO TWO PAGES (or more if items > 6) ===
+ // "more than 2 line iteams take on two pages and last 2 term with sign on the next page"
+ let initialTerms=[];
+ let last2Terms=[];
+ if(termsList.length<=2){
+   initialTerms=[];
+   last2Terms=termsList;
+ }else{
+   initialTerms=termsList.slice(0,termsList.length-2);
+   last2Terms=termsList.slice(termsList.length-2);
  }
 
- const lastChunk=chunks[chunks.length-1];
- const lastChunkHeight=lastChunk.reduce((s,x)=>s+getItemRowHeight(x),0);
- const spaceNeededOnLastItemPage=140+65+lastChunkHeight+termsAndSignHeight;
- const termsFitOnLastItemPage=(spaceNeededOnLastItemPage<=920);
+ const initialTermsHtml=initialTerms.length?`
+   <div class="qtc" style="margin:14px 0 8px 4px">Terms &amp; Conditions</div>
+   ${initialTerms.map((t,i)=>`<div class="qtm">${i+1})&nbsp;&nbsp; ${h(t)}</div>`).join('')}
+ `:'' ;
 
- const totalPages=termsFitOnLastItemPage?chunks.length:(chunks.length+1);
+ const lastTermsStartNum=initialTerms.length+1;
+ const last2TermsHtml=`
+   <div class="qtc" style="margin:16px 0 10px 4px">Terms &amp; Conditions${initialTerms.length?' (Continuation)':''}</div>
+   ${last2Terms.map((t,i)=>`<div class="qtm">${lastTermsStartNum+i})&nbsp;&nbsp; ${h(t)}</div>`).join('')}
+   <div class="qy">Your Faithfully,</div>
+   <div class="qs">${sg}</div>
+ `;
+
+ const p1ItemLimit=Math.min(items.length,6);
+ const chunks=[];
+ chunks.push(items.slice(0,p1ItemLimit));
+ let cur=p1ItemLimit;
+ while(cur<items.length){
+   chunks.push(items.slice(cur,cur+7));
+   cur+=7;
+ }
+
+ const totalPages=chunks.length+1;
  const pages=[];
 
  // Page 1:
- const p1Rows=renderTableRows(chunks[0]||[],0,(chunks.length===1&&termsFitOnLastItemPage));
+ const isOnlyItemChunk=(chunks.length===1);
+ const p1Rows=renderTableRows(chunks[0],0,isOnlyItemChunk);
  const p1Content=`${hdr}
    <table style="width:100%;border-collapse:collapse;margin:2px 0 8px">
      <tr>
@@ -5102,15 +5105,15 @@ function quoteHTML(doc,d,w){
        ${p1Rows}
      </tbody>
    </table>
-   ${(chunks.length===1&&termsFitOnLastItemPage)?termsAndSignHtml:''}`;
+   ${isOnlyItemChunk?initialTermsHtml:''}`;
  pages.push(`<div class="qpage">${p1Content}</div>`);
 
- // Subsequent Item Pages:
- let itemOffset=chunks[0]?chunks[0].length:0;
+ // Intermediate Item Pages (if items > 6):
+ let itemOffset=chunks[0].length;
  for(let c=1;c<chunks.length;c++){
    const pageNum=c+1;
-   const isLastItemChunk=(c===chunks.length-1);
-   const chunkRows=renderTableRows(chunks[c],itemOffset,isLastItemChunk);
+   const isLastChunk=(c===chunks.length-1);
+   const chunkRows=renderTableRows(chunks[c],itemOffset,isLastChunk);
    itemOffset+=chunks[c].length;
 
    const pageContent=`${hdr}
@@ -5135,28 +5138,28 @@ function quoteHTML(doc,d,w){
          ${chunkRows}
        </tbody>
      </table>
-     ${(isLastItemChunk&&termsFitOnLastItemPage)?termsAndSignHtml:''}`;
+     ${isLastChunk?initialTermsHtml:''}`;
    pages.push(`<div class="qpage">${pageContent}</div>`);
  }
 
- if(!termsFitOnLastItemPage){
-   const termsPageContent=`${hdr}
-     <table style="width:100%;border-collapse:collapse;margin:2px 0 12px;border-bottom:1px solid #94a3b8;padding-bottom:4px">
-       <tr>
-         <td style="text-align:left;font-size:13px;font-weight:bold;color:#1a1aff;font-family:'Times New Roman',Times,serif">
-           QUOTATION — Terms &amp; Conditions
-         </td>
-         <td style="text-align:center;font-size:12px;color:#334155;font-family:'Times New Roman',Times,serif">
-           Ref: <b>${h(doc.number)}</b> &nbsp;|&nbsp; M/s <b>${h(d.toName)}</b>
-         </td>
-         <td style="text-align:right;font-size:12px;font-weight:bold;color:#475569;font-family:'Times New Roman',Times,serif">
-           Page ${totalPages} of ${totalPages}
-         </td>
-       </tr>
-     </table>
-     ${termsAndSignHtml}`;
-   pages.push(`<div class="qpage">${termsPageContent}</div>`);
- }
+ // Final Page: Last 2 Terms with Signature
+ const finalPageNum=totalPages;
+ const finalPageContent=`${hdr}
+   <table style="width:100%;border-collapse:collapse;margin:2px 0 12px;border-bottom:1px solid #94a3b8;padding-bottom:4px">
+     <tr>
+       <td style="text-align:left;font-size:13px;font-weight:bold;color:#1a1aff;font-family:'Times New Roman',Times,serif">
+         QUOTATION — Terms &amp; Conditions &amp; Signatory
+       </td>
+       <td style="text-align:center;font-size:12px;color:#334155;font-family:'Times New Roman',Times,serif">
+         Ref: <b>${h(doc.number)}</b> &nbsp;|&nbsp; M/s <b>${h(d.toName)}</b>
+       </td>
+       <td style="text-align:right;font-size:12px;font-weight:bold;color:#475569;font-family:'Times New Roman',Times,serif">
+         Page ${finalPageNum} of ${totalPages}
+       </td>
+     </tr>
+   </table>
+   ${last2TermsHtml}`;
+ pages.push(`<div class="qpage">${finalPageContent}</div>`);
 
  return `<div class="dd qq">${pages.join('')}</div>`;
 }
