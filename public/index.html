@@ -3372,7 +3372,9 @@ function can(mod, action) {
   if (mod === 'leaves') {
     const normDes = normalizeDesignation(me.designation);
     if (normDes === 'operations executive') return true;
-    return action === 'view' || action === 'create';
+    if (action === 'approve' || action === 'manage') return false;
+    const eff = getEffectivePermissions(me);
+    return !!(eff.hr?.manage || eff.hr?.view);
   }
   if (mod === 'workupdates') return true;
 
@@ -5884,7 +5886,9 @@ function renderNav(activeTab) {
   $('#nav').innerHTML = visibleGroups.map(g => {
     const validItems = g.items.filter(item => {
       if (['employees', 'payroll', 'leaves'].includes(item[0])) {
-        return me.role === 'admin' || isOpsExec || can(item[0], 'view');
+        const eff = getEffectivePermissions(me);
+        const canHr = !!(eff.hr?.manage || eff.hr?.view);
+        return me.role === 'admin' || isOpsExec || canHr;
       }
       if (item[0] === 'weeklybackup' && me.role !== 'admin' && !isOpsExec) return false;
       if (item[3] && me.role !== 'admin' && !isOpsExec) return false;
@@ -11588,7 +11592,9 @@ function calcCtcBreakdown(annualCtcInput) {
 async function employeesView() {
   const normDes = normalizeDesignation(me.designation);
   const isOpsExec = normDes === 'operations executive';
-  if (me.role !== 'admin' && !isOpsExec) {
+  const eff = getEffectivePermissions(me);
+  const canHr = !!(eff.hr?.manage || eff.hr?.view);
+  if (me.role !== 'admin' && !isOpsExec && !canHr) {
     say('Access denied: Admin & Operations Executive only');
     return go(getDefaultLandingTab());
   }
@@ -12573,7 +12579,9 @@ async function openDocPreview(userId, docType, title) {
 async function payrollView() {
   const normDes = normalizeDesignation(me.designation);
   const isOpsExec = normDes === 'operations executive';
-  if (me.role !== 'admin' && !isOpsExec) {
+  const eff = getEffectivePermissions(me);
+  const canHr = !!(eff.hr?.manage || eff.hr?.view);
+  if (me.role !== 'admin' && !isOpsExec && !canHr) {
     say('Access denied: Admin & Operations Executive only');
     return go(getDefaultLandingTab());
   }
@@ -13881,7 +13889,9 @@ async function myLeavesView() {
 async function leavesView() {
   const normDes = normalizeDesignation(me.designation);
   const isOpsExec = normDes === 'operations executive';
-  if (me.role !== 'admin' && !isOpsExec) {
+  const eff = getEffectivePermissions(me);
+  const canHr = !!(eff.hr?.manage || eff.hr?.view);
+  if (me.role !== 'admin' && !isOpsExec && !canHr) {
     say('Access denied: Admin & Operations Executive only');
     return go(getDefaultLandingTab());
   }
