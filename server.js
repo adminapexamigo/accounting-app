@@ -474,6 +474,55 @@ const resets = new Map(), resetIp = new Map(); // admin password-reset codes
 const pending = new Map(); // password-verified logins waiting for the face check and/or the e-mailed code
 const maskEmail = e => { const [n, d] = String(e).split('@'); return n[0] + '*'.repeat(Math.max(1, n.length - 2)) + (n.length > 1 ? n.slice(-1) : '') + '@' + d; };
 const otpHash = (code, salt) => crypto.createHash('sha256').update(salt + code).digest('hex');
+
+function signPendingToken(p) {
+  try {
+    const jwt = require('jsonwebtoken');
+    const secret = process.env.JWT_SECRET || 'amigo-accounting-production-jwt-secret-key-2026';
+    const expSec = Math.floor((p.exp || (Date.now() + 15 * 60e3)) / 1000);
+    return jwt.sign(
+      {
+        loginPending: true,
+        id: p.id,
+        methods: Array.isArray(p.methods) ? p.methods : ['otp'],
+        otp: p.otp || null,
+        tries: +p.tries || 0,
+        sends: +p.sends || 0,
+        lastSent: p.lastSent || 0,
+        exp: expSec
+      },
+      secret
+    );
+  } catch (err) {
+    console.error('signPendingToken error:', err.message);
+    return crypto.randomBytes(24).toString('hex');
+  }
+}
+
+function getPendingLogin(tokenStr) {
+  if (!tokenStr || typeof tokenStr !== 'string') return null;
+  let p = pending.get(tokenStr);
+  if (p && p.exp >= Date.now()) return p;
+  try {
+    const jwt = require('jsonwebtoken');
+    const secret = process.env.JWT_SECRET || 'amigo-accounting-production-jwt-secret-key-2026';
+    const dec = jwt.verify(tokenStr, secret);
+    if (dec && dec.loginPending && dec.id) {
+      p = {
+        id: dec.id,
+        methods: Array.isArray(dec.methods) ? dec.methods : ['otp'],
+        otp: dec.otp || null,
+        tries: +dec.tries || 0,
+        sends: +dec.sends || 0,
+        lastSent: +dec.lastSent || 0,
+        exp: (dec.exp ? dec.exp * 1000 : Date.now() + 15 * 60e3)
+      };
+      pending.set(tokenStr, p);
+      return p;
+    }
+  } catch (err) {}
+  return null;
+}
 async function sendOtp(p, u) { // e-mails a fresh 6-digit code; returns '' on success or an error message
   const now = Date.now();
   if (p.lastSent && now - p.lastSent < 30000) return 'Please wait 30 seconds before asking for another code.';
@@ -1109,12 +1158,18 @@ async function api(req, res, parts) {
       let r = resets.get(key); if (!r || now - r.win > 30 * 60e3) r = { win: now, sends: 0 };
       if (now - (r.last || 0) < 60e3 || r.sends >= 4) return send(res, 200, generic);
       const code = String(crypto.randomInt(0, 1000000)).padStart(6, '0'), salt = crypto.randomBytes(8).toString('hex');
-      resets.set(key, { ...r, id: u.id, salt, h: otpHash(code, salt), exp: now + 10 * 60e3, tries: 0, last: now, sends: r.sends + 1 });
+      const resetData = { ...r, id: u.id, salt, h: otpHash(code, salt), exp: now + 10 * 60e3, tries: 0, last: now, sends: r.sends + 1 };
+      resets.set(key, resetData);
+      if (db.isDbActive()) await db.saveSetting('reset_' + key, resetData).catch(() => {});
       try { await smtpSend(c, { to: u.email, subject: 'Your password reset code', html: resetHtml(code), images: mailImages(), text: `Your admin password reset code is ${code}\n\nIt is valid for 10 minutes. If you did not ask for this, ignore this email.` }); }
       catch (e) { console.error('Reset email failed:', e.message); }
       return send(res, 200, generic);
     }
-    const pw = String(b.newPassword || ''), r = resets.get(key);
+    const pw = String(b.newPassword || '');
+    let r = resets.get(key);
+    if (!r && db.isDbActive()) {
+      r = await db.getSetting('reset_' + key, null);
+    }
     if (pw.length < 8) throw fail(400, 'New password must be at least 8 characters');
     if (!r || r.exp < now) throw fail(400, 'Invalid or expired code. Request a new one.');
     const code = String(b.code || '').replace(/\D/g, '');
@@ -1125,6 +1180,7 @@ async function api(req, res, parts) {
     const u = await locked(() => { const L = readTable('users'), x = L.find(y => y.id === r.id); if (!x || x.role !== 'admin') return null; x.password = hash(pw); writeTable('users', L); return x; });
     if (!u) throw fail(400, 'Invalid or expired code. Request a new one.');
     resets.delete(key);
+    if (db.isDbActive()) await db.saveSetting('reset_' + key, null).catch(() => {});
     for (const [sid, ss] of sessions) if (ss.user.id === u.id) sessions.delete(sid); // sign out everywhere
     for (const [k, v] of pending) if (v.id === u.id) pending.delete(k);
     smtpSend(mailCfg(), { to: u.email, subject: 'Your password was changed', html: pwChangedHtml(), images: mailImages(), text: 'The admin password was just changed. If this was not you, contact the person who manages this PC right away.' }).catch(e => console.error('Notice email failed:', e.message));
@@ -1146,39 +1202,55 @@ async function api(req, res, parts) {
         if (u.role === 'admin') return send(res, 200, startSession(res, u)); // fallback if admin has no email/smtp configured
         throw fail(403, 'Cannot verify you: ' + [faceOn && 'your face is not enrolled (no profile photo)', otpOn && (u.email ? 'email codes are not set up' : 'no email address on your account')].filter(Boolean).join(' and ') + '. Ask the admin to fix it.');
       }
-      const methods = [faceOk && 'face', otpOk && 'otp'].filter(Boolean), token = crypto.randomBytes(24).toString('hex'), p = { id: u.id, exp: Date.now() + 120e3, tries: 0, methods };
+      const methods = [faceOk && 'face', otpOk && 'otp'].filter(Boolean);
+      const p = { id: u.id, exp: Date.now() + 15 * 60e3, tries: 0, methods };
+      if (methods.length === 2) {
+        const token = signPendingToken(p);
+        pending.set(token, p);
+        return send(res, 200, { needChoice: true, token, methods, email: maskEmail(u.email) });
+      }
+      if (methods[0] === 'face') {
+        const token = signPendingToken(p);
+        pending.set(token, p);
+        return send(res, 200, { needFace: true, token });
+      }
+      const err = await sendOtp(p, u);
+      const token = signPendingToken(p);
       pending.set(token, p);
-      if (methods.length === 2) return send(res, 200, { needChoice: true, token, methods, email: maskEmail(u.email) });
-      if (methods[0] === 'face') return send(res, 200, { needFace: true, token });
-      const err = await sendOtp(p, u); return send(res, 200, { needOtp: true, token, email: maskEmail(u.email), sent: !err, error: err });
+      return send(res, 200, { needOtp: true, token, email: maskEmail(u.email), sent: !err, error: err });
     }
     return send(res, 200, startSession(res, u));
   }
   if (a === 'login' && id === 'face' && m === 'POST') {
-    const b = await body(req), p = pending.get(b.token);
-    if (!p || p.exp < Date.now() || !p.methods.includes('face')) { pending.delete(b.token); throw fail(401, 'Login expired. Enter your password again.'); }
+    const b = await body(req), p = getPendingLogin(b.token);
+    if (!p || p.exp < Date.now() || !p.methods.includes('face')) { if (b.token) pending.delete(b.token); throw fail(401, 'Login expired. Enter your password again.'); }
     const u = readTable('users').find(x => x.id === p.id), d = Array.isArray(b.descriptor) ? b.descriptor.map(Number) : [];
     if (!u || d.length !== 128 || d.some(x => !isFinite(x))) throw fail(400, 'Invalid face data');
     if (dist(d, JSON.parse(u.faceDescriptor)) > FACE_THRESHOLD) {
-      if (++p.tries >= 5) { pending.delete(b.token); throw fail(429, 'Too many failed face attempts. Log in again.'); }
+      if (++p.tries >= 5) { if (b.token) pending.delete(b.token); throw fail(429, 'Too many failed face attempts. Log in again.'); }
       throw fail(401, 'Face not recognised');
     }
-    pending.delete(b.token);
+    if (b.token) pending.delete(b.token);
     return send(res, 200, startSession(res, u));
   }
   if (a === 'login' && id === 'otp' && m === 'POST') {
-    const b = await body(req), p = pending.get(b.token), now = Date.now();
-    if (!p || p.exp < now || !p.methods.includes('otp')) { pending.delete(b.token); throw fail(401, 'Login expired. Enter your password again.'); }
+    const b = await body(req), p = getPendingLogin(b.token), now = Date.now();
+    if (!p || p.exp < now || !p.methods.includes('otp')) { if (b.token) pending.delete(b.token); throw fail(401, 'Login expired. Enter your password again.'); }
     const u = readTable('users').find(x => x.id === p.id); if (!u) throw fail(401, 'Login expired. Enter your password again.');
-    if (sub === 'send' || sub === 'resend') { const err = await sendOtp(p, u); return send(res, 200, { sent: !err, error: err, email: maskEmail(u.email) }); }
+    if (sub === 'send' || sub === 'resend') {
+      const err = await sendOtp(p, u);
+      const newToken = signPendingToken(p);
+      pending.set(newToken, p);
+      return send(res, 200, { sent: !err, error: err, email: maskEmail(u.email), token: newToken });
+    }
     if (!p.otp) throw fail(400, 'Ask for a code first.');
     if (p.otp.exp < now) throw fail(401, 'The code has expired. Ask for a new one.');
     const code = String(b.code || '').replace(/\D/g, ''), good = Buffer.from(p.otp.h), got = Buffer.from(otpHash(code, p.otp.salt));
     if (code.length !== 6 || !crypto.timingSafeEqual(good, got)) {
-      if (++p.otp.tries >= 5) { pending.delete(b.token); throw fail(429, 'Too many wrong codes. Log in again.'); }
+      if (++p.otp.tries >= 5) { if (b.token) pending.delete(b.token); throw fail(429, 'Too many wrong codes. Log in again.'); }
       throw fail(401, 'Wrong code. Try again.');
     }
-    pending.delete(b.token);
+    if (b.token) pending.delete(b.token);
     return send(res, 200, startSession(res, u));
   }
   const s = session(req); if (!s) throw fail(401, 'Please log in');

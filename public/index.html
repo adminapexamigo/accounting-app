@@ -5028,6 +5028,7 @@ function otpDialog(info){return new Promise((resolve,reject)=>{
     q('.orr').disabled=true;st('Dispatching a fresh code…',0);
     try{
       const r=await api('POST','login/otp/resend',{token:info.token});
+      if(r.token) info.token = r.token;
       if(r.sent){st('A new code was sent to your email.',0);cool()}
       else{q('.orr').disabled=false;st(r.error||'Could not send')}
     }catch(e){q('.orr').disabled=false;end(reject,e)}
@@ -5047,7 +5048,7 @@ async function chooseMethod(r){let note='';
     showOtpLoader('Sending Security Code', `Dispatching 6-digit verification code to ${r.email || 'your email'}…`, '✉️');
     const x=await api('POST','login/otp/send',{token:r.token});
     hideOtpLoader();
-    return await otpDialog({...x,token:r.token});
+    return await otpDialog({...x,token:x.token || r.token});
   }
   catch(e){
     hideOtpLoader();
