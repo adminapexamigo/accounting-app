@@ -2382,7 +2382,17 @@ body.mobile-sidebar-open {
 }
 
 /* === Print === */
-@media print{body>*:not(#invoiceView){display:none!important}#invoiceView{position:static;display:block!important;background:#fff;padding:0}.bar{display:none}.sheet{box-shadow:none;padding:0;max-width:none}@page{size:A4;margin:14mm}}
+@media print {
+  body > *:not(#invoiceView):not(#payslipPrintModal) { display: none !important; }
+  #invoiceView { position: static; display: block !important; background: #fff; padding: 0; }
+  .bar { display: none; }
+  .sheet { box-shadow: none; padding: 0; max-width: none; }
+  #payslipPrintModal { position: static !important; display: block !important; background: #fff !important; padding: 0 !important; margin: 0 !important; box-shadow: none !important; border: none !important; width: 100% !important; max-width: none !important; height: auto !important; max-height: none !important; overflow: visible !important; }
+  #payslipPrintModal .mail-modal-card { border: none !important; box-shadow: none !important; max-width: none !important; width: 100% !important; height: auto !important; max-height: none !important; overflow: visible !important; padding: 0 !important; margin: 0 !important; }
+  #payslipPrintArea { padding: 0 !important; margin: 0 !important; overflow: visible !important; width: 100% !important; }
+  .payslip-no-print { display: none !important; }
+  @page { size: A4 portrait; margin: 10mm 12mm; }
+}
 
 /* === Permanent Database Mutation Loader Overlay === */
 .op-loader-overlay {
@@ -2810,32 +2820,6 @@ body.mobile-sidebar-open {
 }
 
 /* ===== EMPLOYEE ONBOARDING & PAYSLIP STYLES ===== */
-@media print {
-  body * {
-    visibility: hidden !important;
-  }
-  #payslipPrintModal, #payslipPrintModal *, #payslipPrintArea, #payslipPrintArea * {
-    visibility: visible !important;
-  }
-  #payslipPrintModal {
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
-    width: 100% !important;
-    background: #fff !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    box-shadow: none !important;
-    border: none !important;
-  }
-  .payslip-no-print {
-    display: none !important;
-  }
-  @page {
-    size: A4 portrait;
-    margin: 10mm 12mm;
-  }
-}
 
 .hr-badge-pending {
   background: #fef3c7;
@@ -10995,6 +10979,8 @@ async function employeesView() {
     api('GET', 'users'),
     api('GET', 'salaryslips').catch(() => [])
   ]);
+  window._salarySlipsMap = window._salarySlipsMap || {};
+  (slipsList || []).forEach(s => { window._salarySlipsMap[s.id] = s; });
 
   const view = $('#view');
   if (!view) return;
@@ -12080,7 +12066,7 @@ async function payrollView() {
                 <td style="padding:12px 14px;font-weight:800;color:#059669;font-size:14px">₹ ${(+s.netPay).toLocaleString('en-IN')}</td>
                 <td style="padding:12px 16px;text-align:right">
                   <div style="display:inline-flex;align-items:center;gap:6px">
-                    <button class="btn ghost" onclick="showSalarySlip(window._salarySlipsMap['${s.id}'])" style="padding:5px 10px;font-size:12px;color:#4f46e5;font-weight:600">
+                    <button class="btn ghost" onclick="showSalarySlip('${s.id}')" style="padding:5px 10px;font-size:12px;color:#4f46e5;font-weight:600">
                       🖨️ View & Print
                     </button>
                     <button class="btn ghost" onclick="openGenerateSlipModal('${s.employeeId}', ${JSON.stringify(s).replace(/"/g, '&quot;')})" style="padding:5px 9px;font-size:12px">
@@ -12450,7 +12436,42 @@ async function openGenerateSlipModal(selectedEmpId, existingSlip) {
 // -------------------------------------------------------------------------
 // 7. PRINTABLE STANDARD CORPORATE INDIAN PAYSLIP MODAL
 // -------------------------------------------------------------------------
-function showSalarySlip(slip) {
+function printPayslipDirect(slipId) {
+  const slip = (window._salarySlipsMap && window._salarySlipsMap[slipId]) || {};
+  const printArea = document.getElementById('payslipPrintArea');
+  if (!printArea) return window.print();
+  const w = window.open('', '_blank', 'width=900,height=800');
+  if (!w) return window.print();
+  w.document.write(`<!DOCTYPE html><html><head><title>Salary Slip - ${slip.employeeName || 'Staff'} - ${slip.month || ''}/${slip.year || ''}</title>
+  <style>
+    body { font-family: 'Segoe UI', Arial, Helvetica, sans-serif; color: #000; margin: 20px; background: #ffffff; }
+    table { border-collapse: collapse; width: 100%; }
+    @page { size: A4 portrait; margin: 10mm 12mm; }
+    @media print { body { margin: 0; padding: 0; } }
+  </style></head><body>${printArea.innerHTML}</body></html>`);
+  w.document.close();
+  w.focus();
+  setTimeout(() => { w.print(); }, 250);
+}
+
+async function showSalarySlip(slipOrId) {
+  let slip = slipOrId;
+  if (!slip || typeof slip === 'string') {
+    const slipId = typeof slipOrId === 'string' ? slipOrId : '';
+    if (window._salarySlipsMap && slipId && window._salarySlipsMap[slipId]) {
+      slip = window._salarySlipsMap[slipId];
+    } else {
+      const all = await api('GET', 'salaryslips', null, true).catch(() => []);
+      window._salarySlipsMap = window._salarySlipsMap || {};
+      all.forEach(x => { window._salarySlipsMap[x.id] = x; });
+      slip = slipId ? all.find(x => x.id === slipId) : all[0];
+    }
+  }
+  if (!slip) return say('Salary slip not found');
+
+  window._salarySlipsMap = window._salarySlipsMap || {};
+  window._salarySlipsMap[slip.id] = slip;
+
   const monthNames = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   const monthLabel = monthNames[+slip.month] || slip.month;
 
@@ -12466,7 +12487,7 @@ function showSalarySlip(slip) {
       <div class="payslip-no-print" style="padding:12px 20px;background:#1e293b;color:#fff;display:flex;align-items:center;justify-content:space-between">
         <div style="font-size:14px;font-weight:700">🖨️ Payslip Preview & Print</div>
         <div style="display:flex;align-items:center;gap:10px">
-          <button class="btn" onclick="window.print()" style="background:#10b981;border-color:#059669;color:#fff;padding:6px 18px;font-weight:700;display:flex;align-items:center;gap:6px">
+          <button class="btn" onclick="printPayslipDirect('${slip.id}')" style="background:#10b981;border-color:#059669;color:#fff;padding:6px 18px;font-weight:700;display:flex;align-items:center;gap:6px">
             <span>🖨️ Print / Save PDF</span>
           </button>
           <button type="button" id="closePayslipModal" style="background:none;border:none;font-size:24px;cursor:pointer;color:#94a3b8;line-height:1">×</button>
@@ -12889,7 +12910,7 @@ async function myPayslipsView() {
                 <td style="padding:12px 14px;color:#dc2626">₹ ${(+s.totalDeductions).toLocaleString('en-IN')}</td>
                 <td style="padding:12px 14px;font-weight:800;color:#059669;font-size:14px">₹ ${(+s.netPay).toLocaleString('en-IN')}</td>
                 <td style="padding:12px 16px;text-align:right">
-                  <button class="btn ghost" onclick="showSalarySlip(window._salarySlipsMap['${s.id}'])" style="padding:6px 14px;font-size:12px;color:#4f46e5;font-weight:700">
+                  <button class="btn ghost" onclick="showSalarySlip('${s.id}')" style="padding:6px 14px;font-size:12px;color:#4f46e5;font-weight:700">
                     🖨️ View & Print Payslip
                   </button>
                 </td>
