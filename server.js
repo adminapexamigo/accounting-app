@@ -767,6 +767,119 @@ const company = () => {
   return { ...COMPANY_DEFAULTS, ...fileSetting, ...dbSetting };
 };
 
+// ---- Catalogue Defaults ----
+const DEFAULT_CATALOGUE = {
+  companyName: 'AMIGO ENTERPRISES',
+  subtitle: 'MANUFACTURER & SUPPLIER OF AIR POLLUTION CONTROL EQUIPMENT & SPARE PARTS',
+  tagline: 'COMMITTED TO SERVE BETTER SERVICES',
+  logo: '/catalogue/catalogue_logo.jpeg',
+  espModel: '/catalogue/esp_model.jpeg',
+  legend: [
+    { num: 1, text: 'Rapping system for collecting & discharge electrode' },
+    { num: 2, text: 'Support insulator with housing & heater' },
+    { num: 3, text: 'Shaft insulator with housing & heater' },
+    { num: 4, text: 'Bus duct insulator' },
+    { num: 5, text: 'Collecting electrode' },
+    { num: 6, text: 'Discharge electrode' },
+    { num: 7, text: 'TR set' },
+    { num: 8, text: 'Outer arm & Hammer' }
+  ],
+  bottomBanner: 'COMMITTED TO SERVE BETTER SERVICES - COMPLETE AIR POLLUTION CONTROL SOLUTIONS',
+  team: {
+    title: 'OUR TEAM',
+    intro: 'We are supported by a dexterous team of professionals, which possesses vast industrial experience and in-depth domain knowledge. All our professionals work in close sync with one another to deliver quality services & products. Furthermore, our professionals keep themselves abreast of the latest market trends by undergoing continuous development programs and market surveys.',
+    workforceTitle: 'Our workforce consists of:',
+    members: [
+      { role: 'Technical experts', desc: 'Decades of on-site field engineering experience diagnosing ESP performance issues, gas flow anomalies, and mechanical wear.' },
+      { role: 'Engineers', desc: 'Qualified mechanical and electrical engineers specializing in high-voltage industrial precipitators and structural design.' },
+      { role: 'Quality auditors', desc: 'Rigorous quality inspection across dimensional tolerances, insulation ratings, material strength, and thermal resilience.' },
+      { role: 'Packaging personnel', desc: 'Precision heavy-duty industrial packaging ensuring fragile ceramic insulators and delicate electrodes arrive safely on site.' },
+      { role: 'Administrative staff', desc: 'Prompt quotation turnaround, logistics tracking, ERP coordination, and comprehensive after-sales customer care.' }
+    ],
+    qualityNote: 'Owing to our well-defined quality parameters, we ensure that each product delivered to our clients is strictly checked for superior performance, dimensional accuracy and durability.'
+  },
+  services: {
+    title: 'LIST OF SERVICES BEING OFFERED',
+    mechanical: {
+      title: 'MECHANICAL SERVICES',
+      items: [
+        'Complete overhauling & revamping of Electrostatic Precipitators (ESP).',
+        'Alignment and replacement of Collecting Electrodes & Emitting / Discharge Electrodes.',
+        'Servicing & overhaul of Rapping Mechanism (Collecting & Discharge Rapping systems, Hammer, Shafts, Geared Motors).',
+        'Hopper evacuation system maintenance, heating element testing & replacement.',
+        'Gas Distribution (GD) screens repairing, alignment, and optimization for uniform flow.',
+        'ESP casing structural inspection, repair, leak rectification, and thermal insulation replacement.',
+        'Access doors, inspection doors, and high-temperature gasket replacements.',
+        'Comprehensive shutdown maintenance and turnaround engineering services for ESPs.'
+      ]
+    },
+    electrical: {
+      title: 'ELECTRICAL & INSTRUMENTATION SERVICES',
+      items: [
+        'Overhauling, testing and commissioning of Transformer-Rectifier (TR) Sets & High Voltage controllers.',
+        'Servicing, maintenance and calibration of microprocessor-based ESP controllers (PRECICON-R, PRECICON-III, MK-III, DERM).',
+        'High-voltage insulation resistance testing and replacement of Support Insulators, Shaft Insulators, Bushings and Conical Insulators.',
+        'Thermography inspection, spark rate optimization, and kV/mA operating point tuning for optimal particulate collection efficiency.',
+        'Purge air system, electrical heating element (hopper & insulator heaters) control logic testing & servicing.',
+        'Earth switch unit overhauling, interlock mechanism testing, and plant electrical safety compliance.',
+        'Supply of genuine electrical spare parts, thyristor trigger cards, and field instrumentation accessories.'
+      ]
+    }
+  },
+  products: [
+    { id: 1, title: 'PRECICON - R DISPLAY', image: '/catalogue/products/precicon_r_display.png', page: 4 },
+    { id: 2, title: 'COLLECTING ELECTRODE', image: '/catalogue/products/collecting_electrode.png', page: 4 },
+    { id: 3, title: 'RAPPER COIL', image: '/catalogue/products/rapper_coil.png', page: 4 },
+    { id: 4, title: 'MK 3 CONTROLLER', image: '/catalogue/products/mk3.png', page: 4 },
+    { id: 5, title: 'DISCHARGE ELECTRODE', image: '/catalogue/products/discharge_electrode.png', page: 4 },
+    { id: 6, title: 'HOPPER HEATER', image: '/catalogue/products/hopper_heater.png', page: 4 },
+    { id: 7, title: 'EARTH SWITCH UNIT', image: '/catalogue/products/earth_switch_unit.png', page: 4 },
+    { id: 8, title: 'MK 3 PANEL', image: '/catalogue/products/mk3_panel.png', page: 4 },
+    { id: 9, title: 'COLUMN CARD', image: '/catalogue/products/column_card.png', page: 4 },
+    { id: 10, title: 'GD SCREEN', image: '/catalogue/products/gd_screen.png', page: 4 },
+    { id: 11, title: 'INSULATOR FLANGE PLATE', image: '/catalogue/products/insulator_flange_plate.png', page: 4 },
+    { id: 12, title: 'WALL THROUGH BUSHING', image: '/catalogue/products/wall_through_bushing.png', page: 4 },
+
+    { id: 13, title: 'HAMMER', image: '/catalogue/products/hammer.png', page: 5 },
+    { id: 14, title: 'DAMPER RESISTOR', image: '/catalogue/products/damper_resistor.png', page: 5 },
+    { id: 15, title: 'SHAFT INSULATOR', image: '/catalogue/products/shaft_insulator.png', page: 5 },
+    { id: 16, title: 'SUPPORT INSULATOR', image: '/catalogue/products/support_insulators.png', page: 5 },
+    { id: 17, title: 'CONICAL INSULATOR', image: '/catalogue/products/conical_insulator.png', page: 5 },
+    { id: 18, title: 'BOOT SEAL', image: '/catalogue/products/boot_seal.png', page: 5 },
+    { id: 19, title: 'FRP SHAFT', image: '/catalogue/products/frp_shaft.png', page: 5 },
+    { id: 20, title: 'INSPECTION DOOR', image: '/catalogue/products/door.png', page: 5 },
+    { id: 21, title: 'RECTIFIER TRANSFORMER', image: '/catalogue/products/rectifier_transformer.png', page: 5 },
+    { id: 22, title: 'PRECICON - R CONTROLLER', image: '/catalogue/products/precicon_r.png', page: 5 },
+    { id: 23, title: 'PRECICON - III CONTROLLER', image: '/catalogue/products/precicon_iii.png', page: 5 },
+    { id: 24, title: 'HAMMER INNER ARM', image: '/catalogue/products/hammer_inner_arm.png', page: 5 },
+
+    { id: 25, title: 'INSULATOR HEATER', image: '/catalogue/products/insulator_heater.png', page: 6 },
+    { id: 26, title: 'BUS DUCT INSULATOR', image: '/catalogue/products/bus_duct_insulator.png', page: 6 },
+    { id: 27, title: 'GASKET', image: '/catalogue/products/gasket.png', page: 6 },
+    { id: 28, title: 'VERTICAL INSULATOR', image: '/catalogue/products/vertical_insulator.png', page: 6 },
+    { id: 29, title: 'DERM CONTROLLER', image: '/catalogue/products/derm.png', page: 6 }
+  ],
+  sustainability: {
+    title: 'SUSTAINABILITY',
+    icon: '/catalogue/icon_sustainability.png',
+    text: 'We are committed to environmental sustainability and creating long-term value for our clients. By supplying energy-efficient ESP components and engineering revamps, we actively reduce particulate emissions, lower industrial power consumption, and help manufacturing facilities comply with the highest environmental air quality norms.'
+  },
+  vision: {
+    title: 'VISION',
+    icon: '/catalogue/icon_vision.png',
+    text: 'To be recognized as India\'s premier, most dependable engineering partner for Electrostatic Precipitator overhauling, emission control retrofits, and precision industrial spares, driven by uncompromising quality, rapid turnaround, and unmatched technical excellence.'
+  },
+  contact: {
+    companyName: 'AMIGO ENTERPRISES',
+    address: 'S.NO.6/17 FLAT NO 401 CHOVISAWADI Pimpri Chinchwad, Pune, Maharashtra, 412105',
+    email: 'kuldeep.amigo@gmail.com',
+    phone: '+91 8605069145',
+    gstin: '27ACBFA5336L1ZB',
+    pan: 'ACBFA5336L',
+    tagline: 'Partner with us for world-class air pollution control solutions and genuine ESP spares.'
+  }
+};
+
 // ---- AI Integration ----
 const WORKING_AI_MODELS = ['openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'qwen/qwen3.8-27b'];
 
@@ -1450,6 +1563,63 @@ async function api(req, res, parts) {
         fs.writeFileSync(cf, JSON.stringify(o, null, 2));
       } catch {}
       return send(res, 200, o);
+    }
+  }
+  if (a === 'catalogue') {
+    const catFile = path.join(DATA, 'catalogue.json');
+    if (m === 'GET') {
+      let data = null;
+      if (db.isDbActive()) {
+        try { data = await db.getSetting('catalogue', null); } catch {}
+      }
+      if (!data) {
+        try {
+          if (fs.existsSync(catFile)) data = JSON.parse(fs.readFileSync(catFile, 'utf8'));
+        } catch {}
+      }
+      return send(res, 200, data || DEFAULT_CATALOGUE);
+    }
+    if (m === 'PUT') {
+      if (user.role !== 'admin') throw fail(403, 'Admin only: only administrators can edit the catalogue');
+      const b = await body(req);
+      if (db.isDbActive()) {
+        await db.saveSetting('catalogue', b);
+      }
+      try {
+        fs.mkdirSync(DATA, { recursive: true });
+        fs.writeFileSync(catFile, JSON.stringify(b, null, 2));
+      } catch {}
+      return send(res, 200, b);
+    }
+    if (m === 'POST' && id === 'reset') {
+      if (user.role !== 'admin') throw fail(403, 'Admin only');
+      if (db.isDbActive()) {
+        await db.saveSetting('catalogue', DEFAULT_CATALOGUE);
+      }
+      try {
+        fs.mkdirSync(DATA, { recursive: true });
+        fs.writeFileSync(catFile, JSON.stringify(DEFAULT_CATALOGUE, null, 2));
+      } catch {}
+      return send(res, 200, DEFAULT_CATALOGUE);
+    }
+    if (m === 'POST' && id === 'upload') {
+      if (user.role !== 'admin') throw fail(403, 'Admin only');
+      const b = await body(req);
+      if (!b.dataUrl) throw fail(400, 'Image data required');
+      const match = b.dataUrl.match(/^data:image\/([a-zA-Z0-9]+);base64,(.+)$/);
+      if (!match) throw fail(400, 'Invalid base64 image data');
+      const ext = match[1] === 'jpeg' ? 'jpg' : match[1];
+      const filename = `custom_${Date.now()}_${Math.random().toString(36).slice(2, 7)}.${ext}`;
+      const pubDir = path.join(__dirname, 'public', 'catalogue', 'products');
+      let url = b.dataUrl;
+      try {
+        fs.mkdirSync(pubDir, { recursive: true });
+        fs.writeFileSync(path.join(pubDir, filename), Buffer.from(match[2], 'base64'));
+        url = `/catalogue/products/${filename}`;
+      } catch (err) {
+        // serverless read-only fallback to dataUrl
+      }
+      return send(res, 200, { ok: true, url });
     }
   }
   if (a === 'ai') {

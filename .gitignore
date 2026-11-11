@@ -17,6 +17,7 @@ certs/
 
 # Backups (kept local on PC, data is in Supabase)
 backups/
+data/emp_docs/
 
 # OS files
 .DS_Store
