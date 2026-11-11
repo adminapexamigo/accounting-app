@@ -4644,7 +4644,7 @@ async function docs(type){
 }
 
 async function docForm(type, ex, copy){
-  const cl = await load('clients'),
+  const [cl, pr] = await Promise.all([load('clients'), load('products')]),
         D = ex ? JSON.parse(ex.data) : {},
         isQ = type == 'quotation',
         editing = ex && !copy,
@@ -4729,6 +4729,7 @@ async function docForm(type, ex, copy){
           <table class="items" style="width:100%;font-size:12.5px">
             <thead>
               <tr>
+                <th style="width:170px">Product</th>
                 <th style="text-align:left">Description</th>
                 <th style="width:70px">Qty</th>
                 ${isQ ? '' : '<th style="width:70px">UOM</th>'}
@@ -4793,6 +4794,12 @@ async function docForm(type, ex, copy){
     const tr = document.createElement('tr');
     const I = (c, v, w, t = 'text', e = '') => `<td><input class="${c}" type="${t}" value="${h(v ?? '')}" style="width:${w}" ${e}></td>`;
     tr.innerHTML = `
+      <td>
+        <select class="p" style="width:100%;min-width:140px;font-size:12px;padding:4px 6px;border-radius:6px;border:1px solid #cbd5e1;background:#fff">
+          <option value="">— custom / select —</option>
+          ${pr.map(p => `<option value="${p.id}" ${(x.productId == p.id || (!x.productId && x.desc && p.name === x.desc)) ? 'selected' : ''}>${h(p.name)}</option>`).join('')}
+        </select>
+      </td>
       <td><div style="position:relative"><textarea class="d" rows="2" style="width:100%;min-width:180px;padding-right:26px">${h(x.desc || '')}</textarea><button type="button" class="btn-ai-mini" onclick="openAiMenu(this.previousElementSibling,'item_desc',this)" title="AI Assist">✨</button></div></td>
       ${I('q', x.qty ?? '1', '100%')}
       ${isQ ? '' : I('u', x.uom ?? 'Nos', '100%')}
@@ -4806,6 +4813,7 @@ async function docForm(type, ex, copy){
 
   const updatePreview = (subtotal, tx) => {
     const its = [...rows.querySelectorAll('tr')].map(tr => ({
+      productId: val(tr, '.p'),
       desc: val(tr, '.d'),
       qty: val(tr, '.q'),
       uom: val(tr, '.u'),
@@ -4863,7 +4871,33 @@ async function docForm(type, ex, copy){
     updatePreview(s, tx);
   };
 
-  rows.oninput = calc;
+  const onProductPick = (tr, productId) => {
+    const p = pr.find(x => x.id == productId);
+    if (p) {
+      const descEl = tr.querySelector('.d');
+      if (descEl) descEl.value = p.name;
+      const rateEl = tr.querySelector('.r');
+      if (rateEl && p.rate !== undefined && p.rate !== null && p.rate !== '') rateEl.value = p.rate;
+      const uomEl = tr.querySelector('.u');
+      if (uomEl && p.unit) uomEl.value = p.unit;
+    }
+  };
+
+  rows.oninput = e => {
+    if (e.target.classList.contains('p')) {
+      const tr = e.target.closest('tr');
+      if (tr) onProductPick(tr, e.target.value);
+    }
+    calc();
+  };
+
+  rows.onchange = e => {
+    if (e.target.classList.contains('p')) {
+      const tr = e.target.closest('tr');
+      if (tr) onProductPick(tr, e.target.value);
+      calc();
+    }
+  };
   rows.onclick = e => {
     if (e.target.classList.contains('x')) {
       e.target.closest('tr').remove();
@@ -4925,6 +4959,7 @@ async function docForm(type, ex, copy){
       const a = (q * r * (1 - di / 100)) + pf;
       s += a;
       return {
+        productId: val(tr, '.p'),
         desc: val(tr, '.d'),
         qty: val(tr, '.q'),
         uom: val(tr, '.u'),
