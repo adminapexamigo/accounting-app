@@ -2414,7 +2414,7 @@ body.mobile-sidebar-open {
   #payslipPrintModal .mail-modal-card { border: none !important; box-shadow: none !important; max-width: none !important; width: 100% !important; height: auto !important; max-height: none !important; overflow: visible !important; padding: 0 !important; margin: 0 !important; }
   #payslipPrintArea { padding: 0 !important; margin: 0 !important; overflow: visible !important; width: 100% !important; }
   .payslip-no-print { display: none !important; }
-  @page { size: A4 portrait; margin: 10mm 12mm; }
+  @page { size: A4 portrait; margin: 6mm 10mm; }
 }
 
 /* === Permanent Database Mutation Loader Overlay === */
@@ -4960,16 +4960,18 @@ async function docForm(type, ex, copy){
   };
 }
 // ---- document layouts (same markup for screen, PDF and Word) ----
-const DCSS=`.dd{font-family:'Times New Roman',Times,serif;color:#000;font-size:12px;line-height:1.3;-webkit-print-color-adjust:exact;print-color-adjust:exact}.dd table{border-collapse:collapse;width:100%}.dd td,.dd th{padding:0;vertical-align:top;text-align:left;font-weight:normal;font-size:12px;color:#000;text-transform:none;letter-spacing:0;border:0}.dd .b{font-weight:bold}.dd .c{text-align:center}.dd .r{text-align:right}
+const DCSS=`.dd{font-family:'Times New Roman',Times,serif;color:#000;font-size:12px;line-height:1.25;-webkit-print-color-adjust:exact;print-color-adjust:exact}.dd table{border-collapse:collapse;width:100%}.dd td,.dd th{padding:0;vertical-align:top;text-align:left;font-weight:normal;font-size:12px;color:#000;text-transform:none;letter-spacing:0;border:0}.dd .b{font-weight:bold}.dd .c{text-align:center}.dd .r{text-align:right}
 .dd .ttl{text-align:center;margin:4px 0 14px;line-height:1.1}.dd .pph{border:1px solid #000}.dd .pph td.h{padding:6px 8px;border-left:1px solid #000;height:190px}.dd .pph td.f{border-left:0}.dd .cbox{border:1px solid #000;padding:2px 6px;margin-top:24px;font-size:12px;line-height:1.35}
 .dd .itm{border:1.5px solid #000}.dd .itm th{border:1px solid #000;padding:5px 6px;font-size:13px}.dd .itm td{border-left:1px solid #000;border-right:1px solid #000;padding:14px 6px;font-size:12px}.dd .itm td.c{text-align:center}.dd .itm tr.sp td{border-bottom:1px solid #000;padding:0}.dd .itm td.tl{border-top:1px solid #000;border-bottom:1px solid #000;padding:7px 6px;font-size:15px}.dd .itm td.bp{padding-left:16px}
 .dd.pi .itm td.ds{font-weight:bold}.dd.po .itm td.ds{font-size:15px}.dd.po .itm th{font-size:14px}.dd .box{border:1px solid #000;border-top:0}.dd .bk{font:10.5px Arial,Helvetica,sans-serif;padding:10px 6px;height:290px}.dd .bk p{margin:0 0 14px;font-size:10.5px}.dd .bt{text-align:center;font-weight:bold;font-size:12px;margin:8px 0 20px;padding-right:90px}
-.dd .qh{border:1.5px solid #bdd7ee;border-radius:4px;padding:6px 10px;font-size:12.5px;line-height:1.35;font-family:'Times New Roman',Times,serif;color:#0f172a;box-sizing:border-box;background:#ffffff}.dd .rl{border-top:1.5px solid #c0392b;margin:5px 0 8px;width:100%}.dd .qt{text-align:center;color:#1a1aff;font-weight:bold;font-size:23px;margin:2px 0 10px;letter-spacing:0.5px}.dd .qd td{font-size:13.5px;padding:0 80px 3px 0}.dd .qd td.f{padding:0}.dd .qn{margin:0 0 10px 18px;font-size:13.5px}
-.dd .qi{border:1px solid #000;margin-top:6px;width:100%}.dd .qi th{border:1px solid #000;padding:4px 6px;font-size:13.5px}.dd .qi td{border:1px solid #000;padding:7px 6px;font-size:12px;font-weight:bold}.dd .qtc{font:bold 14px Arial,Helvetica,sans-serif;margin:16px 0 10px 4px;text-decoration:underline;color:#0f172a}.dd .qtm{font-size:13px;margin:0 0 5px 4px;line-height:1.35}.dd .qy{margin:24px 0 8px 18px;font-size:14px;font-weight:bold}.dd .qs{margin-left:18px;font-size:13.5px;line-height:1.3}
-.dd .qpage{page-break-after:always;break-after:page;mso-break-type:page-break;border-bottom:2px dashed #94a3b8;padding-bottom:26px;margin-bottom:30px;min-height:260mm;box-sizing:border-box;position:relative}
+.dd .qh{border:1.5px solid #bdd7ee;border-radius:4px;padding:4px 8px;font-size:12px;line-height:1.3;font-family:'Times New Roman',Times,serif;color:#0f172a;box-sizing:border-box;background:#ffffff}.dd .rl{border-top:1.5px solid #c0392b;margin:3px 0 6px;width:100%}.dd .qt{text-align:center;color:#1a1aff;font-weight:bold;font-size:21px;margin:1px 0 6px;letter-spacing:0.5px}.dd .qd td{font-size:13px;padding:0 70px 2px 0}.dd .qd td.f{padding:0}.dd .qn{margin:0 0 5px 14px;font-size:13px;line-height:1.25}
+.dd .qi{border:1px solid #000;margin-top:4px;width:100%}.dd .qi th{border:1px solid #000;padding:3px 5px;font-size:13px}.dd .qi td{border:1px solid #000;padding:4px 5px;font-size:11.5px;line-height:1.25;font-weight:bold}.dd .qtc{font:bold 13px Arial,Helvetica,sans-serif;margin:8px 0 4px 2px;text-decoration:underline;color:#0f172a}.dd .qtm{font-size:11.5px;margin:0 0 2px 2px;line-height:1.25}.dd .qy{margin:10px 0 3px 14px;font-size:13px;font-weight:bold}.dd .qs{margin-left:14px;font-size:12px;line-height:1.25}
+.dd.single-page .qpage{page-break-after:avoid !important;break-after:avoid !important;page-break-inside:avoid !important;break-inside:avoid !important}
+.dd .qpage{page-break-after:always;break-after:page;mso-break-type:page-break;border-bottom:2px dashed #94a3b8;padding-bottom:16px;margin-bottom:20px;box-sizing:border-box;position:relative}
 .dd .qpage:last-child{page-break-after:auto;break-after:auto;border-bottom:none;margin-bottom:0;padding-bottom:0}
 @media print{
-  .dd .qpage{border:0 !important;margin:0 !important;padding:0 !important;page-break-after:always !important;break-after:page !important;min-height:270mm !important;height:auto !important;box-sizing:border-box !important}
+  .dd.single-page, .dd.single-page .qpage{page-break-after:avoid !important;break-after:avoid !important;page-break-inside:avoid !important;break-inside:avoid !important;max-height:285mm !important}
+  .dd .qpage{border:0 !important;margin:0 !important;padding:0 !important;page-break-after:always !important;break-after:page !important;box-sizing:border-box !important}
   .dd .qpage:last-child{page-break-after:avoid !important;break-after:avoid !important}
 }`;
 const logoSrc=w=>w?'file:///C:/logo.png':'/logo.png',nl=s=>h(s).replace(/\n/g,'<br>');
@@ -4992,7 +4994,7 @@ function ppHTML(doc,d,w){const pi=doc.type=='pi',it=d.items,tax=d.taxType=='NONE
   :`<table class="box"><tr><td style="height:56px;vertical-align:middle;padding:0 6px;font:bold 10.5px Arial,Helvetica,sans-serif">PAYMENT TERMS: ${h(d.payment)}</td></tr></table><table class="box"><tr><td style="height:170px;padding:2px 6px;font-size:12px">Our Tax Details: -<br>&nbsp;&nbsp;&nbsp;PAN Number - ${h(co.pan)}<br>GST Number -${h(co.gstin)}</td></tr></table>`;
  return `<div class="dd ${doc.type}"><div class="ttl" style="${pi?'font:bold 26px/1.1 Times New Roman,serif;color:#2e74b5;text-decoration:underline':'font:bold 26px/1.1 Arial,Helvetica,sans-serif;color:#5b9bd5'}">${pi?'PROFORMA INVOICE':'PURCHASE ORDER'}</div><table class="pph"><tr><td class="h f" style="width:40%">${left}</td><td class="h" style="width:32%">${mid}</td><td class="h" style="width:28%">${right}</td></tr></table><div style="height:26px"></div><table class="itm"><thead><tr>${th}</tr></thead><tbody>${body}${totals}</tbody></table>${wr}${foot}</div>`}
 function quoteHTML(doc,d,w){
- const hdr=`<table style="width:100%;table-layout:fixed;border-collapse:collapse;margin:0 0 2px 0"><tr><td style="width:118px;vertical-align:middle;padding-right:10px"><img src="${logoSrc(w)}" width="105" style="width:105px;max-width:105px;height:auto;display:block;object-fit:contain" alt="AMIGO ENTERPRISES"></td><td style="vertical-align:middle"><div class="qh">${emailize((co&&co.quoteHeader)||'').replace(/\n/g,'<br>')}</div></td></tr></table><div class="rl"></div>`;
+ const hdr=`<table style="width:100%;table-layout:fixed;border-collapse:collapse;margin:0 0 2px 0"><tr><td style="width:105px;vertical-align:middle;padding-right:8px"><img src="${logoSrc(w)}" width="95" style="width:95px;max-width:95px;height:auto;display:block;object-fit:contain" alt="AMIGO ENTERPRISES"></td><td style="vertical-align:middle"><div class="qh">${emailize((co&&co.quoteHeader)||'').replace(/\n/g,'<br>')}</div></td></tr></table><div class="rl"></div>`;
  const ln=(a,v)=>v?`<div class="qn">${a} ${h(v)}</div>`:'';
  const items=Array.isArray(d.items)?d.items:[];
 
@@ -5006,7 +5008,7 @@ function quoteHTML(doc,d,w){
    }).join('');
 
    if(isLastChunk){
-     rowsHtml+=`<tr style="height:38px"><td class="c"></td><td style="font-weight:bold">&nbsp;TOTAL</td><td></td><td></td><td class="r" style="font-weight:bold">${fm(d.total)}</td></tr>`;
+     rowsHtml+=`<tr style="height:34px"><td class="c"></td><td style="font-weight:bold">&nbsp;TOTAL</td><td></td><td></td><td class="r" style="font-weight:bold">${fm(d.total)}</td></tr>`;
    }
    return rowsHtml;
  };
@@ -5018,14 +5020,14 @@ function quoteHTML(doc,d,w){
    const p1Content=`${hdr}
      <div class="qt">QUOTATION</div>
      <table class="qd"><tr><td class="f">To,</td><td class="r">Date –&nbsp; ${sd(doc.date)}</td></tr></table>
-     <div style="height:6px"></div>
-     <table class="qd"><tr><td class="f" style="padding-left:20px">M/s <b>${h(d.toName)}</b></td><td class="r" style="font-size:12px">Quotation No. – <b>${h(doc.number)}</b></td></tr></table>
-     <div style="height:8px"></div>
+     <div style="height:3px"></div>
+     <table class="qd"><tr><td class="f" style="padding-left:16px">M/s <b>${h(d.toName)}</b></td><td class="r" style="font-size:12px">Quotation No. – <b>${h(doc.number)}</b></td></tr></table>
+     <div style="height:4px"></div>
      ${ln('Kind Attend –',d.attn)}
      ${ln('Ref.-',d.ref)}
      ${ln('Sub.-',d.subject)}
      <div class="qn">Dear sir,</div>
-     <div class="qn" style="margin:0 0 12px 0;text-indent:30px;text-align:justify">${h(d.intro)}</div>
+     <div class="qn" style="margin:0 0 6px 0;text-indent:24px;text-align:justify">${h(d.intro)}</div>
      <table class="qi">
        <thead>
          <tr><th style="width:9%">Sr. No.</th><th>Description</th><th style="width:8%">Qty</th><th style="width:15%">Rate/Unit</th><th style="width:15%">Total</th></tr>
@@ -5038,7 +5040,7 @@ function quoteHTML(doc,d,w){
      ${termsHtml}
      <div class="qy">Your Faithfully,</div>
      <div class="qs">${sg}</div>`;
-   return `<div class="dd qq"><div class="qpage" style="page-break-after:auto;border-bottom:none;margin-bottom:0;padding-bottom:0">${p1Content}</div></div>`;
+   return `<div class="dd qq single-page"><div class="qpage" style="page-break-after:avoid !important;break-after:avoid !important;page-break-inside:avoid !important;break-inside:avoid !important;border-bottom:none;margin-bottom:0;padding-bottom:0">${p1Content}</div></div>`;
  }
 
  // === RULE 2: MORE THAN 2 LINE ITEMS -> SPLIT ONTO TWO PAGES (or more if items > 6) ===
@@ -5054,13 +5056,13 @@ function quoteHTML(doc,d,w){
  }
 
  const initialTermsHtml=initialTerms.length?`
-   <div class="qtc" style="margin:14px 0 8px 4px">Terms &amp; Conditions</div>
+   <div class="qtc">Terms &amp; Conditions</div>
    ${initialTerms.map((t,i)=>`<div class="qtm">${i+1})&nbsp;&nbsp; ${h(t)}</div>`).join('')}
  `:'' ;
 
  const lastTermsStartNum=initialTerms.length+1;
  const last2TermsHtml=`
-   <div class="qtc" style="margin:16px 0 10px 4px">Terms &amp; Conditions${initialTerms.length?' (Continuation)':''}</div>
+   <div class="qtc">Terms &amp; Conditions${initialTerms.length?' (Continuation)':''}</div>
    ${last2Terms.map((t,i)=>`<div class="qtm">${lastTermsStartNum+i})&nbsp;&nbsp; ${h(t)}</div>`).join('')}
    <div class="qy">Your Faithfully,</div>
    <div class="qs">${sg}</div>
@@ -5082,21 +5084,21 @@ function quoteHTML(doc,d,w){
  const isOnlyItemChunk=(chunks.length===1);
  const p1Rows=renderTableRows(chunks[0],0,isOnlyItemChunk);
  const p1Content=`${hdr}
-   <table style="width:100%;border-collapse:collapse;margin:2px 0 8px">
+   <table style="width:100%;border-collapse:collapse;margin:1px 0 6px">
      <tr>
        <td style="text-align:center"><div class="qt" style="margin:0;padding-left:80px">QUOTATION</div></td>
        <td style="width:90px;text-align:right;font-size:12px;font-weight:bold;color:#475569;vertical-align:middle">Page 1 of ${totalPages}</td>
      </tr>
    </table>
    <table class="qd"><tr><td class="f">To,</td><td class="r">Date –&nbsp; ${sd(doc.date)}</td></tr></table>
-   <div style="height:6px"></div>
-   <table class="qd"><tr><td class="f" style="padding-left:20px">M/s <b>${h(d.toName)}</b></td><td class="r" style="font-size:12px">Quotation No. – <b>${h(doc.number)}</b></td></tr></table>
-   <div style="height:8px"></div>
+   <div style="height:3px"></div>
+   <table class="qd"><tr><td class="f" style="padding-left:16px">M/s <b>${h(d.toName)}</b></td><td class="r" style="font-size:12px">Quotation No. – <b>${h(doc.number)}</b></td></tr></table>
+   <div style="height:4px"></div>
    ${ln('Kind Attend –',d.attn)}
    ${ln('Ref.-',d.ref)}
    ${ln('Sub.-',d.subject)}
    <div class="qn">Dear sir,</div>
-   <div class="qn" style="margin:0 0 12px 0;text-indent:30px;text-align:justify">${h(d.intro)}</div>
+   <div class="qn" style="margin:0 0 6px 0;text-indent:24px;text-align:justify">${h(d.intro)}</div>
    <table class="qi">
      <thead>
        <tr><th style="width:9%">Sr. No.</th><th>Description</th><th style="width:8%">Qty</th><th style="width:15%">Rate/Unit</th><th style="width:15%">Total</th></tr>
@@ -5117,7 +5119,7 @@ function quoteHTML(doc,d,w){
    itemOffset+=chunks[c].length;
 
    const pageContent=`${hdr}
-     <table style="width:100%;border-collapse:collapse;margin:2px 0 10px;border-bottom:1px solid #94a3b8;padding-bottom:4px">
+     <table style="width:100%;border-collapse:collapse;margin:2px 0 8px;border-bottom:1px solid #94a3b8;padding-bottom:3px">
        <tr>
          <td style="text-align:left;font-size:13px;font-weight:bold;color:#1a1aff;font-family:'Times New Roman',Times,serif">
            QUOTATION (Continuation) — Ref: <b>${h(doc.number)}</b>
@@ -5145,7 +5147,7 @@ function quoteHTML(doc,d,w){
  // Final Page: Last 2 Terms with Signature
  const finalPageNum=totalPages;
  const finalPageContent=`${hdr}
-   <table style="width:100%;border-collapse:collapse;margin:2px 0 12px;border-bottom:1px solid #94a3b8;padding-bottom:4px">
+   <table style="width:100%;border-collapse:collapse;margin:2px 0 10px;border-bottom:1px solid #94a3b8;padding-bottom:3px">
      <tr>
        <td style="text-align:left;font-size:13px;font-weight:bold;color:#1a1aff;font-family:'Times New Roman',Times,serif">
          QUOTATION — Terms &amp; Conditions &amp; Signatory
