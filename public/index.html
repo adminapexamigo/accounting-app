@@ -13969,12 +13969,17 @@ async function catalogueView() {
         object-fit: contain;
       }
 
-      /* Print optimizations for exact A4 rendering */
+      /* Print optimizations for exact A4 rendering with zero page margins */
       @media print {
+        @page {
+          size: 210mm 297mm;
+          margin: 0 !important;
+        }
         html, body {
           background: #ffffff !important;
           margin: 0 !important;
           padding: 0 !important;
+          width: 210mm !important;
         }
         body * {
           visibility: hidden !important;
@@ -13986,12 +13991,13 @@ async function catalogueView() {
           position: absolute !important;
           left: 0 !important;
           top: 0 !important;
-          width: 100% !important;
+          width: 210mm !important;
           margin: 0 !important;
           padding: 0 !important;
         }
         .cat-container {
           max-width: 100% !important;
+          width: 210mm !important;
           margin: 0 !important;
           padding: 0 !important;
         }
@@ -14003,15 +14009,19 @@ async function catalogueView() {
           break-after: page !important;
           page-break-inside: avoid !important;
           break-inside: avoid !important;
-          width: 100% !important;
-          min-height: 250mm !important;
-          height: auto !important;
+          width: 210mm !important;
+          min-width: 210mm !important;
+          max-width: 210mm !important;
+          height: 297mm !important;
+          min-height: 297mm !important;
+          max-height: 297mm !important;
           margin: 0 !important;
-          padding: 6mm 8mm !important;
+          padding: 10mm 14mm !important;
           border: none !important;
           box-shadow: none !important;
           border-radius: 0 !important;
-          overflow: visible !important;
+          box-sizing: border-box !important;
+          overflow: hidden !important;
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
         }
@@ -14112,32 +14122,44 @@ function printCatalogue() {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     }
     @page {
-      size: A4 portrait;
-      margin: 6mm 8mm;
+      size: 210mm 297mm;
+      margin: 0 !important;
+    }
+    html, body {
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 210mm !important;
+      background: #ffffff;
+      color: #1e293b;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     }
     @media print {
-      body { margin: 0; padding: 0; background: #ffffff !important; }
+      body { margin: 0 !important; padding: 0 !important; width: 210mm !important; background: #ffffff !important; }
       .cat-page {
         page-break-after: always !important;
         break-after: page !important;
         page-break-inside: avoid !important;
         break-inside: avoid !important;
-        width: 100% !important;
-        min-height: 250mm !important;
-        height: auto !important;
+        width: 210mm !important;
+        min-width: 210mm !important;
+        max-width: 210mm !important;
+        height: 297mm !important;
+        min-height: 297mm !important;
+        max-height: 297mm !important;
         margin: 0 !important;
-        padding: 6mm 8mm !important;
+        padding: 10mm 14mm !important;
         box-shadow: none !important;
         border: none !important;
         box-sizing: border-box !important;
-        overflow: visible !important;
+        overflow: hidden !important;
       }
     }
     .cat-page {
       width: 210mm;
       min-height: 297mm;
+      height: 297mm;
       margin: 0 auto 30px auto;
-      padding: 8mm 12mm;
+      padding: 10mm 14mm;
       background: #ffffff;
       border: 1px solid #cbd5e1;
       box-sizing: border-box;
