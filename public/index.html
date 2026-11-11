@@ -12450,23 +12450,30 @@ function printPayslipDirect(slipId) {
     const slip = (window._salarySlipsMap && window._salarySlipsMap[slipId]) || {};
     const printArea = document.getElementById('payslipPrintArea');
     if (!printArea) return window.print();
-    const w = window.open('', '_blank', 'width=900,height=800');
+    const w = window.open('', '_blank', 'width=920,height=850');
     if (!w) {
       window.print();
       return;
     }
-    w.document.write(`<!DOCTYPE html><html><head><title>Salary Slip - ${slip.employeeName || 'Staff'} - ${slip.month || ''}/${slip.year || ''}</title>
+    const origin = window.location.origin || '';
+    w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
+    <title>Salary Slip - ${slip.employeeName || 'Staff'} - ${slip.month || ''}/${slip.year || ''}</title>
+    <base href="${origin}/">
     <style>
-      body { font-family: 'Segoe UI', Arial, Helvetica, sans-serif; color: #000; margin: 20px; background: #ffffff; }
+      * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      body { font-family: 'Segoe UI', Arial, Helvetica, sans-serif; color: #0f172a; margin: 0; padding: 14px; background: #ffffff; }
       table { border-collapse: collapse; width: 100%; }
-      @page { size: A4 portrait; margin: 10mm 12mm; }
-      @media print { body { margin: 0; padding: 0; } }
+      @page { size: A4 portrait; margin: 8mm 10mm; }
+      @media print {
+        body { padding: 0; }
+        .payslip-card-frame { border: 2px solid #0f2b48 !important; padding: 20px 24px !important; box-shadow: none !important; }
+      }
     </style></head><body>${printArea.innerHTML}</body></html>`);
     w.document.close();
     w.focus();
     setTimeout(() => {
       try { w.print(); } catch (e) { window.print(); }
-    }, 300);
+    }, 400);
   } catch (err) {
     console.error('printPayslipDirect error:', err);
     window.print();
@@ -12498,6 +12505,9 @@ async function showSalarySlip(slipOrId) {
     ? window.co
     : (await api('GET', 'company').catch(() => ({}))) || {};
 
+  const origin = window.location.origin || '';
+  const logoUrl = origin + '/logo.png';
+
   // Remove any previously opened payslip modal
   const existingModal = document.getElementById('payslipPrintModal');
   if (existingModal) existingModal.remove();
@@ -12507,10 +12517,13 @@ async function showSalarySlip(slipOrId) {
   overlay.id = 'payslipPrintModal';
 
   overlay.innerHTML = `
-    <div class="mail-modal-card" style="width:820px;max-width:98vw;max-height:96vh;display:flex;flex-direction:column;background:#ffffff">
+    <div class="mail-modal-card" style="width:860px;max-width:98vw;max-height:96vh;display:flex;flex-direction:column;background:#ffffff">
       <!-- Action Toolbar (Hidden during print) -->
-      <div class="payslip-no-print" style="padding:12px 20px;background:#1e293b;color:#fff;display:flex;align-items:center;justify-content:space-between">
-        <div style="font-size:14px;font-weight:700">🖨️ Payslip Preview & Print</div>
+      <div class="payslip-no-print" style="padding:12px 20px;background:#0f2b48;color:#fff;display:flex;align-items:center;justify-content:space-between">
+        <div style="font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px">
+          <span>🖨️ Payslip Preview & Print</span>
+          <span style="font-size:11px;font-weight:500;background:rgba(255,255,255,0.15);padding:2px 8px;border-radius:10px">${h(slip.employeeName)} • ${monthLabel} ${h(slip.year)}</span>
+        </div>
         <div style="display:flex;align-items:center;gap:10px">
           <button class="btn" onclick="printPayslipDirect('${slip.id}')" style="background:#10b981;border-color:#059669;color:#fff;padding:6px 18px;font-weight:700;display:flex;align-items:center;gap:6px">
             <span>🖨️ Print / Save PDF</span>
@@ -12520,143 +12533,159 @@ async function showSalarySlip(slipOrId) {
       </div>
 
       <!-- Printable Area -->
-      <div id="payslipPrintArea" style="flex:1;overflow-y:auto;padding:30px 36px;color:#000;font-family:'Segoe UI',Arial,Helvetica,sans-serif;background:#ffffff">
+      <div id="payslipPrintArea" style="flex:1;overflow-y:auto;padding:24px;color:#0f172a;font-family:'Segoe UI',Arial,Helvetica,sans-serif;background:#f8fafc">
         
-        <!-- Header -->
-        <div style="border-bottom:2px solid #0f172a;padding-bottom:14px;margin-bottom:16px;display:flex;align-items:flex-start;justify-content:space-between">
-          <div>
-            <div style="font-size:24px;font-weight:800;color:#0f2b48;letter-spacing:0.5px">${h(co.name || 'AMIGO ENTERPRISES')}</div>
-            <div style="font-size:11.5px;color:#334155;margin-top:3px;max-width:440px;line-height:1.4">${h(co.address || 'Plot No. 12, Amigo Industrial Estate, MIDC, Pune, Maharashtra 411018')}</div>
-            <div style="font-size:11px;color:#475569;margin-top:4px">
-              ${co.gstin ? '<strong>GSTIN:</strong> ' + h(co.gstin) + ' • ' : ''}
-              ${co.pan ? '<strong>PAN:</strong> ' + h(co.pan) + ' • ' : ''}
-              <strong>Email:</strong> ${h(co.email || 'kuldeep.amigo@gmail.com')}
-            </div>
-          </div>
-          <div style="text-align:right">
-            <div style="display:inline-block;border:2px solid #0f2b48;padding:6px 14px;border-radius:6px;background:#f8fafc">
-              <div style="font-size:13px;font-weight:800;color:#0f2b48;text-transform:uppercase">PAYSLIP</div>
-              <div style="font-size:12px;font-weight:700;color:#475569">${monthLabel} ${h(slip.year)}</div>
-            </div>
-          </div>
-        </div>
+        <!-- Document Perimeter Frame Border -->
+        <div class="payslip-card-frame" style="border:2.5px solid #0f2b48;border-radius:8px;padding:26px 30px;background:#ffffff;box-sizing:border-box;box-shadow:0 4px 18px rgba(15,43,72,0.07)">
 
-        <!-- Employee Metadata Grid -->
-        <table style="width:100%;border-collapse:collapse;margin-bottom:16px;border:1px solid #cbd5e1;font-size:12px">
-          <tbody>
-            <tr style="border-bottom:1px solid #e2e8f0">
-              <td style="width:20%;padding:6px 10px;font-weight:700;background:#f8fafc;color:#475569">Employee Name</td>
-              <td style="width:30%;padding:6px 10px;font-weight:700;color:#0f172a">${h(slip.employeeName)}</td>
-              <td style="width:20%;padding:6px 10px;font-weight:700;background:#f8fafc;color:#475569">Bank Name</td>
-              <td style="width:30%;padding:6px 10px;color:#0f172a">${h(slip.bankName || '—')}</td>
-            </tr>
-            <tr style="border-bottom:1px solid #e2e8f0">
-              <td style="padding:6px 10px;font-weight:700;background:#f8fafc;color:#475569">Designation</td>
-              <td style="padding:6px 10px;color:#0f172a">${h(slip.designation || 'Staff')}</td>
-              <td style="padding:6px 10px;font-weight:700;background:#f8fafc;color:#475569">Bank A/C No.</td>
-              <td style="padding:6px 10px;color:#0f172a;font-family:monospace;font-weight:600">${h(slip.bankAccountNo || '—')}</td>
-            </tr>
-            <tr style="border-bottom:1px solid #e2e8f0">
-              <td style="padding:6px 10px;font-weight:700;background:#f8fafc;color:#475569">Department</td>
-              <td style="padding:6px 10px;color:#0f172a">${h(slip.department || 'General')}</td>
-              <td style="padding:6px 10px;font-weight:700;background:#f8fafc;color:#475569">Bank IFSC</td>
-              <td style="padding:6px 10px;color:#0f172a;font-family:monospace">${h(slip.bankIfsc || '—')}</td>
-            </tr>
-            <tr style="border-bottom:1px solid #e2e8f0">
-              <td style="padding:6px 10px;font-weight:700;background:#f8fafc;color:#475569">PAN Number</td>
-              <td style="padding:6px 10px;color:#0f172a;font-family:monospace">${h(slip.panNo || '—')}</td>
-              <td style="padding:6px 10px;font-weight:700;background:#f8fafc;color:#475569">UAN / PF No.</td>
-              <td style="padding:6px 10px;color:#0f172a;font-family:monospace">${h(slip.uanNo || '—')}</td>
-            </tr>
+          <!-- Corporate Header with Logo & Brand Details -->
+          <table style="width:100%;border-collapse:collapse">
             <tr>
-              <td style="padding:6px 10px;font-weight:700;background:#f8fafc;color:#475569">Total Days in Month</td>
-              <td style="padding:6px 10px;color:#0f172a">${h(slip.totalDays || 30)} Days</td>
-              <td style="padding:6px 10px;font-weight:700;background:#f8fafc;color:#475569">Paid Days / LOP</td>
-              <td style="padding:6px 10px;color:#0f172a"><strong>${h(slip.paidDays || 30)}</strong> Paid ${slip.lopDays ? ' / ' + slip.lopDays + ' LOP' : ''}</td>
+              <td style="width:115px;vertical-align:middle;padding-right:16px">
+                <img src="${logoUrl}" alt="Company Logo" style="max-height:64px;max-width:115px;object-fit:contain;display:block" onerror="this.onerror=null;this.src='/logo.png'">
+              </td>
+              <td style="vertical-align:middle">
+                <div style="font-size:22px;font-weight:800;color:#0f2b48;letter-spacing:0.5px;line-height:1.2;text-transform:uppercase">${h(co.name || 'AMIGO ENTERPRISES')}</div>
+                <div style="font-size:10.5px;font-weight:700;color:#2563eb;letter-spacing:0.6px;margin-top:2px;text-transform:uppercase">Industrial Engineering &amp; Spares Specialist</div>
+                <div style="font-size:11px;color:#475569;margin-top:3px;max-width:470px;line-height:1.4">${h(co.address || 'Plot No. 12, Amigo Industrial Estate, MIDC, Pune, Maharashtra 411018')}</div>
+                <div style="font-size:10.5px;color:#334155;margin-top:3px">
+                  ${co.gstin ? '<strong>GSTIN:</strong> ' + h(co.gstin) + ' &nbsp;•&nbsp; ' : ''}
+                  ${co.pan ? '<strong>PAN:</strong> ' + h(co.pan) + ' &nbsp;•&nbsp; ' : ''}
+                  <strong>Email:</strong> ${h(co.email || 'kuldeep.amigo@gmail.com')}
+                </div>
+              </td>
+              <td style="width:160px;vertical-align:top;text-align:right">
+                <div style="display:inline-block;border:2px solid #0f2b48;border-radius:6px;background:linear-gradient(135deg, #0f2b48 0%, #1e3a8a 100%);color:#ffffff;padding:8px 14px;min-width:140px;box-shadow:0 2px 6px rgba(15,43,72,0.18);text-align:center">
+                  <div style="font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase">PAYSLIP</div>
+                  <div style="font-size:11.5px;font-weight:700;color:#93c5fd;margin-top:2px">${monthLabel} ${h(slip.year)}</div>
+                </div>
+                <div style="font-size:9.5px;font-weight:700;color:#64748b;margin-top:5px;letter-spacing:0.5px">CONFIDENTIAL</div>
+              </td>
             </tr>
-          </tbody>
-        </table>
+          </table>
 
-        <!-- Earnings vs Deductions Table -->
-        <table style="width:100%;border-collapse:collapse;margin-bottom:16px;border:1px solid #0f172a;font-size:12px">
-          <thead>
-            <tr style="background:#0f2b48;color:#ffffff;text-transform:uppercase;font-size:11.5px;letter-spacing:0.5px">
-              <th style="padding:8px 12px;text-align:left;width:35%;border-right:1px solid #334155">EARNINGS</th>
-              <th style="padding:8px 12px;text-align:right;width:15%;border-right:1px solid #cbd5e1">AMOUNT (₹)</th>
-              <th style="padding:8px 12px;text-align:left;width:35%;border-right:1px solid #334155">DEDUCTIONS</th>
-              <th style="padding:8px 12px;text-align:right;width:15%">AMOUNT (₹)</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr style="border-bottom:1px solid #e2e8f0">
-              <td style="padding:6px 12px;border-right:1px solid #e2e8f0">Basic Salary</td>
-              <td style="padding:6px 12px;text-align:right;border-right:1px solid #cbd5e1;font-weight:600">${(+slip.basic || 0).toFixed(2)}</td>
-              <td style="padding:6px 12px;border-right:1px solid #e2e8f0">Provident Fund (PF / EPF)</td>
-              <td style="padding:6px 12px;text-align:right;font-weight:600">${(+slip.pf || 0).toFixed(2)}</td>
-            </tr>
-            <tr style="border-bottom:1px solid #e2e8f0">
-              <td style="padding:6px 12px;border-right:1px solid #e2e8f0">House Rent Allowance (HRA)</td>
-              <td style="padding:6px 12px;text-align:right;border-right:1px solid #cbd5e1;font-weight:600">${(+slip.hra || 0).toFixed(2)}</td>
-              <td style="padding:6px 12px;border-right:1px solid #e2e8f0">Professional Tax (PT)</td>
-              <td style="padding:6px 12px;text-align:right;font-weight:600">${(+slip.pt || 0).toFixed(2)}</td>
-            </tr>
-            <tr style="border-bottom:1px solid #e2e8f0">
-              <td style="padding:6px 12px;border-right:1px solid #e2e8f0">Conveyance Allowance</td>
-              <td style="padding:6px 12px;text-align:right;border-right:1px solid #cbd5e1;font-weight:600">${(+slip.conveyance || 0).toFixed(2)}</td>
-              <td style="padding:6px 12px;border-right:1px solid #e2e8f0">Income Tax (TDS)</td>
-              <td style="padding:6px 12px;text-align:right;font-weight:600">${(+slip.tds || 0).toFixed(2)}</td>
-            </tr>
-            <tr style="border-bottom:1px solid #e2e8f0">
-              <td style="padding:6px 12px;border-right:1px solid #e2e8f0">Special Allowance</td>
-              <td style="padding:6px 12px;text-align:right;border-right:1px solid #cbd5e1;font-weight:600">${(+slip.specialAllowance || 0).toFixed(2)}</td>
-              <td style="padding:6px 12px;border-right:1px solid #e2e8f0">Other Deductions / LOP</td>
-              <td style="padding:6px 12px;text-align:right;font-weight:600">${(+slip.otherDeductions || 0).toFixed(2)}</td>
-            </tr>
-            <!-- Total Row -->
-            <tr style="background:#f8fafc;font-weight:700;border-top:1px solid #0f172a">
-              <td style="padding:8px 12px;border-right:1px solid #e2e8f0">TOTAL GROSS EARNINGS</td>
-              <td style="padding:8px 12px;text-align:right;border-right:1px solid #cbd5e1;color:#0f2b48">₹ ${(+slip.grossEarnings || 0).toFixed(2)}</td>
-              <td style="padding:8px 12px;border-right:1px solid #e2e8f0">TOTAL DEDUCTIONS</td>
-              <td style="padding:8px 12px;text-align:right;color:#dc2626">₹ ${(+slip.totalDeductions || 0).toFixed(2)}</td>
-            </tr>
-          </tbody>
-        </table>
+          <!-- Decorative Accent Divider -->
+          <div style="height:3px;background:linear-gradient(90deg, #0f2b48 0%, #2563eb 50%, #0f2b48 100%);margin:14px 0 18px 0;border-radius:2px"></div>
 
-        <!-- Net Take Home Pay Highlight Box -->
-        <div style="border:2px solid #0f2b48;border-radius:6px;padding:12px 18px;margin-bottom:24px;background:#f1f5f9;display:flex;align-items:center;justify-content:space-between">
-          <div>
-            <div style="font-size:12px;font-weight:700;color:#0f2b48;text-transform:uppercase;letter-spacing:0.5px">NET TAKE-HOME SALARY</div>
-            <div style="font-size:12px;color:#334155;margin-top:2px">
-              <strong>In Words:</strong> ${h(slip.netPayWords || rupeeWords(slip.netPay))}
+          <!-- Employee Metadata Grid -->
+          <table style="width:100%;border-collapse:collapse;margin-bottom:18px;border:1px solid #cbd5e1;font-size:11.5px">
+            <tbody>
+              <tr style="border-bottom:1px solid #cbd5e1">
+                <td style="width:20%;padding:6px 10px;font-weight:700;background:#f8fafc;color:#334155;border-right:1px solid #cbd5e1">Employee Name</td>
+                <td style="width:30%;padding:6px 10px;font-weight:700;color:#0f2b48;border-right:1px solid #cbd5e1">${h(slip.employeeName)}</td>
+                <td style="width:20%;padding:6px 10px;font-weight:700;background:#f8fafc;color:#334155;border-right:1px solid #cbd5e1">Bank Name</td>
+                <td style="width:30%;padding:6px 10px;color:#0f172a">${h(slip.bankName || '—')}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #cbd5e1">
+                <td style="padding:6px 10px;font-weight:700;background:#f8fafc;color:#334155;border-right:1px solid #cbd5e1">Designation</td>
+                <td style="padding:6px 10px;color:#0f172a;border-right:1px solid #cbd5e1">${h(slip.designation || 'Staff')}</td>
+                <td style="padding:6px 10px;font-weight:700;background:#f8fafc;color:#334155;border-right:1px solid #cbd5e1">Bank A/C No.</td>
+                <td style="padding:6px 10px;color:#0f172a;font-family:monospace;font-weight:600">${h(slip.bankAccountNo || '—')}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #cbd5e1">
+                <td style="padding:6px 10px;font-weight:700;background:#f8fafc;color:#334155;border-right:1px solid #cbd5e1">Department</td>
+                <td style="padding:6px 10px;color:#0f172a;border-right:1px solid #cbd5e1">${h(slip.department || 'General')}</td>
+                <td style="padding:6px 10px;font-weight:700;background:#f8fafc;color:#334155;border-right:1px solid #cbd5e1">Bank IFSC</td>
+                <td style="padding:6px 10px;color:#0f172a;font-family:monospace">${h(slip.bankIfsc || '—')}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #cbd5e1">
+                <td style="padding:6px 10px;font-weight:700;background:#f8fafc;color:#334155;border-right:1px solid #cbd5e1">PAN Number</td>
+                <td style="padding:6px 10px;color:#0f172a;font-family:monospace;border-right:1px solid #cbd5e1">${h(slip.panNo || '—')}</td>
+                <td style="padding:6px 10px;font-weight:700;background:#f8fafc;color:#334155;border-right:1px solid #cbd5e1">UAN / PF No.</td>
+                <td style="padding:6px 10px;color:#0f172a;font-family:monospace">${h(slip.uanNo || '—')}</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 10px;font-weight:700;background:#f8fafc;color:#334155;border-right:1px solid #cbd5e1">Total Days in Month</td>
+                <td style="padding:6px 10px;color:#0f172a;border-right:1px solid #cbd5e1">${h(slip.totalDays || 30)} Days</td>
+                <td style="padding:6px 10px;font-weight:700;background:#f8fafc;color:#334155;border-right:1px solid #cbd5e1">Paid Days / LOP</td>
+                <td style="padding:6px 10px;color:#0f172a"><strong>${h(slip.paidDays || 30)}</strong> Paid ${slip.lopDays ? ' / ' + slip.lopDays + ' LOP' : ''}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Earnings vs Deductions Table -->
+          <table style="width:100%;border-collapse:collapse;margin-bottom:18px;border:1.5px solid #0f2b48;font-size:12px">
+            <thead>
+              <tr style="color:#ffffff;text-transform:uppercase;font-size:11px;letter-spacing:0.5px">
+                <th style="background:#0f2b48;padding:8px 12px;text-align:left;width:35%;border-right:1px solid #1e3a5f">EARNINGS</th>
+                <th style="background:#0f2b48;padding:8px 12px;text-align:right;width:15%;border-right:2px solid #0f2b48">AMOUNT (₹)</th>
+                <th style="background:#1e3a5f;padding:8px 12px;text-align:left;width:35%;border-right:1px solid #334155">DEDUCTIONS</th>
+                <th style="background:#1e3a5f;padding:8px 12px;text-align:right;width:15%">AMOUNT (₹)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid #e2e8f0">
+                <td style="padding:6px 12px;border-right:1px solid #e2e8f0;color:#1e293b">Basic Salary</td>
+                <td style="padding:6px 12px;text-align:right;border-right:2px solid #0f2b48;font-weight:600;color:#0f2b48">${(+slip.basic || 0).toFixed(2)}</td>
+                <td style="padding:6px 12px;border-right:1px solid #e2e8f0;color:#1e293b">Provident Fund (PF / EPF)</td>
+                <td style="padding:6px 12px;text-align:right;font-weight:600;color:#b91c1c">${(+slip.pf || 0).toFixed(2)}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #e2e8f0">
+                <td style="padding:6px 12px;border-right:1px solid #e2e8f0;color:#1e293b">House Rent Allowance (HRA)</td>
+                <td style="padding:6px 12px;text-align:right;border-right:2px solid #0f2b48;font-weight:600;color:#0f2b48">${(+slip.hra || 0).toFixed(2)}</td>
+                <td style="padding:6px 12px;border-right:1px solid #e2e8f0;color:#1e293b">Professional Tax (PT)</td>
+                <td style="padding:6px 12px;text-align:right;font-weight:600;color:#b91c1c">${(+slip.pt || 0).toFixed(2)}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #e2e8f0">
+                <td style="padding:6px 12px;border-right:1px solid #e2e8f0;color:#1e293b">Conveyance Allowance</td>
+                <td style="padding:6px 12px;text-align:right;border-right:2px solid #0f2b48;font-weight:600;color:#0f2b48">${(+slip.conveyance || 0).toFixed(2)}</td>
+                <td style="padding:6px 12px;border-right:1px solid #e2e8f0;color:#1e293b">Income Tax (TDS)</td>
+                <td style="padding:6px 12px;text-align:right;font-weight:600;color:#b91c1c">${(+slip.tds || 0).toFixed(2)}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #e2e8f0">
+                <td style="padding:6px 12px;border-right:1px solid #e2e8f0;color:#1e293b">Special Allowance</td>
+                <td style="padding:6px 12px;text-align:right;border-right:2px solid #0f2b48;font-weight:600;color:#0f2b48">${(+slip.specialAllowance || 0).toFixed(2)}</td>
+                <td style="padding:6px 12px;border-right:1px solid #e2e8f0;color:#1e293b">Other Deductions / LOP</td>
+                <td style="padding:6px 12px;text-align:right;font-weight:600;color:#b91c1c">${(+slip.otherDeductions || 0).toFixed(2)}</td>
+              </tr>
+              <!-- Subtotals Row -->
+              <tr style="background:#f8fafc;font-weight:700;border-top:1.5px solid #0f2b48">
+                <td style="padding:8px 12px;border-right:1px solid #cbd5e1;color:#0f2b48">TOTAL GROSS EARNINGS</td>
+                <td style="padding:8px 12px;text-align:right;border-right:2px solid #0f2b48;color:#0f2b48;font-weight:800">₹ ${(+slip.grossEarnings || 0).toFixed(2)}</td>
+                <td style="padding:8px 12px;border-right:1px solid #cbd5e1;color:#b91c1c">TOTAL DEDUCTIONS</td>
+                <td style="padding:8px 12px;text-align:right;color:#dc2626;font-weight:800">₹ ${(+slip.totalDeductions || 0).toFixed(2)}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Net Take-Home Salary Highlight Box (Executive Emerald & Navy Palette) -->
+          <div style="border:2px solid #059669;border-radius:6px;padding:12px 18px;margin-bottom:24px;background:linear-gradient(135deg, #f0fdf4 0%, #ecfeff 100%);display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(5,150,105,0.08)">
+            <div>
+              <div style="font-size:11px;font-weight:800;color:#065f46;letter-spacing:1px;text-transform:uppercase">NET TAKE-HOME SALARY</div>
+              <div style="font-size:12px;color:#1e293b;margin-top:3px">
+                <span style="color:#64748b;font-weight:600">In Words:</span> <strong>${h(slip.netPayWords || rupeeWords(slip.netPay))}</strong>
+              </div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:24px;font-weight:800;color:#047857;letter-spacing:0.5px">₹ ${(+slip.netPay || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+              <div style="font-size:10px;color:#059669;font-weight:600">Disbursed via Direct Bank Credit</div>
             </div>
           </div>
-          <div style="text-align:right">
-            <div style="font-size:24px;font-weight:800;color:#0f2b48">₹ ${(+slip.netPay || 0).toLocaleString('en-IN')}.00</div>
-          </div>
-        </div>
 
-        <!-- Signatures & Declaration -->
-        <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:40px;padding-top:16px">
-          <div style="text-align:center;width:200px">
-            <div style="border-bottom:1px dashed #64748b;height:30px;margin-bottom:6px"></div>
-            <div style="font-size:11px;font-weight:700;color:#475569">Employee Signature</div>
-          </div>
-
-          <div style="text-align:center;width:240px">
-            <div style="height:30px;margin-bottom:6px;display:flex;align-items:center;justify-content:center">
-              ${co.stamp ? `<img src="${co.stamp}" style="max-height:45px;max-width:140px">` : '<span style="font-weight:700;color:#0f2b48">AMIGO ENTERPRISES</span>'}
+          <!-- Signatures & Authority -->
+          <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:34px;padding-top:10px">
+            <div style="text-align:center;width:210px">
+              <div style="border-bottom:1px dashed #94a3b8;height:35px;margin-bottom:6px"></div>
+              <div style="font-size:11px;font-weight:700;color:#475569">Employee Signature</div>
+              <div style="font-size:9.5px;color:#94a3b8">(${h(slip.employeeName)})</div>
             </div>
-            <div style="border-top:1px dashed #64748b;padding-top:4px">
-              <div style="font-size:11px;font-weight:700;color:#475569">Authorized Signatory</div>
-              <div style="font-size:10px;color:#94a3b8">For ${h(co.name || 'Amigo Enterprises')}</div>
+
+            <div style="text-align:center;width:230px">
+              <div style="min-height:35px;margin-bottom:4px;display:flex;align-items:center;justify-content:center">
+                ${co.stamp ? `<img src="${co.stamp.startsWith('http') || co.stamp.startsWith('data:') ? co.stamp : (origin + co.stamp)}" style="max-height:48px;max-width:140px;object-fit:contain">` : `<span style="font-weight:800;color:#0f2b48;font-size:12px">${h(co.name || 'AMIGO ENTERPRISES')}</span>`}
+              </div>
+              <div style="border-top:1px dashed #94a3b8;padding-top:4px">
+                <div style="font-size:11px;font-weight:700;color:#0f2b48">Authorized Signatory</div>
+                <div style="font-size:10px;color:#64748b">For ${h(co.name || 'Amigo Enterprises')}</div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div style="text-align:center;font-size:10px;color:#94a3b8;margin-top:30px;border-top:1px solid #f1f5f9;padding-top:8px">
-          This is a computer-generated salary slip and does not require an ink signature. Generated on ${new Date().toLocaleDateString('en-IN')}.
-        </div>
+          <div style="text-align:center;font-size:10px;color:#94a3b8;margin-top:24px;border-top:1px solid #e2e8f0;padding-top:8px">
+            This is a confidential computer-generated salary slip and does not require an ink signature. Generated on ${new Date().toLocaleDateString('en-IN')}.
+          </div>
 
+        </div>
       </div>
     </div>
   `;
