@@ -14105,42 +14105,9 @@ async function catalogueView() {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         border: none;
       }
-      .cat-page > div:not(.cat-watermark) {
+      .cat-page > div {
         position: relative;
         z-index: 1;
-      }
-      .cat-watermark {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) rotate(-25deg);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        pointer-events: none;
-        user-select: none;
-        z-index: 0;
-        opacity: 0.10;
-        width: 540px;
-        text-align: center;
-      }
-      .cat-watermark-logo {
-        width: 240px;
-        max-width: 240px;
-        height: auto;
-        object-fit: contain;
-        margin-bottom: 14px;
-        display: block;
-      }
-      .cat-watermark-text {
-        font-size: 36px;
-        font-weight: 900;
-        color: #1e3a8a;
-        letter-spacing: 5px;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        text-transform: uppercase;
-        white-space: nowrap;
       }
       .cat-page::before {
         content: '';
@@ -14515,47 +14482,9 @@ function printCatalogue() {
         overflow: hidden !important;
         position: relative !important;
       }
-      .cat-page > div:not(.cat-watermark) {
+      .cat-page > div {
         position: relative !important;
         z-index: 1 !important;
-      }
-      .cat-watermark {
-        position: absolute !important;
-        top: 50% !important;
-        left: 50% !important;
-        transform: translate(-50%, -50%) rotate(-25deg) !important;
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        justify-content: center !important;
-        pointer-events: none !important;
-        user-select: none !important;
-        z-index: 0 !important;
-        opacity: 0.10 !important;
-        width: 540px !important;
-        text-align: center !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-      }
-      .cat-watermark-logo {
-        width: 240px !important;
-        max-width: 240px !important;
-        height: auto !important;
-        object-fit: contain !important;
-        margin-bottom: 14px !important;
-        display: block !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-      }
-      .cat-watermark-text {
-        font-size: 36px !important;
-        font-weight: 900 !important;
-        color: #1e3a8a !important;
-        letter-spacing: 5px !important;
-        text-transform: uppercase !important;
-        white-space: nowrap !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
       }
       .cat-page::before {
         content: '' !important;
@@ -14584,39 +14513,6 @@ function printCatalogue() {
       page-break-after: always;
       break-after: page;
       position: relative;
-    }
-    .cat-watermark {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) rotate(-25deg);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      pointer-events: none;
-      user-select: none;
-      z-index: 0;
-      opacity: 0.10;
-      width: 540px;
-      text-align: center;
-    }
-    .cat-watermark-logo {
-      width: 240px;
-      max-width: 240px;
-      height: auto;
-      object-fit: contain;
-      margin-bottom: 14px;
-      display: block;
-    }
-    .cat-watermark-text {
-      font-size: 36px;
-      font-weight: 900;
-      color: #1e3a8a;
-      letter-spacing: 5px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      text-transform: uppercase;
-      white-space: nowrap;
     }
     .cat-page::before {
       content: '';
@@ -14662,42 +14558,9 @@ function printCatalogue() {
       height: 172px;
       position: relative;
     }
-    .cat-page > div:not(.cat-watermark) {
+    .cat-page > div {
       position: relative;
       z-index: 1;
-    }
-    .cat-watermark {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) rotate(-25deg);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      pointer-events: none;
-      user-select: none;
-      z-index: 0;
-      opacity: 0.10;
-      width: 520px;
-      text-align: center;
-    }
-    .cat-watermark-logo {
-      width: 220px;
-      max-width: 220px;
-      height: auto;
-      object-fit: contain;
-      margin-bottom: 14px;
-      display: block;
-    }
-    .cat-watermark-text {
-      font-size: 34px;
-      font-weight: 900;
-      color: #1e3a8a;
-      letter-spacing: 5px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      text-transform: uppercase;
-      white-space: nowrap;
     }
     .cat-product-img-box {
       width: 100%;
@@ -15046,17 +14909,9 @@ function renderCatalogueAllPagesHTML(forceReadOnly = false) {
   const p5Products = d.products.filter(p => p.page === 5);
   const p6Products = d.products.filter(p => p.page === 6);
 
-  const watermarkCommon = `
-    <div class="cat-watermark" style="position: absolute !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) rotate(-25deg) !important; display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; pointer-events: none !important; user-select: none !important; z-index: 0 !important; opacity: 0.10 !important; width: 540px !important; text-align: center !important; margin: 0 !important; padding: 0 !important;">
-      <img src="${h(d.logo || '/logo.png')}" alt="Amigo Watermark Logo" class="cat-watermark-logo" style="width: 240px !important; max-width: 240px !important; height: auto !important; object-fit: contain !important; margin-bottom: 14px !important; display: block !important;">
-      <div class="cat-watermark-text" style="font-size: 36px !important; font-weight: 900 !important; color: #1e3a8a !important; letter-spacing: 5px !important; text-transform: uppercase !important; white-space: nowrap !important;">AMIGO ENTERPRISES</div>
-    </div>
-  `;
-
   return `
     <!-- ================= PAGE 1 ================= -->
     <div class="cat-page" id="cat-page-1">
-      ${watermarkCommon}
       <div>
         ${headerCommon(d.subtitle)}
 
@@ -15111,7 +14966,6 @@ function renderCatalogueAllPagesHTML(forceReadOnly = false) {
 
     <!-- ================= PAGE 2 ================= -->
     <div class="cat-page" id="cat-page-2">
-      ${watermarkCommon}
       <div>
         ${headerCommon(d.subtitle)}
 
@@ -15165,7 +15019,6 @@ function renderCatalogueAllPagesHTML(forceReadOnly = false) {
 
     <!-- ================= PAGE 3 ================= -->
     <div class="cat-page" id="cat-page-3">
-      ${watermarkCommon}
       <div>
         ${headerCommon(d.subtitle)}
 
@@ -15223,7 +15076,6 @@ function renderCatalogueAllPagesHTML(forceReadOnly = false) {
 
     <!-- ================= PAGE 4 (PRODUCTS GRID 1) ================= -->
     <div class="cat-page" id="cat-page-4">
-      ${watermarkCommon}
       <div>
         ${headerCommon(d.subtitle)}
 
@@ -15250,7 +15102,6 @@ function renderCatalogueAllPagesHTML(forceReadOnly = false) {
 
     <!-- ================= PAGE 5 (PRODUCTS GRID 2) ================= -->
     <div class="cat-page" id="cat-page-5">
-      ${watermarkCommon}
       <div>
         ${headerCommon(d.subtitle)}
 
@@ -15277,7 +15128,6 @@ function renderCatalogueAllPagesHTML(forceReadOnly = false) {
 
     <!-- ================= PAGE 6 (PRODUCTS GRID 3 + VISION & PRIME CUSTOMERS) ================= -->
     <div class="cat-page" id="cat-page-6">
-      ${watermarkCommon}
       <div>
         ${headerCommon(d.subtitle)}
 
@@ -15369,7 +15219,6 @@ function renderCatalogueAllPagesHTML(forceReadOnly = false) {
 
     <!-- ================= PAGE 7 (BACK COVER) ================= -->
     <div class="cat-page" id="cat-page-7" style="display:flex; flex-direction:column; justify-content:space-between; text-align:center;">
-      ${watermarkCommon}
       <div>
         <div style="margin:55px 0 24px 0;">
           <img src="${h(d.logo)}" style="height:70px; width:auto; object-fit:contain; margin-bottom:14px;" alt="Logo">
