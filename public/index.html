@@ -11845,8 +11845,8 @@ async function openOnboardModal(userId) {
   }
 
   const isEdit = !!user;
-  const ctc = user?.salaryStructure || (user?.annualCtc ? calcCtcBreakdown(user.annualCtc) : calcCtcBreakdown(0));
-  const leave = user?.leavePolicy || { pl: 12, cl: 6, sl: 6, plBalance: 12, clBalance: 6, slBalance: 6 };
+  const ctc = user?.salaryStructure || user?.permissions?.profile?.salaryStructure || (user?.annualCtc ? calcCtcBreakdown(user.annualCtc) : calcCtcBreakdown(0));
+  const leave = user?.leavePolicy || user?.permissions?.profile?.leavePolicy || { pl: 12, cl: 6, sl: 6, plBalance: 12, clBalance: 6, slBalance: 6 };
 
   const overlay = document.createElement('div');
   overlay.className = 'mail-modal-overlay';
@@ -12118,11 +12118,11 @@ async function openOnboardModal(userId) {
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
                 <div>
                   <label style="font-size:11px;color:#64748b">Annual Quota</label>
-                  <input type="number" id="ob_plQuota" value="${leave.pl || 12}" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+                  <input type="number" id="ob_plQuota" value="${leave.pl ?? 12}" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
                 </div>
                 <div>
                   <label style="font-size:11px;color:#64748b">Current Balance</label>
-                  <input type="number" id="ob_plBalance" value="${leave.plBalance !== undefined ? leave.plBalance : 12}" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+                  <input type="number" id="ob_plBalance" value="${leave.plBalance ?? 12}" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
                 </div>
               </div>
             </div>
@@ -12132,11 +12132,11 @@ async function openOnboardModal(userId) {
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
                 <div>
                   <label style="font-size:11px;color:#64748b">Annual Quota</label>
-                  <input type="number" id="ob_clQuota" value="${leave.cl || 6}" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+                  <input type="number" id="ob_clQuota" value="${leave.cl ?? 6}" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
                 </div>
                 <div>
                   <label style="font-size:11px;color:#64748b">Current Balance</label>
-                  <input type="number" id="ob_clBalance" value="${leave.clBalance !== undefined ? leave.clBalance : 6}" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+                  <input type="number" id="ob_clBalance" value="${leave.clBalance ?? 6}" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
                 </div>
               </div>
             </div>
@@ -12147,11 +12147,11 @@ async function openOnboardModal(userId) {
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:400px">
               <div>
                 <label style="font-size:11px;color:#64748b">Annual Quota</label>
-                <input type="number" id="ob_slQuota" value="${leave.sl || 6}" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+                <input type="number" id="ob_slQuota" value="${leave.sl ?? 6}" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
               </div>
               <div>
                 <label style="font-size:11px;color:#64748b">Current Balance</label>
-                <input type="number" id="ob_slBalance" value="${leave.slBalance !== undefined ? leave.slBalance : 6}" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+                <input type="number" id="ob_slBalance" value="${leave.slBalance ?? 6}" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
               </div>
             </div>
           </div>
@@ -12264,12 +12264,12 @@ async function openOnboardModal(userId) {
     };
 
     const leavePolicy = {
-      pl: parseNum('#ob_plQuota', 12),
-      plBalance: parseNum('#ob_plBalance', 12),
-      cl: parseNum('#ob_clQuota', 6),
-      clBalance: parseNum('#ob_clBalance', 6),
-      sl: parseNum('#ob_slQuota', 6),
-      slBalance: parseNum('#ob_slBalance', 6)
+      pl: parseNum('#ob_plQuota', 0),
+      plBalance: parseNum('#ob_plBalance', 0),
+      cl: parseNum('#ob_clQuota', 0),
+      clBalance: parseNum('#ob_clBalance', 0),
+      sl: parseNum('#ob_slQuota', 0),
+      slBalance: parseNum('#ob_slBalance', 0)
     };
 
     const payload = {
@@ -13417,19 +13417,19 @@ async function myProfileView() {
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;text-align:center;margin-bottom:12px">
           <div style="background:#eff6ff;border:1px solid #dbeafe;border-radius:8px;padding:12px 6px">
-            <div style="font-size:20px;font-weight:800;color:#1d4ed8">${leave.plBalance !== undefined ? leave.plBalance : 12}</div>
+            <div style="font-size:20px;font-weight:800;color:#1d4ed8">${leave.plBalance ?? 12}</div>
             <div style="font-size:11px;font-weight:600;color:#3b82f6;margin-top:2px">PL</div>
-            <div style="font-size:10px;color:#64748b">Quota: ${leave.pl || 12}</div>
+            <div style="font-size:10px;color:#64748b">Quota: ${leave.pl ?? 12}</div>
           </div>
           <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:12px 6px">
-            <div style="font-size:20px;font-weight:800;color:#b45309">${leave.clBalance !== undefined ? leave.clBalance : 6}</div>
+            <div style="font-size:20px;font-weight:800;color:#b45309">${leave.clBalance ?? 6}</div>
             <div style="font-size:11px;font-weight:600;color:#d97706;margin-top:2px">CL</div>
-            <div style="font-size:10px;color:#64748b">Quota: ${leave.cl || 6}</div>
+            <div style="font-size:10px;color:#64748b">Quota: ${leave.cl ?? 6}</div>
           </div>
           <div style="background:#fee2e2;border:1px solid #fecaca;border-radius:8px;padding:12px 6px">
-            <div style="font-size:20px;font-weight:800;color:#b91c1c">${leave.slBalance !== undefined ? leave.slBalance : 6}</div>
+            <div style="font-size:20px;font-weight:800;color:#b91c1c">${leave.slBalance ?? 6}</div>
             <div style="font-size:11px;font-weight:600;color:#dc2626;margin-top:2px">SL</div>
-            <div style="font-size:10px;color:#64748b">Quota: ${leave.sl || 6}</div>
+            <div style="font-size:10px;color:#64748b">Quota: ${leave.sl ?? 6}</div>
           </div>
         </div>
         <div style="font-size:11.5px;color:#64748b;margin-top:auto">Granted and monitored by Accounts Admin</div>
@@ -13672,17 +13672,17 @@ async function myPayslipsView() {
         <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:8px;padding:12px 14px">
           <div style="font-size:12px;font-weight:700;color:#1d4ed8">🌴 Paid Leave (PL)</div>
           <div style="font-size:24px;font-weight:800;color:#0f172a;margin-top:2px">${plBal} <span style="font-size:12px;color:#64748b;font-weight:500">Days Left</span></div>
-          <div style="font-size:11px;color:#64748b;margin-top:4px">Allotted Quota: ${lp.pl || 12} ${pendingPL ? `(${pendingPL} pend)` : ''}</div>
+          <div style="font-size:11px;color:#64748b;margin-top:4px">Allotted Quota: ${lp.pl ?? 12} ${pendingPL ? `(${pendingPL} pend)` : ''}</div>
         </div>
         <div style="background:#fef3c7;border:1.5px solid #fde68a;border-radius:8px;padding:12px 14px">
           <div style="font-size:12px;font-weight:700;color:#b45309">☕ Casual Leave (CL)</div>
           <div style="font-size:24px;font-weight:800;color:#0f172a;margin-top:2px">${clBal} <span style="font-size:12px;color:#64748b;font-weight:500">Days Left</span></div>
-          <div style="font-size:11px;color:#64748b;margin-top:4px">Allotted Quota: ${lp.cl || 6} ${pendingCL ? `(${pendingCL} pend)` : ''}</div>
+          <div style="font-size:11px;color:#64748b;margin-top:4px">Allotted Quota: ${lp.cl ?? 6} ${pendingCL ? `(${pendingCL} pend)` : ''}</div>
         </div>
         <div style="background:#fee2e2;border:1.5px solid #fecaca;border-radius:8px;padding:12px 14px">
           <div style="font-size:12px;font-weight:700;color:#b91c1c">🩺 Sick Leave (SL)</div>
           <div style="font-size:24px;font-weight:800;color:#0f172a;margin-top:2px">${slBal} <span style="font-size:12px;color:#64748b;font-weight:500">Days Left</span></div>
-          <div style="font-size:11px;color:#64748b;margin-top:4px">Allotted Quota: ${lp.sl || 6} ${pendingSL ? `(${pendingSL} pend)` : ''}</div>
+          <div style="font-size:11px;color:#64748b;margin-top:4px">Allotted Quota: ${lp.sl ?? 6} ${pendingSL ? `(${pendingSL} pend)` : ''}</div>
         </div>
       </div>
 
@@ -13784,7 +13784,7 @@ async function myLeavesView() {
         </div>
         <div style="font-size:28px;font-weight:800;color:#0f172a">${plBal} <span style="font-size:13px;color:#64748b;font-weight:500">Days Left</span></div>
         <div style="display:flex;justify-content:space-between;font-size:11.5px;color:#64748b;margin-top:8px;border-top:1px solid #f1f5f9;padding-top:6px">
-          <span>Allotted Quota: <strong>${lp.pl || 12}</strong></span>
+          <span>Allotted Quota: <strong>${lp.pl ?? 12}</strong></span>
           ${pendingPL ? `<span style="color:#d97706;font-weight:600">(${pendingPL} pending)</span>` : ''}
         </div>
       </div>
@@ -13796,7 +13796,7 @@ async function myLeavesView() {
         </div>
         <div style="font-size:28px;font-weight:800;color:#0f172a">${clBal} <span style="font-size:13px;color:#64748b;font-weight:500">Days Left</span></div>
         <div style="display:flex;justify-content:space-between;font-size:11.5px;color:#64748b;margin-top:8px;border-top:1px solid #f1f5f9;padding-top:6px">
-          <span>Allotted Quota: <strong>${lp.cl || 6}</strong></span>
+          <span>Allotted Quota: <strong>${lp.cl ?? 6}</strong></span>
           ${pendingCL ? `<span style="color:#d97706;font-weight:600">(${pendingCL} pending)</span>` : ''}
         </div>
       </div>
@@ -13808,7 +13808,7 @@ async function myLeavesView() {
         </div>
         <div style="font-size:28px;font-weight:800;color:#0f172a">${slBal} <span style="font-size:13px;color:#64748b;font-weight:500">Days Left</span></div>
         <div style="display:flex;justify-content:space-between;font-size:11.5px;color:#64748b;margin-top:8px;border-top:1px solid #f1f5f9;padding-top:6px">
-          <span>Allotted Quota: <strong>${lp.sl || 6}</strong></span>
+          <span>Allotted Quota: <strong>${lp.sl ?? 6}</strong></span>
           ${pendingSL ? `<span style="color:#d97706;font-weight:600">(${pendingSL} pending)</span>` : ''}
         </div>
       </div>
@@ -14091,17 +14091,17 @@ async function openApplyLeaveModal(onSuccess) {
             <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:8px;padding:10px 6px">
               <div style="font-size:22px;font-weight:800;color:#1d4ed8" id="modal_plBal">${plBal}</div>
               <div style="font-size:11px;font-weight:700;color:#2563eb">Paid Leave (PL)</div>
-              <div style="font-size:10px;color:#64748b">Quota: ${lp.pl || 12} ${pendingMap['Paid Leave (PL)'] ? `(${pendingMap['Paid Leave (PL)']} pend)` : ''}</div>
+              <div style="font-size:10px;color:#64748b">Quota: ${lp.pl ?? 12} ${pendingMap['Paid Leave (PL)'] ? `(${pendingMap['Paid Leave (PL)']} pend)` : ''}</div>
             </div>
             <div style="background:#fef3c7;border:1.5px solid #fde68a;border-radius:8px;padding:10px 6px">
               <div style="font-size:22px;font-weight:800;color:#b45309" id="modal_clBal">${clBal}</div>
               <div style="font-size:11px;font-weight:700;color:#d97706">Casual Leave (CL)</div>
-              <div style="font-size:10px;color:#64748b">Quota: ${lp.cl || 6} ${pendingMap['Casual Leave (CL)'] ? `(${pendingMap['Casual Leave (CL)']} pend)` : ''}</div>
+              <div style="font-size:10px;color:#64748b">Quota: ${lp.cl ?? 6} ${pendingMap['Casual Leave (CL)'] ? `(${pendingMap['Casual Leave (CL)']} pend)` : ''}</div>
             </div>
             <div style="background:#fee2e2;border:1.5px solid #fecaca;border-radius:8px;padding:10px 6px">
               <div style="font-size:22px;font-weight:800;color:#b91c1c" id="modal_slBal">${slBal}</div>
               <div style="font-size:11px;font-weight:700;color:#dc2626">Sick Leave (SL)</div>
-              <div style="font-size:10px;color:#64748b">Quota: ${lp.sl || 6} ${pendingMap['Sick Leave (SL)'] ? `(${pendingMap['Sick Leave (SL)']} pend)` : ''}</div>
+              <div style="font-size:10px;color:#64748b">Quota: ${lp.sl ?? 6} ${pendingMap['Sick Leave (SL)'] ? `(${pendingMap['Sick Leave (SL)']} pend)` : ''}</div>
             </div>
           </div>
         </div>

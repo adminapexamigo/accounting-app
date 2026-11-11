@@ -157,7 +157,14 @@ const safeUser = u => {
     bankBranch: u.bankBranch || prof.bankBranch || '',
     annualCtc: u.annualCtc != null ? +u.annualCtc : (prof.annualCtc != null ? +prof.annualCtc : 0),
     salaryStructure: u.salaryStructure || prof.salaryStructure || null,
-    leavePolicy: u.leavePolicy || prof.leavePolicy || { pl: 12, cl: 6, sl: 6, plBalance: 12, clBalance: 6, slBalance: 6 },
+    leavePolicy: (u.leavePolicy || prof.leavePolicy) ? {
+      pl: +(u.leavePolicy?.pl ?? prof.leavePolicy?.pl ?? 12),
+      plBalance: +(u.leavePolicy?.plBalance ?? prof.leavePolicy?.plBalance ?? 12),
+      cl: +(u.leavePolicy?.cl ?? prof.leavePolicy?.cl ?? 6),
+      clBalance: +(u.leavePolicy?.clBalance ?? prof.leavePolicy?.clBalance ?? 6),
+      sl: +(u.leavePolicy?.sl ?? prof.leavePolicy?.sl ?? 6),
+      slBalance: +(u.leavePolicy?.slBalance ?? prof.leavePolicy?.slBalance ?? 6)
+    } : { pl: 12, cl: 6, sl: 6, plBalance: 12, clBalance: 6, slBalance: 6 },
     documents: u.documents || prof.documents || {},
     createdAt: u.createdAt
   };
