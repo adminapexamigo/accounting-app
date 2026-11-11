@@ -3092,7 +3092,7 @@ body.mobile-sidebar-open {
         <line x1="3" y1="18" x2="21" y2="18"></line>
       </svg>
     </button>
-    <div class="mobile-topbar-brand" onclick="go(me && me.role==='admin'?'dash':'invoices')">
+    <div class="mobile-topbar-brand" onclick="go(getDefaultLandingTab())">
       <span class="mobile-brand-icon">🏭</span>
       <div class="mobile-brand-text">
         <span class="mobile-brand-title">Amigo</span>
@@ -3168,29 +3168,210 @@ const dmy=d=>String(d||'').split('-').reverse().join('-');
 let me,co,cache={};
 
 /* === Granular Role-Based Access Control (RBAC) === */
+function normalizeDesignation(des) {
+  const d = String(des || '').trim().toLowerCase();
+  if (d.includes('managing director') || d === 'md') return 'managing director';
+  if (d.includes('operations admin')) return 'operations admin';
+  if (d.includes('operations executive')) return 'operations executive';
+  if (d.includes('account')) return 'accounts';
+  if (d.includes('sales executive') || (d.includes('sales') && !d.includes('account'))) return 'sales executive';
+  if (d.includes('service engineer') || d.includes('service')) return 'service engineer';
+  return d;
+}
+
 const DEFAULT_EMPLOYEE_PERMISSIONS = {
-  invoices:  { view: true, create: true, edit: true, delete: false, mail: true },
-  quotation: { view: true, create: true, edit: true, delete: false, mail: true },
-  pi:        { view: true, create: true, edit: true, delete: false, mail: true },
-  po:        { view: true, create: true, edit: true, delete: false, mail: true },
-  sheets:    { view: true, create: true, edit: true, delete: false, mail: false },
-  clients:   { view: true, create: true, edit: true, delete: false },
-  products:  { view: true, create: true, edit: true, delete: false },
-  purchases: { view: false, create: false, edit: false, delete: false },
-  ledgers:   { view: true, create: true, edit: true, delete: false },
-  vouchers:  { view: true, create: true, edit: true, delete: false }
+  invoices:    { view: true, create: true, edit: true, delete: false, mail: true, scope: 'all' },
+  quotation:   { view: true, create: true, edit: true, delete: false, mail: true, scope: 'all' },
+  pi:          { view: true, create: true, edit: true, delete: false, mail: true, scope: 'all' },
+  po:          { view: true, create: true, edit: true, delete: false, mail: true, scope: 'all' },
+  sheets:      { view: true, create: true, edit: true, delete: false, mail: false },
+  clients:     { view: true, create: true, edit: true, delete: false },
+  products:    { view: true, create: true, edit: true, delete: false },
+  purchases:   { view: false, create: false, edit: false, delete: false },
+  ledgers:     { view: true, create: true, edit: true, delete: false },
+  vouchers:    { view: true, create: true, edit: true, delete: false },
+  catalogue:   { view: true, edit: false },
+  dash:        { view: false },
+  hr:          { view: false, manage: false },
+  salaryslips: { view: true, create: false, edit: false, delete: false },
+  workupdates: { view: true, create: true, edit: true, delete: false }
 };
+
+const ROLE_PERMISSIONS_MAP = {
+  'managing director': {
+    isFullAdmin: true
+  },
+  'operations admin': {
+    isFullAdmin: true
+  },
+  'operations executive': {
+    invoices:    { view: true, create: true, edit: true, delete: false, mail: true, scope: 'all' },
+    quotation:   { view: true, create: true, edit: true, delete: false, mail: true, scope: 'all' },
+    pi:          { view: true, create: true, edit: true, delete: false, mail: true, scope: 'all' },
+    po:          { view: true, create: true, edit: true, delete: false, mail: true, scope: 'all' },
+    sheets:      { view: true, create: true, edit: true, delete: false, mail: true },
+    purchases:   { view: true, create: true, edit: true, delete: false },
+    clients:     { view: true, create: true, edit: true, delete: false },
+    products:    { view: true, create: true, edit: true, delete: false },
+    ledgers:     { view: true, create: true, edit: true, delete: false },
+    vouchers:    { view: true, create: true, edit: true, delete: false },
+    catalogue:   { view: true, edit: true },
+    dash:        { view: true },
+    hr:          { view: true, manage: true },
+    workupdates: { view: true, create: true }
+  },
+  'accounts': {
+    invoices:    { view: true, create: true, edit: true, delete: false, mail: true, scope: 'all' },
+    quotation:   { view: true, create: true, edit: true, delete: false, mail: true, scope: 'own' },
+    pi:          { view: true, create: true, edit: true, delete: false, mail: true, scope: 'all' },
+    po:          { view: true, create: true, edit: true, delete: false, mail: true, scope: 'all' },
+    sheets:      { view: true, create: true, edit: true, delete: false, mail: false },
+    purchases:   { view: true, create: true, edit: true, delete: false },
+    clients:     { view: true, create: true, edit: true, delete: false },
+    products:    { view: true, create: true, edit: true, delete: false },
+    ledgers:     { view: true, create: true, edit: true, delete: false },
+    vouchers:    { view: true, create: true, edit: true, delete: false },
+    catalogue:   { view: true, edit: true },
+    dash:        { view: false },
+    hr:          { view: false, manage: false },
+    workupdates: { view: true, create: true }
+  },
+  'sales executive': {
+    invoices:    { view: false, create: false, edit: false, delete: false, mail: false },
+    quotation:   { view: true, create: true, edit: true, delete: false, mail: true, scope: 'own' },
+    pi:          { view: true, create: true, edit: true, delete: false, mail: true, scope: 'own' },
+    po:          { view: true, create: true, edit: true, delete: false, mail: true, scope: 'own' },
+    sheets:      { view: false, create: false, edit: false, delete: false, mail: false },
+    purchases:   { view: false, create: false, edit: false, delete: false },
+    clients:     { view: true, create: false, edit: false, delete: false },
+    products:    { view: true, create: false, edit: false, delete: false },
+    ledgers:     { view: false, create: false, edit: false, delete: false },
+    vouchers:    { view: false, create: false, edit: false, delete: false },
+    catalogue:   { view: true, edit: false },
+    dash:        { view: false },
+    hr:          { view: false, manage: false },
+    workupdates: { view: true, create: true }
+  },
+  'service engineer': {
+    invoices:    { view: false, create: false, edit: false, delete: false, mail: false },
+    quotation:   { view: true, create: true, edit: true, delete: false, mail: true, scope: 'own' },
+    pi:          { view: true, create: true, edit: true, delete: false, mail: true, scope: 'own' },
+    po:          { view: true, create: true, edit: true, delete: false, mail: true, scope: 'own' },
+    sheets:      { view: false, create: false, edit: false, delete: false, mail: false },
+    purchases:   { view: false, create: false, edit: false, delete: false },
+    clients:     { view: true, create: false, edit: false, delete: false },
+    products:    { view: true, create: false, edit: false, delete: false },
+    ledgers:     { view: false, create: false, edit: false, delete: false },
+    vouchers:    { view: false, create: false, edit: false, delete: false },
+    catalogue:   { view: true, edit: false },
+    dash:        { view: false },
+    hr:          { view: false, manage: false },
+    workupdates: { view: true, create: true }
+  }
+};
+
+function getEffectivePermissions(user) {
+  if (!user) return {};
+  if (user.role === 'admin') {
+    const full = {};
+    for (const k of ['invoices','quotation','pi','po','sheets','clients','products','purchases','ledgers','vouchers','catalogue','dash','hr','workupdates','tally']) {
+      full[k] = { view: true, create: true, edit: true, delete: true, mail: true, scope: 'all' };
+    }
+    return full;
+  }
+  const normDes = normalizeDesignation(user.designation);
+  const baseMap = ROLE_PERMISSIONS_MAP[normDes] || DEFAULT_EMPLOYEE_PERMISSIONS;
+  const effective = JSON.parse(JSON.stringify(baseMap));
+
+  if (user.permissions && typeof user.permissions === 'object' && Object.keys(user.permissions).length > 0) {
+    for (const [mod, p] of Object.entries(user.permissions)) {
+      if (typeof p === 'object' && p !== null) {
+        effective[mod] = Object.assign({}, effective[mod] || {}, p);
+      }
+    }
+  }
+
+  // Explicit policy overrides per company matrix
+  if (normDes === 'accounts' || user.username === 'Mansi') {
+    if (!effective.pi) effective.pi = { view: true, create: true, edit: true, delete: false, mail: true };
+    effective.pi.scope = 'all';
+    if (!effective.po) effective.po = { view: true, create: true, edit: true, delete: false, mail: true };
+    effective.po.scope = 'all';
+    if (!effective.quotation) effective.quotation = { view: true, create: true, edit: true, delete: false, mail: true };
+    if (!effective.quotation.scope) effective.quotation.scope = 'own';
+    effective.catalogue = Object.assign({}, effective.catalogue || {}, { view: true, edit: true });
+    effective.dash = { view: false };
+    effective.invoices = Object.assign({}, effective.invoices || {}, { view: true, create: true, edit: true, mail: true });
+  }
+
+  if (normDes === 'service engineer' || user.username === 'Mahesh') {
+    if (effective.quotation) effective.quotation.scope = 'own';
+    if (effective.po) effective.po.scope = 'own';
+    if (effective.pi) effective.pi.scope = 'own';
+  }
+
+  if (normDes === 'sales executive' || user.username === 'Ashwini') {
+    if (effective.quotation) effective.quotation.scope = 'own';
+    if (effective.po) effective.po.scope = 'own';
+    if (effective.pi) effective.pi.scope = 'own';
+  }
+
+  return effective;
+}
+
+function getDocScope(user, type) {
+  if (!user) return 'own';
+  if (user.role === 'admin') return 'all';
+  const normDes = normalizeDesignation(user.designation);
+  if (normDes === 'operations executive') return 'all';
+  const eff = getEffectivePermissions(user);
+  if (eff[type] && eff[type].scope) return eff[type].scope;
+  if (normDes === 'accounts' || user.username === 'Mansi') {
+    if (type === 'pi' || type === 'po') return 'all';
+    if (type === 'quotation') return 'own';
+  }
+  if (normDes === 'sales executive' || normDes === 'service engineer') {
+    return 'own';
+  }
+  return 'own';
+}
 
 function can(mod, action) {
   if (!me) return false;
   if (me.role === 'admin') return true;
   if (mod === 'taxinvoice' || mod === 'invoice') mod = 'invoices';
   if (mod === 'docs') mod = 'quotation';
-  const userPerms = (me.permissions && typeof me.permissions === 'object' && Object.keys(me.permissions).length > 0)
-    ? me.permissions
-    : DEFAULT_EMPLOYEE_PERMISSIONS;
-  const modPerms = userPerms[mod] || DEFAULT_EMPLOYEE_PERMISSIONS[mod] || {};
+  if (mod === 'tally') return can('ledgers', action) || can('vouchers', action);
+  if (mod === 'salaryslips') return action === 'view';
+  if (mod === 'leaves') {
+    const normDes = normalizeDesignation(me.designation);
+    if (normDes === 'operations executive') return true;
+    return action === 'view' || action === 'create';
+  }
+  if (mod === 'workupdates') return true;
+
+  const eff = getEffectivePermissions(me);
+  const modPerms = eff[mod] || {};
   return !!modPerms[action];
+}
+
+function canEditCatalogue() {
+  if (!me) return false;
+  if (me.role === 'admin') return true;
+  const normDes = normalizeDesignation(me.designation);
+  return normDes === 'operations executive' || normDes === 'accounts' || me.username === 'Mansi' || can('catalogue', 'edit');
+}
+
+function getDefaultLandingTab() {
+  if (!me) return 'invoices';
+  if (me.role === 'admin') return 'dash';
+  const normDes = normalizeDesignation(me.designation);
+  if (normDes === 'operations executive') return 'dash';
+  if (normDes === 'accounts' || me.username === 'Mansi') return 'invoices';
+  if (normDes === 'sales executive' || normDes === 'service engineer') return 'quotation';
+  if (can('invoices', 'view')) return 'invoices';
+  if (can('quotation', 'view')) return 'quotation';
+  return 'myprofile';
 }
 
 /* === Secure SWR Session Storage Cache with 8-Hour TTL & 7:00 AM Daily Invalidation === */
@@ -3937,7 +4118,7 @@ async function mail(){const c=await api('GET','mail');
 
 // ---- Employee Productivity & Monitoring ----
 async function monitoring(activeTab = 'live') {
-  if (me.role !== 'admin') return go('invoices');
+  if (me.role !== 'admin') return go(getDefaultLandingTab());
 
   const selectedDate = window.monitoringSelectedDate || today();
   const summary = await api('GET', `monitoring/summary?date=${selectedDate}`);
@@ -4414,9 +4595,13 @@ async function showEmployeeActivityModal(empId, empName, dateStr) {
 const DOCT={quotation:{l:'Quotation',p:'Quotations'},pi:{l:'Proforma invoice',p:'Proforma invoices'},po:{l:'Purchase order',p:'Purchase orders'}};
 const sd=d=>String(d||'').split('-').reverse().join('/');
 async function docs(type){
-  const L = (await api('GET','docs')).filter(x=>x.type==type).sort((a,b)=>b.date.localeCompare(a.date)||b.number.localeCompare(a.number,undefined,{numeric:true})),
+  const allDocs = await api('GET','docs');
+  const scope = getDocScope(me, type);
+  const L = (scope === 'own' ? allDocs.filter(x => x.createdBy === me.username) : allDocs)
+        .filter(x => x.type == type)
+        .sort((a,b) => b.date.localeCompare(a.date) || b.number.localeCompare(a.number, undefined, {numeric: true})),
         T = DOCT[type],
-        adm = me.role=='admin',
+        adm = me.role == 'admin',
         partyLbl = type == 'po' ? 'Vendor' : 'Customer',
         icon = type == 'quotation' ? '📑' : (type == 'pi' ? '📄' : '📦');
 
@@ -4475,10 +4660,10 @@ async function docs(type){
         </td>
         <td class="n" style="white-space:nowrap">
           <button class="btn ghost sm" data-v="${r.id}">View / Download</button>
-          ${can(type, 'mail') ? `<button class="btn ghost sm" data-m="${r.id}">✉️ Mail</button>` : ''}
+          ${can(type, 'mail') && (adm || scope !== 'own' || r.createdBy === me.username) ? `<button class="btn ghost sm" data-m="${r.id}">✉️ Mail</button>` : ''}
           ${can(type, 'create') ? `<button class="btn ghost sm" data-c="${r.id}">Copy</button>` : ''}
-          ${can(type, 'edit') ? `<button class="btn ghost sm" data-x="${r.id}">Edit</button>` : ''}
-          ${can(type, 'delete') ? `<button class="btn red sm" data-d="${r.id}">Delete</button>` : ''}
+          ${can(type, 'edit') && (adm || scope !== 'own' || r.createdBy === me.username) ? `<button class="btn ghost sm" data-x="${r.id}">Edit</button>` : ''}
+          ${can(type, 'delete') && (adm || scope !== 'own' || r.createdBy === me.username) ? `<button class="btn red sm" data-d="${r.id}">Delete</button>` : ''}
         </td>
       </tr>
     `).join('') : `<tr><td colspan="6" style="text-align:center;padding:36px;color:var(--mute)">No ${T.p.toLowerCase()} matching search or filter</td></tr>`;
@@ -4486,9 +4671,10 @@ async function docs(type){
     $('#view').innerHTML = `
       <!-- Top Title & Global Actions -->
       <div class="row" style="margin-bottom:14px;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
-        <h1 class="sp" style="display:flex;align-items:center;margin:0">
+        <h1 class="sp" style="display:flex;align-items:center;margin:0;gap:8px">
           <span>${T.p}</span>
           <span class="header-count-pill">${L.length} Total</span>
+          ${scope === 'own' ? '<span style="font-size:11px;font-weight:700;background:#e0f2fe;color:#0284c7;padding:3px 8px;border-radius:12px;display:inline-flex;align-items:center;gap:4px">👤 My Documents Only</span>' : ''}
         </h1>
         <div style="display:flex;gap:10px">
           <button class="btn ghost" id="docRefreshBtn" title="Fetch fresh records directly from database">🔄 Refresh</button>
@@ -5633,7 +5819,17 @@ window.toggleMobileSidebar = toggleMobileSidebar;
 window.closeMobileSidebar = closeMobileSidebar;
 
 function renderNav(activeTab) {
-  const visibleGroups = MENU_GROUPS.filter(g => !g.adminOnly || me.role === 'admin');
+  const normDes = normalizeDesignation(me.designation);
+  const isOpsExec = normDes === 'operations executive';
+  const visibleGroups = MENU_GROUPS.filter(g => {
+    if (g.id === 'overview') {
+      return me.role === 'admin' || isOpsExec || can('dash', 'view');
+    }
+    if (g.id === 'admin') {
+      return me.role === 'admin';
+    }
+    return true;
+  });
   const getBadgeHtml = (k) => {
     const ck = COUNT_KEY_MAP[k];
     if (!ck) return '';
@@ -5644,13 +5840,16 @@ function renderNav(activeTab) {
   
   $('#nav').innerHTML = visibleGroups.map(g => {
     const validItems = g.items.filter(item => {
-    if (item[3] && me.role !== 'admin') return false;
-    if (item[4] === 'empOnly' && me.role === 'admin') return false;
-    if (['invoices','quotation','pi','po','sheets','purchases','clients','products'].includes(item[0])) {
-      return can(item[0], 'view');
-    }
-    return true;
-  });
+      if (['employees', 'payroll', 'leaves'].includes(item[0])) {
+        return me.role === 'admin' || isOpsExec || can(item[0], 'view');
+      }
+      if (item[3] && me.role !== 'admin' && !isOpsExec) return false;
+      if (item[4] === 'empOnly' && me.role === 'admin') return false;
+      if (['invoices','quotation','pi','po','sheets','purchases','clients','products','catalogue','tally'].includes(item[0])) {
+        return can(item[0], 'view');
+      }
+      return true;
+    });
     if (!validItems.length) return '';
     const containsActive = validItems.some(i => i[0] === activeTab);
 
@@ -5851,15 +6050,18 @@ function start() {
   }
   checkSyncBanner();
   startLiveSyncPolling();
-  go(me.role === 'admin' ? 'dash' : 'invoices');
+  go(getDefaultLandingTab());
   primeUserCacheAfterAuth();
 }
 
 async function primeUserCacheAfterAuth() {
   if (!me || !me.id) return;
-  const tablesToWarm = me.role === 'admin'
-    ? ['counts', 'invoices', 'purchases', 'clients', 'products', 'ledgers', 'vouchers', 'sheets']
-    : ['counts', 'invoices', 'clients', 'products'];
+  const normDes = normalizeDesignation(me.designation);
+  const tablesToWarm = (me.role === 'admin' || normDes === 'operations executive')
+    ? ['counts', 'invoices', 'purchases', 'clients', 'products', 'ledgers', 'vouchers', 'sheets', 'docs']
+    : (normDes === 'accounts' || me.username === 'Mansi')
+      ? ['counts', 'invoices', 'purchases', 'clients', 'products', 'ledgers', 'vouchers', 'sheets', 'docs']
+      : ['counts', 'clients', 'products', 'docs'];
 
   // Pre-load session cache in parallel once user is completely authenticated
   Promise.all(tablesToWarm.map(async t => {
@@ -5884,10 +6086,32 @@ window.addEventListener('keydown', (e) => {
 
 function go(t) {
   if (me && me.role !== 'admin') {
-    if (['invoices','quotation','pi','po','sheets','purchases','clients','products'].includes(t)) {
+    const normDes = normalizeDesignation(me.designation);
+    const isOpsExec = normDes === 'operations executive';
+
+    // Administration pages - strict Admin only
+    if (['users', 'sync', 'settings', 'mail', 'ai', 'monitoring', 'logins'].includes(t)) {
+      say('Access restricted: Administration is reserved for System Administrators.');
+      return go(getDefaultLandingTab());
+    }
+
+    // Financial Dashboard
+    if (t === 'dash' && !isOpsExec && !can('dash', 'view')) {
+      say('Access restricted: You do not have permission to view Financial Dashboard.');
+      return go(getDefaultLandingTab());
+    }
+
+    // HR Admin features
+    if (['employees', 'payroll', 'leaves'].includes(t) && !isOpsExec && !can(t, 'view')) {
+      say('Access restricted: You do not have HR management permissions.');
+      return go(getDefaultLandingTab());
+    }
+
+    // Document & standard modules
+    if (['invoices','quotation','pi','po','sheets','purchases','clients','products','catalogue','tally'].includes(t)) {
       if (!can(t, 'view')) {
         say('Access restricted: You do not have permission to view ' + t);
-        return;
+        return go(getDefaultLandingTab());
       }
     }
   }
@@ -5978,7 +6202,9 @@ const load = async (t, forceFresh = false) => {
 };
 // ---- dashboard (admin) ----
 async function dash(){
-  if(me.role!='admin') return invoices();
+  const normDes = normalizeDesignation(me.designation);
+  const isOpsExec = normDes === 'operations executive';
+  if(me.role !== 'admin' && !isOpsExec && !can('dash', 'view')) return go(getDefaultLandingTab());
   const [inv, pur, cnt] = await Promise.all([load('invoices'), load('purchases'), api('GET', 'counts')]);
   window.counts = cnt;
   const ym = today().slice(0, 7), sum = (L, k, f = () => 1) => L.filter(f).reduce((s, x) => s + (+x[k] || 0), 0);
@@ -6293,12 +6519,15 @@ const CFG={clients:{l:'Clients',f:[['name','Name',1],['email','Email'],['phone',
  purchases:{l:'Purchases',f:[['date','Date',1,'date'],['vendor','Vendor'],['description','Description'],['amount','Amount (₹)',1,'number'],['gst','GST (₹)',0,'number']]},
  users:{l:'Users',f:[['username','Username',1],['fullName','Full name'],['role','Base System Role',1,'roleSelect'],['designation','Specific Role / Designation',0,'designationSelect'],['password','Password',0,'password'],['contact','Contact number',0,'tel'],['email','Email (login codes are sent here)',0,'email']]}};
 async function crud(t){const c=CFG[t],L=await load(t),adm=me.role=='admin';let edit=null;
- const draw=()=>{$('#view').innerHTML=`<h1 style="display:flex;align-items:center"><span>${c.l}</span><span class="header-count-pill">${L.length} Total</span></h1><div class="card"><h3>${edit?'Edit':'Add'}</h3><form id="f"><div class="grid">${c.f.map(([k,lb,rq,ty])=>{
-   if(ty==='roleSelect') return `<div><label>${lb}${rq?' *':''}</label><select name="${k}" id="userRoleSelect"><option value="employee">Employee</option><option value="admin">Admin</option></select></div>`;
-   if(ty==='designationSelect') return `<div><label>${lb}${rq?' *':''}</label><input name="${k}" id="userDesigInput" list="userDesigList" placeholder="e.g. Accounts, Sales Executive, Accountant Admin..." autocomplete="off"><datalist id="userDesigList"></datalist></div>`;
-   if(ty==='select') return `<div><label>${lb}${rq?' *':''}</label><select name="${k}"><option>employee</option><option>admin</option></select></div>`;
-   return `<div><label>${lb}${rq?' *':''}</label><input name="${k}" type="${ty||'text'}" ${ty=='number'?'step="0.01" min="0"':''} ${ty=='password'?'autocomplete="new-password"':''} ${rq&&!(t=='users'&&k=='password')?'':''}></div>`;
- }).join('')}</div>${t=='users'?`<br><div class="card" style="background:#f8f9fd;box-shadow:none;margin:0"><label>Profile photo (clear, front-facing; used for employee face check / admin avatar)</label><div class="row"><input type="file" id="pf" accept="image/*" style="width:auto"><button type="button" class="btn ghost sm" id="pcam">📷 Use camera</button><img id="pimg" style="height:70px;border-radius:8px;display:${edit&&edit.photo?'block':'none'}" ${edit&&edit.photo?`src="/api/photo/${edit.id}?v=${Date.now()}"`:''}><span id="pst" style="color:var(--mute)"></span></div><div id="uinfo" style="margin-top:10px;font-size:13px;color:var(--mute)"></div></div>`:''}<br><div class="row"><button class="btn">${edit?'Update':'Add'}</button>${edit?'<button type="button" class="btn ghost" id="cx">Cancel</button>':''}</div></form></div>
+ const draw=()=>{
+   const canModify = adm || (edit ? can(t, 'edit') : can(t, 'create'));
+   $('#view').innerHTML=`<h1 style="display:flex;align-items:center"><span>${c.l}</span><span class="header-count-pill">${L.length} Total</span></h1>
+   ${canModify ? `<div class="card"><h3>${edit?'Edit':'Add'}</h3><form id="f"><div class="grid">${c.f.map(([k,lb,rq,ty])=>{
+     if(ty==='roleSelect') return `<div><label>${lb}${rq?' *':''}</label><select name="${k}" id="userRoleSelect"><option value="employee">Employee</option><option value="admin">Admin</option></select></div>`;
+     if(ty==='designationSelect') return `<div><label>${lb}${rq?' *':''}</label><input name="${k}" id="userDesigInput" list="userDesigList" placeholder="e.g. Accounts, Sales Executive, Accountant Admin..." autocomplete="off"><datalist id="userDesigList"></datalist></div>`;
+     if(ty==='select') return `<div><label>${lb}${rq?' *':''}</label><select name="${k}"><option>employee</option><option>admin</option></select></div>`;
+     return `<div><label>${lb}${rq?' *':''}</label><input name="${k}" type="${ty||'text'}" ${ty=='number'?'step="0.01" min="0"':''} ${ty=='password'?'autocomplete="new-password"':''} ${rq&&!(t=='users'&&k=='password')?'':''}></div>`;
+   }).join('')}</div>${t=='users'?`<br><div class="card" style="background:#f8f9fd;box-shadow:none;margin:0"><label>Profile photo (clear, front-facing; used for employee face check / admin avatar)</label><div class="row"><input type="file" id="pf" accept="image/*" style="width:auto"><button type="button" class="btn ghost sm" id="pcam">📷 Use camera</button><img id="pimg" style="height:70px;border-radius:8px;display:${edit&&edit.photo?'block':'none'}" ${edit&&edit.photo?`src="/api/photo/${edit.id}?v=${Date.now()}"`:''}><span id="pst" style="color:var(--mute)"></span></div><div id="uinfo" style="margin-top:10px;font-size:13px;color:var(--mute)"></div></div>`:''}<br><div class="row"><button class="btn">${edit?'Update':'Add'}</button>${edit?'<button type="button" class="btn ghost" id="cx">Cancel</button>':''}</div></form></div>` : ''}
  <div class="card" style="overflow:auto"><table><tr>${t=='users'?'<th></th>':''}${c.f.filter(x=>x[0]!='password').map(x=>`<th>${x[1]}</th>`).join('')}${t=='users'?'<th>Login checks</th>':''}${adm?'<th></th>':''}</tr>${L.map(r=>`<tr>${t=='users'?`<td>${r.photo?`<img src="/api/photo/${r.id}" style="width:38px;height:38px;border-radius:50%;object-fit:cover">`:''}</td>`:''}${c.f.filter(x=>x[0]!='password').map(x=>{
    if(t=='users'&&x[0]=='role') return `<td>${r.role==='admin'?'<span style="display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;background:#e0e7ff;color:#3730a3">ADMIN</span>':'<span style="display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;background:#ecfdf5;color:#065f46">EMPLOYEE</span>'}</td>`;
    if(t=='users'&&x[0]=='designation') return `<td>${r.designation?`<span style="display:inline-block;padding:2px 8px;border-radius:6px;font-size:12px;font-weight:600;background:#f1f5f9;color:#0f172a;border:1px solid #cbd5e1">${h(r.designation)}</span>`:'<span style="color:var(--mute)">—</span>'}</td>`;
@@ -6329,6 +6558,10 @@ async function crud(t){const c=CFG[t],L=await load(t),adm=me.role=='admin';let e
   $('#view').onclick=async e=>{const d=e.target.dataset;if(d.perm){const u=L.find(x=>x.id==d.perm);if(u)openPermissionsModal(u,()=>load(t,true).then(x=>{L.splice(0,L.length,...x);draw()}));return}if(d.e){edit=L.find(x=>x.id==d.e);draw();scrollTo(0,0)}if(d.d&&confirm('Delete this record?')){try{await api('DELETE',t+'/'+d.d);L.splice(0,L.length,...await load(t));draw()}catch(er){say(er.message)}}}};draw()}
 // ---- invoices ----
 async function invoices(){
+  if (!can('invoices', 'view')) {
+    say('Access restricted: You do not have permission to view Tax Invoices.');
+    return go(getDefaultLandingTab());
+  }
   const L = await load('invoices');
   L.sort((a,b)=>b.date.localeCompare(a.date)||b.number.localeCompare(a.number,undefined,{numeric:true}));
 
@@ -7837,6 +8070,10 @@ function evalFormula(raw, grid, visited = new Set()) {
 }
 
 async function sheetsView() {
+  if (!can('sheets', 'view')) {
+    say('Access restricted: You do not have permission to view Spreadsheets.');
+    return go(getDefaultLandingTab());
+  }
   const L = await load('sheets');
   L.sort((a,b) => (b.date || '').localeCompare(a.date || '') || (b.createdAt || '').localeCompare(a.createdAt || ''));
   let filterType = 'all', searchText = '';
@@ -8642,6 +8879,10 @@ function getLedgerBalances(ledgers, vouchers) {
 }
 
 async function tallyView() {
+  if (!can('tally', 'view')) {
+    say('Access restricted: You do not have permission to view Tally Accounting.');
+    return go(getDefaultLandingTab());
+  }
   const [ledgers, vouchers] = await Promise.all([load('ledgers'), load('vouchers')]);
   const balances = getLedgerBalances(ledgers, vouchers);
   const balList = Object.values(balances);
@@ -11039,26 +11280,29 @@ boot();
 /* === Role-Based Permissions Management Modal for Admins === */
 const PERM_MODULES = [
   { id: 'invoices', label: 'Tax Invoices', icon: '🧾', actions: ['view', 'create', 'edit', 'delete', 'mail'] },
-  { id: 'quotation', label: 'Quotations', icon: '📑', actions: ['view', 'create', 'edit', 'delete', 'mail'] },
-  { id: 'pi', label: 'Proforma Invoices (PI)', icon: '📋', actions: ['view', 'create', 'edit', 'delete', 'mail'] },
-  { id: 'po', label: 'Purchase Orders (PO)', icon: '📦', actions: ['view', 'create', 'edit', 'delete', 'mail'] },
+  { id: 'quotation', label: 'Quotations', icon: '📑', actions: ['view', 'create', 'edit', 'delete', 'mail'], hasScope: true },
+  { id: 'pi', label: 'Proforma Invoices (PI)', icon: '📋', actions: ['view', 'create', 'edit', 'delete', 'mail'], hasScope: true },
+  { id: 'po', label: 'Purchase Orders (PO)', icon: '📦', actions: ['view', 'create', 'edit', 'delete', 'mail'], hasScope: true },
   { id: 'sheets', label: 'Excel & Word Docs', icon: '📗', actions: ['view', 'create', 'edit', 'delete', 'mail'] },
   { id: 'clients', label: 'Clients / Parties', icon: '👥', actions: ['view', 'create', 'edit', 'delete'] },
   { id: 'products', label: 'Products & Services', icon: '🏷️', actions: ['view', 'create', 'edit', 'delete'] },
   { id: 'purchases', label: 'Purchases Register', icon: '🛒', actions: ['view', 'create', 'edit', 'delete'] },
   { id: 'ledgers', label: 'Ledgers & Accounts', icon: '🏛️', actions: ['view', 'create', 'edit', 'delete'] },
-  { id: 'vouchers', label: 'Vouchers & Entries', icon: '🎫', actions: ['view', 'create', 'edit', 'delete'] }
+  { id: 'vouchers', label: 'Vouchers & Entries', icon: '🎫', actions: ['view', 'create', 'edit', 'delete'] },
+  { id: 'catalogue', label: 'Company Catalogue', icon: '📖', actions: ['view', 'edit'] }
 ];
 
 function openPermissionsModal(user, onSaved) {
+  const normDes = normalizeDesignation(user.designation);
+  const baseMap = ROLE_PERMISSIONS_MAP[normDes] || DEFAULT_EMPLOYEE_PERMISSIONS;
   const existing = (user.permissions && typeof user.permissions === 'object' && Object.keys(user.permissions).length)
     ? JSON.parse(JSON.stringify(user.permissions))
-    : JSON.parse(JSON.stringify(DEFAULT_EMPLOYEE_PERMISSIONS));
+    : JSON.parse(JSON.stringify(baseMap));
 
   const o = document.createElement('div');
   o.className = 'mail-modal-overlay';
   o.innerHTML = `
-    <div class="mail-modal-card" style="width:840px;max-width:96vw">
+    <div class="mail-modal-card" style="width:890px;max-width:96vw">
       <div class="mail-modal-header" style="background:linear-gradient(135deg,#1e1b4b 0%,#312e81 100%);color:#fff">
         <h3 style="color:#fff;font-size:16px;display:flex;align-items:center;gap:10px">
           <span>🛡️ User Access Control &amp; Permissions</span>
@@ -11085,12 +11329,13 @@ function openPermissionsModal(user, onSaved) {
 
         <!-- Presets Bar -->
         <div style="background:#f1f5f9;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;display:flex;align-items:center;flex-wrap:wrap;gap:8px">
-          <span style="font-size:12px;font-weight:700;color:#334155">⚡ Quick Presets:</span>
-          <button type="button" class="btn sm ghost" id="presetBilling" style="background:#fff">🧾 Billing Executive</button>
-          <button type="button" class="btn sm ghost" id="presetAddOnly" style="background:#fff">➕ Add-Only Data Entry</button>
-          <button type="button" class="btn sm ghost" id="presetFull" style="background:#fff">👑 Full Access</button>
-          <button type="button" class="btn sm ghost" id="presetViewer" style="background:#fff">👁️ Viewer Only</button>
-          <button type="button" class="btn sm ghost" id="presetDefault" style="background:#fff">🔄 Reset to Default</button>
+          <span style="font-size:12px;font-weight:700;color:#334155">⚡ Role Presets:</span>
+          <button type="button" class="btn sm ghost" id="presetOpsExec" style="background:#fff">👑 Operations Executive</button>
+          <button type="button" class="btn sm ghost" id="presetAccounts" style="background:#fff">🏛️ Accounts</button>
+          <button type="button" class="btn sm ghost" id="presetSalesExec" style="background:#fff">💼 Sales Executive</button>
+          <button type="button" class="btn sm ghost" id="presetServiceEng" style="background:#fff">🔧 Service Engineer</button>
+          <button type="button" class="btn sm ghost" id="presetFull" style="background:#fff">✨ Full Access</button>
+          <button type="button" class="btn sm ghost" id="presetDefault" style="background:#fff">🔄 Default</button>
         </div>
 
         <!-- Permissions Matrix Table -->
@@ -11099,11 +11344,12 @@ function openPermissionsModal(user, onSaved) {
             <thead>
               <tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0;text-align:center">
                 <th style="text-align:left;padding:10px 14px">Module / Feature</th>
-                <th style="padding:10px 8px;width:95px">👁️ View</th>
-                <th style="padding:10px 8px;width:95px">➕ Create</th>
-                <th style="padding:10px 8px;width:95px">✏️ Edit</th>
-                <th style="padding:10px 8px;width:95px">🗑️ Delete</th>
-                <th style="padding:10px 8px;width:95px">✉️ Send Mail</th>
+                <th style="padding:10px 8px;width:75px">👁️ View</th>
+                <th style="padding:10px 8px;width:75px">➕ Create</th>
+                <th style="padding:10px 8px;width:75px">✏️ Edit</th>
+                <th style="padding:10px 8px;width:75px">🗑️ Delete</th>
+                <th style="padding:10px 8px;width:85px">✉️ Mail</th>
+                <th style="padding:10px 8px;width:125px">🌐 Scope</th>
               </tr>
             </thead>
             <tbody id="permMatrixBody">
@@ -11112,11 +11358,9 @@ function openPermissionsModal(user, onSaved) {
         </div>
 
         <div style="font-size:11.5px;color:var(--mute);line-height:1.5">
-          💡 <b>Permissions Guide:</b> 
-          &bull; <b>Create</b> allows creating new entries.
-          &bull; <b>Edit</b> allows modifying existing entries (invoices, quotations, PI, PO, sheets).
-          &bull; <b>Delete</b> allows deleting existing entries.
-          &bull; <b>Send Mail</b> enables emailing documents to clients directly with PDF/Word attachments.
+          💡 <b>Scope Guide:</b> 
+          &bull; <b>All Records:</b> Employee can view and interact with all company records in this module.
+          &bull; <b>Own Only:</b> Employee can view, edit, and email only records created by themselves.
         </div>
       </div>
 
@@ -11141,6 +11385,12 @@ function openPermissionsModal(user, onSaved) {
         const checked = p[act] ? 'checked' : '';
         return `<input type="checkbox" data-mod="${m.id}" data-act="${act}" ${checked} style="width:16px;height:16px;cursor:pointer">`;
       };
+      const scopeSelect = m.hasScope ? `
+        <select data-mod="${m.id}" data-scope="1" style="font-size:11.5px;padding:3px 6px;border-radius:6px;border:1px solid #cbd5e1;background:#fff;font-weight:600">
+          <option value="all" ${(p.scope||'all')==='all'?'selected':''}>🌐 All Records</option>
+          <option value="own" ${(p.scope||'')==='own'?'selected':''}>👤 Own Only</option>
+        </select>
+      ` : '<span style="color:#cbd5e1">—</span>';
       return `
         <tr style="border-bottom:1px solid #e2e8f0">
           <td style="padding:10px 14px;font-weight:600;color:#1e293b;display:flex;align-items:center;gap:8px">
@@ -11152,6 +11402,7 @@ function openPermissionsModal(user, onSaved) {
           <td style="text-align:center;padding:8px">${chk('edit')}</td>
           <td style="text-align:center;padding:8px">${chk('delete')}</td>
           <td style="text-align:center;padding:8px">${chk('mail')}</td>
+          <td style="text-align:center;padding:8px">${scopeSelect}</td>
         </tr>
       `;
     }).join('');
@@ -11160,41 +11411,39 @@ function openPermissionsModal(user, onSaved) {
   renderMatrix();
 
   o.querySelector('#permMatrixBody').onchange = e => {
-    const cb = e.target;
-    if (cb.dataset.mod && cb.dataset.act) {
-      if (!curState[cb.dataset.mod]) curState[cb.dataset.mod] = {};
-      curState[cb.dataset.mod][cb.dataset.act] = cb.checked;
+    const target = e.target;
+    if (target.dataset.mod && target.dataset.act) {
+      if (!curState[target.dataset.mod]) curState[target.dataset.mod] = {};
+      curState[target.dataset.mod][target.dataset.act] = target.checked;
+    } else if (target.dataset.mod && target.dataset.scope) {
+      if (!curState[target.dataset.mod]) curState[target.dataset.mod] = {};
+      curState[target.dataset.mod].scope = target.value;
     }
   };
 
   // Preset Handlers
-  o.querySelector('#presetBilling').onclick = () => {
-    PERM_MODULES.forEach(m => {
-      curState[m.id] = {
-        view: true,
-        create: true,
-        edit: true,
-        delete: false,
-        mail: m.actions.includes('mail')
-      };
-    });
-    curState.purchases = { view: false, create: false, edit: false, delete: false };
+  o.querySelector('#presetOpsExec').onclick = () => {
+    Object.assign(curState, JSON.parse(JSON.stringify(ROLE_PERMISSIONS_MAP['operations executive'])));
     renderMatrix();
-    say('Applied Billing Executive preset', 1);
+    say('Applied Operations Executive preset', 1);
   };
 
-  o.querySelector('#presetAddOnly').onclick = () => {
-    PERM_MODULES.forEach(m => {
-      curState[m.id] = {
-        view: true,
-        create: true,
-        edit: false,
-        delete: false,
-        mail: false
-      };
-    });
+  o.querySelector('#presetAccounts').onclick = () => {
+    Object.assign(curState, JSON.parse(JSON.stringify(ROLE_PERMISSIONS_MAP['accounts'])));
     renderMatrix();
-    say('Applied Add-Only Data Entry preset', 1);
+    say('Applied Accounts preset', 1);
+  };
+
+  o.querySelector('#presetSalesExec').onclick = () => {
+    Object.assign(curState, JSON.parse(JSON.stringify(ROLE_PERMISSIONS_MAP['sales executive'])));
+    renderMatrix();
+    say('Applied Sales Executive preset', 1);
+  };
+
+  o.querySelector('#presetServiceEng').onclick = () => {
+    Object.assign(curState, JSON.parse(JSON.stringify(ROLE_PERMISSIONS_MAP['service engineer'])));
+    renderMatrix();
+    say('Applied Service Engineer preset', 1);
   };
 
   o.querySelector('#presetFull').onclick = () => {
@@ -11204,25 +11453,12 @@ function openPermissionsModal(user, onSaved) {
         create: true,
         edit: true,
         delete: true,
-        mail: m.actions.includes('mail')
+        mail: m.actions.includes('mail'),
+        scope: 'all'
       };
     });
     renderMatrix();
     say('Applied Full Access preset', 1);
-  };
-
-  o.querySelector('#presetViewer').onclick = () => {
-    PERM_MODULES.forEach(m => {
-      curState[m.id] = {
-        view: true,
-        create: false,
-        edit: false,
-        delete: false,
-        mail: false
-      };
-    });
-    renderMatrix();
-    say('Applied Viewer Only preset', 1);
   };
 
   o.querySelector('#presetDefault').onclick = () => {
@@ -11306,9 +11542,11 @@ function calcCtcBreakdown(annualCtcInput) {
 // 1. ADMIN: EMPLOYEE DIRECTORY & ONBOARDING VIEW
 // -------------------------------------------------------------------------
 async function employeesView() {
-  if (me.role !== 'admin') {
-    say('Access denied: Admin only');
-    return go('dash');
+  const normDes = normalizeDesignation(me.designation);
+  const isOpsExec = normDes === 'operations executive';
+  if (me.role !== 'admin' && !isOpsExec) {
+    say('Access denied: Admin & Operations Executive only');
+    return go(getDefaultLandingTab());
   }
 
   const [usersList, slipsList] = await Promise.all([
@@ -12278,9 +12516,11 @@ async function openDocPreview(userId, docType, title) {
 // 5. ADMIN: PAYROLL & SALARY SLIPS VIEW
 // -------------------------------------------------------------------------
 async function payrollView() {
-  if (me.role !== 'admin') {
-    say('Access denied: Admin only');
-    return go('dash');
+  const normDes = normalizeDesignation(me.designation);
+  const isOpsExec = normDes === 'operations executive';
+  if (me.role !== 'admin' && !isOpsExec) {
+    say('Access denied: Admin & Operations Executive only');
+    return go(getDefaultLandingTab());
   }
 
   const [usersList, slipsList] = await Promise.all([
@@ -13557,6 +13797,12 @@ async function myLeavesView() {
 // 11. ADMIN LEAVE MANAGEMENT & APPROVALS VIEW
 // -------------------------------------------------------------------------
 async function leavesView() {
+  const normDes = normalizeDesignation(me.designation);
+  const isOpsExec = normDes === 'operations executive';
+  if (me.role !== 'admin' && !isOpsExec) {
+    say('Access denied: Admin & Operations Executive only');
+    return go(getDefaultLandingTab());
+  }
   SessionCache.remove('leaves');
   const leaves = await api('GET', 'leaves', null, true).catch(() => []);
   const allUsers = await api('GET', 'users', null, true).catch(() => []);
@@ -14384,22 +14630,22 @@ async function catalogueView() {
         </div>
 
         <div class="cat-toolbar-right">
-          ${isAdmin ? `
+          <button class="btn" style="background:#0284c7; font-size:12px; font-weight:700; padding:6px 14px;" onclick="printCatalogue()">
+            📥 Download PDF / Print
+          </button>
+          ${canEditCatalogue() ? `
             <button class="btn" style="background:${window.catEditMode ? '#0284c7' : '#334155'}; font-size:12px; font-weight:700; padding:6px 14px;" onclick="toggleCatalogueEditMode()">
               ${window.catEditMode ? '👁️ Preview Mode' : '✏️ Edit Mode'}
             </button>
             <button class="btn" id="cat-save-btn" style="background:#059669; font-size:12px; font-weight:700; padding:6px 14px; ${window.catModified ? 'box-shadow:0 0 12px rgba(16,185,129,0.5);' : 'opacity:0.85;'}" onclick="saveCatalogueChanges()">
               💾 Save Changes
             </button>
-            <button class="btn" style="background:#0284c7; font-size:12px; font-weight:700; padding:6px 14px;" onclick="printCatalogue()">
-              📥 Download PDF / Print
-            </button>
             <button class="btn" style="background:#475569; font-size:12px; padding:6px 10px;" title="Reset back to Amigo PDF original values" onclick="resetCatalogueToDefaults()">
               🔄 Reset
             </button>
           ` : `
             <span style="font-size:12px; color:#94a3b8; background:rgba(255,255,255,0.06); padding:6px 12px; border-radius:6px;">
-              👁️ Employee Read-Only View
+              👁️ View &amp; Print Only
             </span>
           `}
         </div>
@@ -14424,6 +14670,10 @@ function jumpToCataloguePage(pageNumber) {
 }
 
 function toggleCatalogueEditMode() {
+  if (!canEditCatalogue()) {
+    say('Access restricted: Only administrators, Operations Executives, and Accounts can edit the catalogue.');
+    return;
+  }
   window.catEditMode = !window.catEditMode;
   const wrapper = $('#cat-pages-wrapper');
   if (wrapper) wrapper.innerHTML = renderCatalogueAllPagesHTML();
@@ -14878,7 +15128,7 @@ function onCatFieldChange(path, val) {
 // ------------------------------------------
 function renderCatalogueAllPagesHTML(forceReadOnly = false) {
   const d = window.catData;
-  const isEdit = forceReadOnly ? false : window.catEditMode;
+  const isEdit = forceReadOnly ? false : (window.catEditMode && canEditCatalogue());
 
   const headerCommon = (subtitle) => `
     <div class="cat-page-header">

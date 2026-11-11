@@ -37,7 +37,7 @@ const SCHEMA = {
   leaves: ['id','userId','userName','leaveType','fromDate','toDate','days','reason','status','approvedBy','approvedAt','rejectionReason','appliedAt','reminderSentAt','createdBy','createdAt'],
 };
 const BOTH = ['admin','employee'], ADMIN = ['admin'];
-const PERM = { clients:{r:BOTH,c:BOTH}, products:{r:BOTH,c:BOTH}, invoices:{r:BOTH,c:BOTH}, purchases:{r:ADMIN,c:ADMIN}, users:{r:ADMIN,c:ADMIN}, workupdates:{r:BOTH,c:BOTH}, logins:{r:ADMIN,c:[]}, docs:{r:BOTH,c:BOTH}, sheets:{r:BOTH,c:BOTH}, ledgers:{r:BOTH,c:BOTH}, vouchers:{r:BOTH,c:BOTH}, salaryslips:{r:BOTH,c:ADMIN}, leaves:{r:BOTH,c:BOTH} };
+const PERM = { clients:{r:BOTH,c:BOTH}, products:{r:BOTH,c:BOTH}, invoices:{r:BOTH,c:BOTH}, purchases:{r:BOTH,c:BOTH}, users:{r:ADMIN,c:ADMIN}, workupdates:{r:BOTH,c:BOTH}, logins:{r:ADMIN,c:[]}, docs:{r:BOTH,c:BOTH}, sheets:{r:BOTH,c:BOTH}, ledgers:{r:BOTH,c:BOTH}, vouchers:{r:BOTH,c:BOTH}, salaryslips:{r:BOTH,c:ADMIN}, leaves:{r:BOTH,c:BOTH} };
 const REQUIRED = { clients:['name'], products:['name','rate'], purchases:['date','amount'], users:['username','role'], sheets:['title','type'], ledgers:['name','group'], vouchers:['voucherType','date'], salaryslips:['employeeId','month','year'], leaves:['leaveType','fromDate','toDate'] };
 
 // ---------- CSV ----------
@@ -1269,33 +1269,190 @@ const clean = (o, t) => {
   return x;
 };
 
+function normalizeDesignation(des) {
+  const d = String(des || '').trim().toLowerCase();
+  if (d.includes('managing director') || d === 'md') return 'managing director';
+  if (d.includes('operations admin')) return 'operations admin';
+  if (d.includes('operations executive')) return 'operations executive';
+  if (d.includes('account')) return 'accounts';
+  if (d.includes('sales executive') || (d.includes('sales') && !d.includes('account'))) return 'sales executive';
+  if (d.includes('service engineer') || d.includes('service')) return 'service engineer';
+  return d;
+}
+
 const DEFAULT_EMPLOYEE_PERMISSIONS = {
-  invoices:  { view: true, create: true, edit: true, delete: false, mail: true },
-  quotation: { view: true, create: true, edit: true, delete: false, mail: true },
-  pi:        { view: true, create: true, edit: true, delete: false, mail: true },
-  po:        { view: true, create: true, edit: true, delete: false, mail: true },
-  sheets:    { view: true, create: true, edit: true, delete: false, mail: false },
-  clients:   { view: true, create: true, edit: true, delete: false },
-  products:  { view: true, create: true, edit: true, delete: false },
-  purchases: { view: false, create: false, edit: false, delete: false },
-  ledgers:   { view: true, create: true, edit: true, delete: false },
-  vouchers:  { view: true, create: true, edit: true, delete: false },
+  invoices:    { view: true, create: true, edit: true, delete: false, mail: true, scope: 'all' },
+  quotation:   { view: true, create: true, edit: true, delete: false, mail: true, scope: 'all' },
+  pi:          { view: true, create: true, edit: true, delete: false, mail: true, scope: 'all' },
+  po:          { view: true, create: true, edit: true, delete: false, mail: true, scope: 'all' },
+  sheets:      { view: true, create: true, edit: true, delete: false, mail: false },
+  clients:     { view: true, create: true, edit: true, delete: false },
+  products:    { view: true, create: true, edit: true, delete: false },
+  purchases:   { view: false, create: false, edit: false, delete: false },
+  ledgers:     { view: true, create: true, edit: true, delete: false },
+  vouchers:    { view: true, create: true, edit: true, delete: false },
+  catalogue:   { view: true, edit: false },
+  dash:        { view: false },
+  hr:          { view: false, manage: false },
   salaryslips: { view: true, create: false, edit: false, delete: false },
   workupdates: { view: true, create: true, edit: true, delete: false }
 };
+
+const ROLE_PERMISSIONS_MAP = {
+  'managing director': {
+    isFullAdmin: true
+  },
+  'operations admin': {
+    isFullAdmin: true
+  },
+  'operations executive': {
+    invoices:    { view: true, create: true, edit: true, delete: false, mail: true, scope: 'all' },
+    quotation:   { view: true, create: true, edit: true, delete: false, mail: true, scope: 'all' },
+    pi:          { view: true, create: true, edit: true, delete: false, mail: true, scope: 'all' },
+    po:          { view: true, create: true, edit: true, delete: false, mail: true, scope: 'all' },
+    sheets:      { view: true, create: true, edit: true, delete: false, mail: true },
+    purchases:   { view: true, create: true, edit: true, delete: false },
+    clients:     { view: true, create: true, edit: true, delete: false },
+    products:    { view: true, create: true, edit: true, delete: false },
+    ledgers:     { view: true, create: true, edit: true, delete: false },
+    vouchers:    { view: true, create: true, edit: true, delete: false },
+    catalogue:   { view: true, edit: true },
+    dash:        { view: true },
+    hr:          { view: true, manage: true },
+    workupdates: { view: true, create: true }
+  },
+  'accounts': {
+    invoices:    { view: true, create: true, edit: true, delete: false, mail: true, scope: 'all' },
+    quotation:   { view: true, create: true, edit: true, delete: false, mail: true, scope: 'own' },
+    pi:          { view: true, create: true, edit: true, delete: false, mail: true, scope: 'all' },
+    po:          { view: true, create: true, edit: true, delete: false, mail: true, scope: 'all' },
+    sheets:      { view: true, create: true, edit: true, delete: false, mail: false },
+    purchases:   { view: true, create: true, edit: true, delete: false },
+    clients:     { view: true, create: true, edit: true, delete: false },
+    products:    { view: true, create: true, edit: true, delete: false },
+    ledgers:     { view: true, create: true, edit: true, delete: false },
+    vouchers:    { view: true, create: true, edit: true, delete: false },
+    catalogue:   { view: true, edit: true },
+    dash:        { view: false },
+    hr:          { view: false, manage: false },
+    workupdates: { view: true, create: true }
+  },
+  'sales executive': {
+    invoices:    { view: false, create: false, edit: false, delete: false, mail: false },
+    quotation:   { view: true, create: true, edit: true, delete: false, mail: true, scope: 'own' },
+    pi:          { view: true, create: true, edit: true, delete: false, mail: true, scope: 'own' },
+    po:          { view: true, create: true, edit: true, delete: false, mail: true, scope: 'own' },
+    sheets:      { view: false, create: false, edit: false, delete: false, mail: false },
+    purchases:   { view: false, create: false, edit: false, delete: false },
+    clients:     { view: true, create: false, edit: false, delete: false },
+    products:    { view: true, create: false, edit: false, delete: false },
+    ledgers:     { view: false, create: false, edit: false, delete: false },
+    vouchers:    { view: false, create: false, edit: false, delete: false },
+    catalogue:   { view: true, edit: false },
+    dash:        { view: false },
+    hr:          { view: false, manage: false },
+    workupdates: { view: true, create: true }
+  },
+  'service engineer': {
+    invoices:    { view: false, create: false, edit: false, delete: false, mail: false },
+    quotation:   { view: true, create: true, edit: true, delete: false, mail: true, scope: 'own' },
+    pi:          { view: true, create: true, edit: true, delete: false, mail: true, scope: 'own' },
+    po:          { view: true, create: true, edit: true, delete: false, mail: true, scope: 'own' },
+    sheets:      { view: false, create: false, edit: false, delete: false, mail: false },
+    purchases:   { view: false, create: false, edit: false, delete: false },
+    clients:     { view: true, create: false, edit: false, delete: false },
+    products:    { view: true, create: false, edit: false, delete: false },
+    ledgers:     { view: false, create: false, edit: false, delete: false },
+    vouchers:    { view: false, create: false, edit: false, delete: false },
+    catalogue:   { view: true, edit: false },
+    dash:        { view: false },
+    hr:          { view: false, manage: false },
+    workupdates: { view: true, create: true }
+  }
+};
+
+function getEffectivePermissions(user) {
+  if (!user) return {};
+  if (user.role === 'admin') {
+    const full = {};
+    for (const k of ['invoices','quotation','pi','po','sheets','clients','products','purchases','ledgers','vouchers','catalogue','dash','hr','workupdates','tally']) {
+      full[k] = { view: true, create: true, edit: true, delete: true, mail: true, scope: 'all' };
+    }
+    return full;
+  }
+  const normDes = normalizeDesignation(user.designation);
+  const baseMap = ROLE_PERMISSIONS_MAP[normDes] || DEFAULT_EMPLOYEE_PERMISSIONS;
+  const effective = JSON.parse(JSON.stringify(baseMap));
+
+  if (user.permissions && typeof user.permissions === 'object' && Object.keys(user.permissions).length > 0) {
+    for (const [mod, p] of Object.entries(user.permissions)) {
+      if (typeof p === 'object' && p !== null) {
+        effective[mod] = Object.assign({}, effective[mod] || {}, p);
+      }
+    }
+  }
+
+  // Explicit policy overrides per company matrix
+  if (normDes === 'accounts' || user.username === 'Mansi') {
+    if (!effective.pi) effective.pi = { view: true, create: true, edit: true, delete: false, mail: true };
+    effective.pi.scope = 'all';
+    if (!effective.po) effective.po = { view: true, create: true, edit: true, delete: false, mail: true };
+    effective.po.scope = 'all';
+    if (!effective.quotation) effective.quotation = { view: true, create: true, edit: true, delete: false, mail: true };
+    if (!effective.quotation.scope) effective.quotation.scope = 'own';
+    effective.catalogue = Object.assign({}, effective.catalogue || {}, { view: true, edit: true });
+    effective.dash = { view: false };
+    effective.invoices = Object.assign({}, effective.invoices || {}, { view: true, create: true, edit: true, mail: true });
+  }
+
+  if (normDes === 'service engineer' || user.username === 'Mahesh') {
+    if (effective.quotation) effective.quotation.scope = 'own';
+    if (effective.po) effective.po.scope = 'own';
+    if (effective.pi) effective.pi.scope = 'own';
+  }
+
+  if (normDes === 'sales executive' || user.username === 'Ashwini') {
+    if (effective.quotation) effective.quotation.scope = 'own';
+    if (effective.po) effective.po.scope = 'own';
+    if (effective.pi) effective.pi.scope = 'own';
+  }
+
+  return effective;
+}
+
+function getDocScope(user, type) {
+  if (!user) return 'own';
+  if (user.role === 'admin') return 'all';
+  const normDes = normalizeDesignation(user.designation);
+  if (normDes === 'operations executive') return 'all';
+  const eff = getEffectivePermissions(user);
+  if (eff[type] && eff[type].scope) return eff[type].scope;
+  if (normDes === 'accounts' || user.username === 'Mansi') {
+    if (type === 'pi' || type === 'po') return 'all';
+    if (type === 'quotation') return 'own';
+  }
+  if (normDes === 'sales executive' || normDes === 'service engineer') {
+    return 'own';
+  }
+  return 'own';
+}
 
 function hasPermission(user, mod, action) {
   if (!user) return false;
   if (user.role === 'admin') return true;
   if (mod === 'taxinvoice' || mod === 'invoice') mod = 'invoices';
   if (mod === 'docs') mod = 'quotation';
+  if (mod === 'tally') return hasPermission(user, 'ledgers', action) || hasPermission(user, 'vouchers', action);
   if (mod === 'salaryslips') return action === 'view';
-  if (mod === 'leaves') return action === 'view' || action === 'create';
+  if (mod === 'leaves') {
+    const normDes = normalizeDesignation(user.designation);
+    if (normDes === 'operations executive') return true;
+    return action === 'view' || action === 'create';
+  }
   if (mod === 'workupdates') return true;
-  const userPerms = (user.permissions && typeof user.permissions === 'object' && Object.keys(user.permissions).length > 0)
-    ? user.permissions
-    : DEFAULT_EMPLOYEE_PERMISSIONS;
-  const modPerms = userPerms[mod] || DEFAULT_EMPLOYEE_PERMISSIONS[mod] || {};
+
+  const eff = getEffectivePermissions(user);
+  const modPerms = eff[mod] || {};
   return !!modPerms[action];
 }
 
@@ -1420,19 +1577,28 @@ async function api(req, res, parts) {
   if (a === 'counts' && m === 'GET') {
     const clients = readTable('clients').length;
     const products = readTable('products').length;
-    const invoices = readTable('invoices').length;
-    const purchases = readTable('purchases').length;
-    const users = readTable('users').length;
+    const invoices = hasPermission(user, 'invoices', 'view') ? readTable('invoices').length : 0;
+    const purchases = hasPermission(user, 'purchases', 'view') ? readTable('purchases').length : 0;
+    const users = user.role === 'admin' ? readTable('users').length : 0;
     const docs = readTable('docs');
-    const quotation = docs.filter(x => x.type === 'quotation').length;
-    const pi = docs.filter(x => x.type === 'pi').length;
-    const po = docs.filter(x => x.type === 'po').length;
-    const sheets = readTable('sheets').length;
-    const vouchers = readTable('vouchers').length;
-    const ledgers = readTable('ledgers').length;
+    const canSeeDoc = (doc) => {
+      if (user.role === 'admin') return true;
+      if (!hasPermission(user, doc.type, 'view')) return false;
+      const scope = getDocScope(user, doc.type);
+      if (scope === 'own' && doc.createdBy && doc.createdBy !== user.username) return false;
+      return true;
+    };
+    const quotation = docs.filter(x => x.type === 'quotation' && canSeeDoc(x)).length;
+    const pi = docs.filter(x => x.type === 'pi' && canSeeDoc(x)).length;
+    const po = docs.filter(x => x.type === 'po' && canSeeDoc(x)).length;
+    const sheets = hasPermission(user, 'sheets', 'view') ? readTable('sheets').length : 0;
+    const vouchers = hasPermission(user, 'vouchers', 'view') ? readTable('vouchers').length : 0;
+    const ledgers = hasPermission(user, 'ledgers', 'view') ? readTable('ledgers').length : 0;
     const salaryslips = readTable('salaryslips').length;
     const allLeaves = readTable('leaves');
-    const leaves = user.role === 'admin'
+    const normDes = normalizeDesignation(user.designation);
+    const isOpsExec = normDes === 'operations executive';
+    const leaves = (user.role === 'admin' || isOpsExec)
       ? allLeaves.filter(x => x.status === 'Pending').length
       : allLeaves.filter(x => x.userId === user.id && x.status === 'Pending').length;
     return send(res, 200, { clients, products, invoices, purchases, users, quotation, pi, po, sheets, vouchers, ledgers, salaryslips, leaves });
@@ -1610,7 +1776,9 @@ async function api(req, res, parts) {
       return send(res, 200, data);
     }
     if (m === 'PUT') {
-      if (user.role !== 'admin') throw fail(403, 'Admin only: only administrators can edit the catalogue');
+      const normDes = normalizeDesignation(user.designation);
+      const canEditCat = user.role === 'admin' || normDes === 'operations executive' || normDes === 'accounts' || user.username === 'Mansi' || hasPermission(user, 'catalogue', 'edit');
+      if (!canEditCat) throw fail(403, 'Permission denied: Only administrators, Operations Executives, and Accounts can edit the catalogue');
       const b = await body(req);
       if (db.isDbActive()) {
         await db.saveSetting('catalogue', b);
@@ -1622,7 +1790,9 @@ async function api(req, res, parts) {
       return send(res, 200, b);
     }
     if (m === 'POST' && id === 'reset') {
-      if (user.role !== 'admin') throw fail(403, 'Admin only');
+      const normDes = normalizeDesignation(user.designation);
+      const canEditCat = user.role === 'admin' || normDes === 'operations executive' || normDes === 'accounts' || user.username === 'Mansi' || hasPermission(user, 'catalogue', 'edit');
+      if (!canEditCat) throw fail(403, 'Permission denied: Only administrators, Operations Executives, and Accounts can edit the catalogue');
       if (db.isDbActive()) {
         await db.saveSetting('catalogue', DEFAULT_CATALOGUE);
       }
@@ -1633,7 +1803,9 @@ async function api(req, res, parts) {
       return send(res, 200, DEFAULT_CATALOGUE);
     }
     if (m === 'POST' && id === 'upload') {
-      if (user.role !== 'admin') throw fail(403, 'Admin only');
+      const normDes = normalizeDesignation(user.designation);
+      const canEditCat = user.role === 'admin' || normDes === 'operations executive' || normDes === 'accounts' || user.username === 'Mansi' || hasPermission(user, 'catalogue', 'edit');
+      if (!canEditCat) throw fail(403, 'Permission denied: Only administrators, Operations Executives, and Accounts can edit the catalogue');
       const b = await body(req);
       if (!b.dataUrl) throw fail(400, 'Image data required');
       const match = b.dataUrl.match(/^data:image\/([a-zA-Z0-9]+);base64,(.+)$/);
@@ -2554,24 +2726,42 @@ async function api(req, res, parts) {
   }
   const P = PERM[t];
   if (m === 'GET' && !id) {
-    if (t === 'users' || t === 'purchases' || t === 'logins' || t === 'salaryslips' || t === 'workupdates' || t === 'leaves') {
-      if (!P.r.includes(user.role)) throw fail(403, 'Not allowed');
+    const normDes = normalizeDesignation(user.designation);
+    const isOpsExec = normDes === 'operations executive';
+    const isAdminOrOps = user.role === 'admin' || isOpsExec;
+
+    if (t === 'users') {
+      if (!isAdminOrOps) throw fail(403, 'Not allowed');
+    } else if (t === 'purchases') {
+      if (!hasPermission(user, 'purchases', 'view')) throw fail(403, 'Not allowed');
+    } else if (t === 'logins') {
+      if (user.role !== 'admin') throw fail(403, 'Not allowed');
     } else if (t === 'docs') {
       if (!hasPermission(user, 'quotation', 'view') && !hasPermission(user, 'pi', 'view') && !hasPermission(user, 'po', 'view')) {
         throw fail(403, 'Not allowed');
       }
+    } else if (t === 'salaryslips' || t === 'workupdates' || t === 'leaves') {
+      // accessible, filtered below by ownership / role
     } else {
       if (!hasPermission(user, t, 'view')) throw fail(403, 'Not allowed');
     }
+
     let L = readTable(t);
     if (t === 'users') L = L.map(safeUser);
-    if (t === 'docs' && user.role !== 'admin') L = L.filter(x => hasPermission(user, x.type, 'view'));
-    if (t === 'workupdates' && user.role !== 'admin') L = L.filter(x => x.userId === user.id);
-    if (t === 'salaryslips' && user.role !== 'admin') {
+    if (t === 'docs' && user.role !== 'admin') {
+      L = L.filter(x => {
+        if (!hasPermission(user, x.type, 'view')) return false;
+        const scope = getDocScope(user, x.type);
+        if (scope === 'own' && x.createdBy && x.createdBy !== user.username) return false;
+        return true;
+      });
+    }
+    if (t === 'workupdates' && !isAdminOrOps) L = L.filter(x => x.userId === user.id);
+    if (t === 'salaryslips' && !isAdminOrOps) {
       L = L.filter(x => x.employeeId === user.id || String(x.employeeName || '').toLowerCase() === String(user.fullName || user.username).toLowerCase());
     }
     if (t === 'leaves') {
-      if (user.role !== 'admin') L = L.filter(x => x.userId === user.id);
+      if (!isAdminOrOps) L = L.filter(x => x.userId === user.id);
       L = L.slice().sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
     }
     return send(res, 200, L);
@@ -2579,8 +2769,10 @@ async function api(req, res, parts) {
   if (m === 'POST' && !id) {
     const b = await body(req);
     const targetMod = t === 'docs' ? (b.type || 'quotation') : t;
-    if (t === 'users' || t === 'purchases') {
+    if (t === 'users') {
       if (!P.c.includes(user.role)) throw fail(403, 'Not allowed');
+    } else if (t === 'purchases') {
+      if (!hasPermission(user, 'purchases', 'create')) throw fail(403, 'Permission denied: Cannot create purchase');
     } else if (t !== 'workupdates' && t !== 'leaves') {
       if (!hasPermission(user, targetMod, 'create')) throw fail(403, 'Permission denied: Cannot create ' + targetMod);
     }
@@ -2633,14 +2825,22 @@ async function api(req, res, parts) {
   }
   if ((m === 'PUT' || m === 'DELETE') && id) {
     const action = m === 'PUT' ? 'edit' : 'delete';
-    if (t === 'users' || t === 'purchases') {
+    if (t === 'users') {
       if (user.role !== 'admin') throw fail(403, 'Admin only');
+    } else if (t === 'purchases') {
+      if (!hasPermission(user, 'purchases', action)) throw fail(403, 'Permission denied: Cannot ' + action + ' purchases');
     }
     const L = readTable(t), i = L.findIndex(x => x.id === id); if (i < 0) throw fail(404, 'Not found');
     const targetMod = t === 'docs' ? (L[i].type || 'quotation') : t;
     if (t !== 'users' && t !== 'purchases') {
       if (!hasPermission(user, targetMod, action)) {
         throw fail(403, 'Permission denied: Cannot ' + action + ' ' + targetMod);
+      }
+      if (t === 'docs' && user.role !== 'admin') {
+        const docScope = getDocScope(user, targetMod);
+        if (docScope === 'own' && L[i].createdBy && L[i].createdBy !== user.username) {
+          throw fail(403, 'Permission denied: You can only ' + action + ' your own ' + targetMod);
+        }
       }
       if (['sheets','vouchers'].includes(t) && user.role !== 'admin' && L[i].createdBy && L[i].createdBy !== user.username) {
         throw fail(403, 'You can only edit or delete your own entries');
@@ -2727,7 +2927,9 @@ async function api(req, res, parts) {
           return L[i];
         }
         if (t === 'leaves') {
-          if (user.role !== 'admin') throw fail(403, 'Only administrators can approve or reject leaves');
+          const normDes = normalizeDesignation(user.designation);
+          const isOpsExec = normDes === 'operations executive';
+          if (user.role !== 'admin' && !isOpsExec) throw fail(403, 'Only administrators or Operations Executives can approve or reject leaves');
           const prevStatus = L[i].status;
           const action = (b.action || b.status || '').toLowerCase();
           if (action === 'approve' || action === 'approved') {
