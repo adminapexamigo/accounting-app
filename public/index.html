@@ -5198,8 +5198,10 @@ const MENU_GROUPS = [
     items: [
       ['employees', 'Employee Directory', '👥', 1],
       ['payroll', 'Payroll & Salary Slips', '💵', 1],
+      ['leaves', 'Leave Requests & Approvals', '🏖️', 1],
       ['myprofile', 'My Profile & Docs', '📋', 0, 'empOnly'],
-      ['mypayslips', 'My Payslips', '💵', 0, 'empOnly']
+      ['mypayslips', 'My Payslips', '💵', 0, 'empOnly'],
+      ['myleaves', 'Apply Leave & Balances', '🏖️', 0, 'empOnly']
     ]
   },
   {
@@ -5590,8 +5592,10 @@ function go(t) {
       users: 'User Management',
       employees: 'Employee Directory & Onboarding',
       payroll: 'Payroll & Salary Slips',
+      leaves: 'Leave Requests & Approvals',
       myprofile: 'My Profile & Documents',
       mypayslips: 'My Payslips',
+      myleaves: 'Apply Leave & Quota Balances',
       settings: 'Company Profile',
       mail: 'Email Settings',
       monitoring: 'Employee Activity & Audit',
@@ -5615,7 +5619,7 @@ function go(t) {
     `;
   }
 
-  ({dash,invoices,settings,ai:aiSettingsView,workupdates,logins,mail,monitoring,sheets:sheetsView,tally:tallyView,sync:syncView,weeklybackup:()=>syncView(true),quotation:()=>docs('quotation'),pi:()=>docs('pi'),po:()=>docs('po'),support:supportView,employees:employeesView,payroll:payrollView,myprofile:myProfileView,mypayslips:myPayslipsView}[t]||(()=>crud(t)))(t).catch?.(e=>say(e.message));
+  ({dash,invoices,settings,ai:aiSettingsView,workupdates,logins,mail,monitoring,sheets:sheetsView,tally:tallyView,sync:syncView,weeklybackup:()=>syncView(true),quotation:()=>docs('quotation'),pi:()=>docs('pi'),po:()=>docs('po'),support:supportView,employees:employeesView,payroll:payrollView,leaves:leavesView,myprofile:myProfileView,mypayslips:myPayslipsView,myleaves:myLeavesView}[t]||(()=>crud(t)))(t).catch?.(e=>say(e.message));
 }
 
 const load = async (t, forceFresh = false) => {
@@ -12924,11 +12928,25 @@ async function myProfileView() {
 // -------------------------------------------------------------------------
 async function myPayslipsView() {
   SessionCache.remove('salaryslips');
-  const slips = await api('GET', 'salaryslips', null, true).catch(() => []);
+  SessionCache.remove('leaves');
+  const [slips, myLeaves, me] = await Promise.all([
+    api('GET', 'salaryslips', null, true).catch(() => []),
+    api('GET', 'leaves', null, true).catch(() => []),
+    api('GET', 'me').catch(() => window.me || {})
+  ]);
   window._salarySlipsMap = window._salarySlipsMap || {};
   (slips || []).forEach(s => { window._salarySlipsMap[s.id] = s; });
   const view = $('#view');
   if (!view) return;
+
+  const lp = me.leavePolicy || (me.permissions?.profile?.leavePolicy) || { pl: 12, cl: 6, sl: 6, plBalance: 12, clBalance: 6, slBalance: 6 };
+  const pendingPL = (myLeaves || []).filter(x => x.status === 'Pending' && x.leaveType.includes('PL')).reduce((s, x) => s + (+x.days || 0), 0);
+  const pendingCL = (myLeaves || []).filter(x => x.status === 'Pending' && x.leaveType.includes('CL')).reduce((s, x) => s + (+x.days || 0), 0);
+  const pendingSL = (myLeaves || []).filter(x => x.status === 'Pending' && x.leaveType.includes('SL')).reduce((s, x) => s + (+x.days || 0), 0);
+
+  const plBal = Math.max(0, +(lp.plBalance ?? 12) - pendingPL);
+  const clBal = Math.max(0, +(lp.clBalance ?? 6) - pendingCL);
+  const slBal = Math.max(0, +(lp.slBalance ?? 6) - pendingSL);
 
   const monthNames = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -12938,12 +12956,13 @@ async function myPayslipsView() {
       <p style="margin:0;font-size:13px;color:#64748b">View, print, or download your official monthly payslips</p>
     </div>
 
+    <!-- Salary Slips Table -->
     <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.04)">
       <div style="overflow-x:auto">
         <table style="width:100%;border-collapse:collapse;text-align:left;font-size:13px">
           <thead>
             <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;color:#475569;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:0.4px">
-              <th style="padding:12px 16px">Month & Year</th>
+              <th style="padding:12px 16px">Month &amp; Year</th>
               <th style="padding:12px 14px">Working Days</th>
               <th style="padding:12px 14px">Gross Earnings</th>
               <th style="padding:12px 14px">Total Deductions</th>
@@ -12966,7 +12985,7 @@ async function myPayslipsView() {
                 <td style="padding:12px 14px;font-weight:800;color:#059669;font-size:14px">₹ ${(+s.netPay).toLocaleString('en-IN')}</td>
                 <td style="padding:12px 16px;text-align:right">
                   <button class="btn ghost" onclick="showSalarySlip('${s.id}')" style="padding:6px 14px;font-size:12px;color:#4f46e5;font-weight:700">
-                    🖨️ View & Print Payslip
+                    🖨️ View &amp; Print Payslip
                   </button>
                 </td>
               </tr>
@@ -12983,7 +13002,653 @@ async function myPayslipsView() {
         </table>
       </div>
     </div>
+
+    <!-- Quick Leave Quota & Application Section directly below salary slips -->
+    <div style="margin-top:28px;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:22px 24px;box-shadow:0 1px 4px rgba(0,0,0,0.04)">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px">
+        <div>
+          <h3 style="margin:0 0 3px;font-size:17px;color:#0f2b48;font-weight:700;display:flex;align-items:center;gap:8px">
+            <span>🏖️</span>
+            <span>Apply For Leave &amp; Quota Balances</span>
+          </h3>
+          <p style="margin:0;font-size:12.5px;color:#64748b">Apply for leaves directly from your available balance. Admins are notified instantly upon submission.</p>
+        </div>
+        <button class="btn" onclick="openApplyLeaveModal(() => myPayslipsView())" style="background:#0f2b48;border-color:#0f2b48;color:#fff;font-weight:700;padding:8px 18px;display:flex;align-items:center;gap:6px">
+          <span>+ Apply For Leave</span>
+        </button>
+      </div>
+
+      <!-- 3 Live Balance Tiles -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px">
+        <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:8px;padding:12px 14px">
+          <div style="font-size:12px;font-weight:700;color:#1d4ed8">🌴 Paid Leave (PL)</div>
+          <div style="font-size:24px;font-weight:800;color:#0f172a;margin-top:2px">${plBal} <span style="font-size:12px;color:#64748b;font-weight:500">Days Left</span></div>
+          <div style="font-size:11px;color:#64748b;margin-top:4px">Allotted Quota: ${lp.pl || 12} ${pendingPL ? `(${pendingPL} pend)` : ''}</div>
+        </div>
+        <div style="background:#fef3c7;border:1.5px solid #fde68a;border-radius:8px;padding:12px 14px">
+          <div style="font-size:12px;font-weight:700;color:#b45309">☕ Casual Leave (CL)</div>
+          <div style="font-size:24px;font-weight:800;color:#0f172a;margin-top:2px">${clBal} <span style="font-size:12px;color:#64748b;font-weight:500">Days Left</span></div>
+          <div style="font-size:11px;color:#64748b;margin-top:4px">Allotted Quota: ${lp.cl || 6} ${pendingCL ? `(${pendingCL} pend)` : ''}</div>
+        </div>
+        <div style="background:#fee2e2;border:1.5px solid #fecaca;border-radius:8px;padding:12px 14px">
+          <div style="font-size:12px;font-weight:700;color:#b91c1c">🩺 Sick Leave (SL)</div>
+          <div style="font-size:24px;font-weight:800;color:#0f172a;margin-top:2px">${slBal} <span style="font-size:12px;color:#64748b;font-weight:500">Days Left</span></div>
+          <div style="font-size:11px;color:#64748b;margin-top:4px">Allotted Quota: ${lp.sl || 6} ${pendingSL ? `(${pendingSL} pend)` : ''}</div>
+        </div>
+      </div>
+
+      <!-- Recent Leaves List -->
+      <div style="border-top:1px solid #e2e8f0;padding-top:16px">
+        <div style="font-size:13px;font-weight:700;color:#334155;margin-bottom:10px">My Recent Leave Applications</div>
+        ${(myLeaves && myLeaves.length) ? `
+          <div style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;font-size:12.5px;text-align:left">
+              <thead>
+                <tr style="background:#f8fafc;color:#64748b;font-size:11px;text-transform:uppercase;border-bottom:1px solid #e2e8f0">
+                  <th style="padding:8px 12px">Type</th>
+                  <th style="padding:8px 12px">Dates</th>
+                  <th style="padding:8px 12px">Days</th>
+                  <th style="padding:8px 12px">Reason</th>
+                  <th style="padding:8px 12px">Status</th>
+                  <th style="padding:8px 12px;text-align:right">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${myLeaves.slice(0, 5).map(l => {
+                  const st = l.status || 'Pending';
+                  const badge = st === 'Approved'
+                    ? '<span style="background:#f0fdf4;color:#15803d;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700">✓ Approved</span>'
+                    : st === 'Rejected'
+                    ? '<span style="background:#fef2f2;color:#b91c1c;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700">✕ Declined</span>'
+                    : '<span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700">⏳ Pending</span>';
+                  return `
+                    <tr style="border-bottom:1px solid #f1f5f9">
+                      <td style="padding:8px 12px;font-weight:600;color:#0f2b48">${h(l.leaveType)}</td>
+                      <td style="padding:8px 12px;color:#334155">${h(l.fromDate)} to ${h(l.toDate)}</td>
+                      <td style="padding:8px 12px;font-weight:600">${l.days}d</td>
+                      <td style="padding:8px 12px;color:#64748b;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${h(l.reason || '—')}</td>
+                      <td style="padding:8px 12px">${badge}</td>
+                      <td style="padding:8px 12px;text-align:right">
+                        ${st === 'Pending' ? `
+                          <button class="btn ghost" onclick="sendLeaveReminder('${l.id}', this)" style="padding:4px 8px;font-size:11px;color:#d97706;font-weight:700">
+                            🔔 Send Reminder
+                          </button>
+                        ` : '<span style="color:#94a3b8;font-size:11px">Done</span>'}
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        ` : `
+          <div style="font-size:12px;color:#94a3b8;padding:12px 0">No leave requests applied yet. Use the "+ Apply For Leave" button above when needed.</div>
+        `}
+      </div>
+    </div>
   `;
+}
+
+// -------------------------------------------------------------------------
+// 10. EMPLOYEE SELF-SERVICE: DEDICATED MY LEAVES VIEW
+// -------------------------------------------------------------------------
+async function myLeavesView() {
+  SessionCache.remove('leaves');
+  const me = await api('GET', 'me').catch(() => window.me || {});
+  const lp = me.leavePolicy || (me.permissions?.profile?.leavePolicy) || { pl: 12, cl: 6, sl: 6, plBalance: 12, clBalance: 6, slBalance: 6 };
+  const leaves = await api('GET', 'leaves', null, true).catch(() => []);
+
+  const view = $('#view');
+  if (!view) return;
+
+  const pendingPL = leaves.filter(x => x.status === 'Pending' && x.leaveType.includes('PL')).reduce((s, x) => s + (+x.days || 0), 0);
+  const pendingCL = leaves.filter(x => x.status === 'Pending' && x.leaveType.includes('CL')).reduce((s, x) => s + (+x.days || 0), 0);
+  const pendingSL = leaves.filter(x => x.status === 'Pending' && x.leaveType.includes('SL')).reduce((s, x) => s + (+x.days || 0), 0);
+
+  const plBal = Math.max(0, +(lp.plBalance ?? 12) - pendingPL);
+  const clBal = Math.max(0, +(lp.clBalance ?? 6) - pendingCL);
+  const slBal = Math.max(0, +(lp.slBalance ?? 6) - pendingSL);
+
+  view.innerHTML = `
+    <div style="margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px">
+      <div>
+        <h2 style="margin:0 0 4px;font-size:22px;color:#1e293b;font-weight:700">🏖️ My Leaves &amp; Quota Balances</h2>
+        <p style="margin:0;font-size:13px;color:#64748b">Apply for leaves from your allotted quota, view approval status, or send reminder to admin</p>
+      </div>
+      <button class="btn" onclick="openApplyLeaveModal(() => myLeavesView())" style="background:#0f2b48;border-color:#0f2b48;color:#fff;font-weight:700;padding:8px 18px;display:flex;align-items:center;gap:6px">
+        <span>+ Apply For Leave</span>
+      </button>
+    </div>
+
+    <!-- 3 Quota Tiles -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-bottom:24px">
+      <div style="background:#ffffff;border:1.5px solid #bfdbfe;border-radius:10px;padding:18px;box-shadow:0 1px 4px rgba(0,0,0,0.04)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <span style="font-size:13px;font-weight:700;color:#1d4ed8">🌴 Paid Leave (PL)</span>
+          <span style="font-size:11px;background:#eff6ff;color:#1e40af;padding:2px 8px;border-radius:99px;font-weight:700">Annual</span>
+        </div>
+        <div style="font-size:28px;font-weight:800;color:#0f172a">${plBal} <span style="font-size:13px;color:#64748b;font-weight:500">Days Left</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:11.5px;color:#64748b;margin-top:8px;border-top:1px solid #f1f5f9;padding-top:6px">
+          <span>Allotted Quota: <strong>${lp.pl || 12}</strong></span>
+          ${pendingPL ? `<span style="color:#d97706;font-weight:600">(${pendingPL} pending)</span>` : ''}
+        </div>
+      </div>
+
+      <div style="background:#ffffff;border:1.5px solid #fde68a;border-radius:10px;padding:18px;box-shadow:0 1px 4px rgba(0,0,0,0.04)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <span style="font-size:13px;font-weight:700;color:#b45309">☕ Casual Leave (CL)</span>
+          <span style="font-size:11px;background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:99px;font-weight:700">General</span>
+        </div>
+        <div style="font-size:28px;font-weight:800;color:#0f172a">${clBal} <span style="font-size:13px;color:#64748b;font-weight:500">Days Left</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:11.5px;color:#64748b;margin-top:8px;border-top:1px solid #f1f5f9;padding-top:6px">
+          <span>Allotted Quota: <strong>${lp.cl || 6}</strong></span>
+          ${pendingCL ? `<span style="color:#d97706;font-weight:600">(${pendingCL} pending)</span>` : ''}
+        </div>
+      </div>
+
+      <div style="background:#ffffff;border:1.5px solid #fecaca;border-radius:10px;padding:18px;box-shadow:0 1px 4px rgba(0,0,0,0.04)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <span style="font-size:13px;font-weight:700;color:#b91c1c">🩺 Sick Leave (SL)</span>
+          <span style="font-size:11px;background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:99px;font-weight:700">Medical</span>
+        </div>
+        <div style="font-size:28px;font-weight:800;color:#0f172a">${slBal} <span style="font-size:13px;color:#64748b;font-weight:500">Days Left</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:11.5px;color:#64748b;margin-top:8px;border-top:1px solid #f1f5f9;padding-top:6px">
+          <span>Allotted Quota: <strong>${lp.sl || 6}</strong></span>
+          ${pendingSL ? `<span style="color:#d97706;font-weight:600">(${pendingSL} pending)</span>` : ''}
+        </div>
+      </div>
+    </div>
+
+    <!-- History Table -->
+    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.04)">
+      <div style="padding:14px 18px;border-bottom:1px solid #e2e8f0;font-size:14px;font-weight:700;color:#1e293b">
+        My Leave Applications History
+      </div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;text-align:left;font-size:13px">
+          <thead>
+            <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;color:#475569;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:0.4px">
+              <th style="padding:12px 16px">Leave Type</th>
+              <th style="padding:12px 14px">Duration &amp; Dates</th>
+              <th style="padding:12px 14px">Days</th>
+              <th style="padding:12px 14px">Reason</th>
+              <th style="padding:12px 14px">Applied Date</th>
+              <th style="padding:12px 14px">Status</th>
+              <th style="padding:12px 16px;text-align:right">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${leaves.length ? leaves.map(l => {
+              const st = l.status || 'Pending';
+              const badge = st === 'Approved'
+                ? '<span style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;padding:3px 10px;border-radius:99px;font-size:11.5px;font-weight:700">✓ Approved</span>'
+                : st === 'Rejected'
+                ? '<span style="background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;padding:3px 10px;border-radius:99px;font-size:11.5px;font-weight:700">✕ Declined</span>'
+                : '<span style="background:#fef3c7;color:#b45309;border:1px solid #fde68a;padding:3px 10px;border-radius:99px;font-size:11.5px;font-weight:700">⏳ Pending Approval</span>';
+
+              return `
+                <tr style="border-bottom:1px solid #f1f5f9;transition:background 0.15s ease" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+                  <td style="padding:12px 16px;font-weight:700;color:#0f2b48">${h(l.leaveType)}</td>
+                  <td style="padding:12px 14px;color:#1e293b">${h(l.fromDate)} to ${h(l.toDate)}</td>
+                  <td style="padding:12px 14px;font-weight:700;color:#0f172a">${l.days} Day${l.days > 1 ? 's' : ''}</td>
+                  <td style="padding:12px 14px;color:#475569;max-width:240px;word-break:break-word">${h(l.reason || '—')}</td>
+                  <td style="padding:12px 14px;color:#64748b;font-size:12px">${new Date(l.appliedAt || l.createdAt).toLocaleDateString('en-IN')}</td>
+                  <td style="padding:12px 14px">
+                    ${badge}
+                    ${l.approvedBy ? `<div style="font-size:10px;color:#64748b;margin-top:3px">${st === 'Approved' ? 'By' : 'Declined by'} ${h(l.approvedBy)}</div>` : ''}
+                    ${l.rejectionReason ? `<div style="font-size:10.5px;color:#b91c1c;margin-top:2px">Reason: ${h(l.rejectionReason)}</div>` : ''}
+                  </td>
+                  <td style="padding:12px 16px;text-align:right">
+                    ${st === 'Pending' ? `
+                      <div style="display:inline-flex;align-items:center;gap:6px">
+                        <button class="btn ghost" onclick="sendLeaveReminder('${l.id}', this)" style="padding:5px 10px;font-size:11.5px;color:#d97706;font-weight:700">
+                          ${l.reminderSentAt ? '🔔 Re-send Reminder' : '🔔 Send Reminder'}
+                        </button>
+                        <button class="btn ghost" onclick="cancelLeaveRequest('${l.id}')" style="padding:5px 9px;font-size:11.5px;color:#ef4444">
+                          ✕ Cancel
+                        </button>
+                      </div>
+                    ` : '<span style="color:#94a3b8;font-size:11.5px">Completed</span>'}
+                  </td>
+                </tr>
+              `;
+            }).join('') : `
+              <tr>
+                <td colspan="7" style="padding:40px 16px;text-align:center;color:#94a3b8">
+                  <div style="font-size:32px;margin-bottom:8px">🏖️</div>
+                  <div style="font-size:15px;font-weight:600;color:#64748b">No leave applications yet</div>
+                  <div style="font-size:12px;color:#94a3b8;margin-top:4px">Click "+ Apply For Leave" above to submit a new leave request.</div>
+                </td>
+              </tr>
+            `}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+// -------------------------------------------------------------------------
+// 11. ADMIN LEAVE MANAGEMENT & APPROVALS VIEW
+// -------------------------------------------------------------------------
+async function leavesView() {
+  SessionCache.remove('leaves');
+  const leaves = await api('GET', 'leaves', null, true).catch(() => []);
+  const allUsers = await api('GET', 'users', null, true).catch(() => []);
+
+  const view = $('#view');
+  if (!view) return;
+
+  const pendingList = leaves.filter(x => x.status === 'Pending');
+  const approvedList = leaves.filter(x => x.status === 'Approved');
+  const rejectedList = leaves.filter(x => x.status === 'Rejected');
+  const totalDaysApproved = approvedList.reduce((s, x) => s + (+x.days || 0), 0);
+
+  view.innerHTML = `
+    <div style="margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px">
+      <div>
+        <h2 style="margin:0 0 4px;font-size:22px;color:#1e293b;font-weight:700">🏖️ Leave Requests &amp; Approvals</h2>
+        <p style="margin:0;font-size:13px;color:#64748b">Review, approve, or decline employee leave applications with automatic balance deduction and email notifications</p>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn ghost" onclick="leavesView()" style="display:flex;align-items:center;gap:6px">
+          <span>🔄 Refresh</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Admin KPI Summary Cards -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-bottom:22px">
+      <div style="background:#ffffff;border:1px solid #e2e8f0;border-left:4px solid #f59e0b;border-radius:10px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+        <div style="font-size:11.5px;color:#64748b;font-weight:600;text-transform:uppercase">Pending Approvals</div>
+        <div style="font-size:26px;font-weight:800;color:#d97706;margin-top:4px">${pendingList.length}</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:2px">Awaiting admin review</div>
+      </div>
+      <div style="background:#ffffff;border:1px solid #e2e8f0;border-left:4px solid #10b981;border-radius:10px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+        <div style="font-size:11.5px;color:#64748b;font-weight:600;text-transform:uppercase">Approved Requests</div>
+        <div style="font-size:26px;font-weight:800;color:#059669;margin-top:4px">${approvedList.length}</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:2px">${totalDaysApproved} total days taken</div>
+      </div>
+      <div style="background:#ffffff;border:1px solid #e2e8f0;border-left:4px solid #ef4444;border-radius:10px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+        <div style="font-size:11.5px;color:#64748b;font-weight:600;text-transform:uppercase">Declined Requests</div>
+        <div style="font-size:26px;font-weight:800;color:#dc2626;margin-top:4px">${rejectedList.length}</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:2px">Not approved</div>
+      </div>
+      <div style="background:#ffffff;border:1px solid #e2e8f0;border-left:4px solid #3b82f6;border-radius:10px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+        <div style="font-size:11.5px;color:#64748b;font-weight:600;text-transform:uppercase">Total Applications</div>
+        <div style="font-size:26px;font-weight:800;color:#2563eb;margin-top:4px">${leaves.length}</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:2px">All staff records</div>
+      </div>
+    </div>
+
+    <!-- Leave Requests Table -->
+    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.04)">
+      <div style="padding:14px 18px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div style="font-size:14px;font-weight:700;color:#1e293b">All Employee Leave Applications</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="text" id="admin_leave_filter" placeholder="Filter by employee name…" oninput="filterAdminLeaves(this.value)" style="padding:6px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:12px;width:200px">
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;text-align:left;font-size:13px">
+          <thead>
+            <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;color:#475569;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:0.4px">
+              <th style="padding:12px 16px">Employee</th>
+              <th style="padding:12px 14px">Leave Type</th>
+              <th style="padding:12px 14px">Duration &amp; Dates</th>
+              <th style="padding:12px 14px">Days</th>
+              <th style="padding:12px 14px">Reason</th>
+              <th style="padding:12px 14px">Quota Remaining</th>
+              <th style="padding:12px 14px">Status</th>
+              <th style="padding:12px 16px;text-align:right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${leaves.length ? leaves.map(l => {
+              const emp = allUsers.find(u => u.id === l.userId) || {};
+              const lp = emp.leavePolicy || (emp.permissions?.profile?.leavePolicy) || { plBalance: 12, clBalance: 6, slBalance: 6 };
+              const st = l.status || 'Pending';
+              const badge = st === 'Approved'
+                ? '<span style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;padding:3px 10px;border-radius:99px;font-size:11.5px;font-weight:700">✓ Approved</span>'
+                : st === 'Rejected'
+                ? '<span style="background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;padding:3px 10px;border-radius:99px;font-size:11.5px;font-weight:700">✕ Declined</span>'
+                : '<span style="background:#fef3c7;color:#b45309;border:1px solid #fde68a;padding:3px 10px;border-radius:99px;font-size:11.5px;font-weight:700">⏳ Pending Review</span>';
+
+              return `
+                <tr class="admin-leave-row" data-name="${h((l.userName||'').toLowerCase())}" style="border-bottom:1px solid #f1f5f9;transition:background 0.15s ease" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+                  <td style="padding:12px 16px">
+                    <div style="font-weight:700;color:#0f2b48">${h(l.userName)}</div>
+                    <div style="font-size:11px;color:#64748b">${h(emp.designation || 'Staff')} • ${h(emp.department || 'General')}</div>
+                  </td>
+                  <td style="padding:12px 14px;font-weight:600;color:#1e3a8a">${h(l.leaveType)}</td>
+                  <td style="padding:12px 14px;color:#1e293b">${h(l.fromDate)} to ${h(l.toDate)}</td>
+                  <td style="padding:12px 14px;font-weight:700;color:#0f172a">${l.days} Day${l.days > 1 ? 's' : ''}</td>
+                  <td style="padding:12px 14px;color:#475569;max-width:220px;word-break:break-word">${h(l.reason || '—')}</td>
+                  <td style="padding:12px 14px;font-size:11.5px">
+                    <span style="color:#1d4ed8;font-weight:600">PL: ${lp.plBalance ?? 12}</span> • 
+                    <span style="color:#b45309;font-weight:600">CL: ${lp.clBalance ?? 6}</span> • 
+                    <span style="color:#b91c1c;font-weight:600">SL: ${lp.slBalance ?? 6}</span>
+                  </td>
+                  <td style="padding:12px 14px">
+                    ${badge}
+                    ${l.approvedBy ? `<div style="font-size:10px;color:#64748b;margin-top:2px">${st === 'Approved' ? 'By' : 'Declined by'} ${h(l.approvedBy)}</div>` : ''}
+                    ${l.rejectionReason ? `<div style="font-size:10px;color:#b91c1c;margin-top:2px">${h(l.rejectionReason)}</div>` : ''}
+                    ${l.reminderSentAt ? `<div style="font-size:10px;color:#d97706;margin-top:2px;font-weight:600">🔔 Reminder sent</div>` : ''}
+                  </td>
+                  <td style="padding:12px 16px;text-align:right">
+                    ${st === 'Pending' ? `
+                      <div style="display:inline-flex;align-items:center;gap:6px">
+                        <button class="btn" onclick="approveLeave('${l.id}', '${h(l.userName)}')" style="background:#10b981;border-color:#059669;color:#fff;padding:5px 12px;font-size:11.5px;font-weight:700">
+                          ✓ Approve
+                        </button>
+                        <button class="btn" onclick="rejectLeavePrompt('${l.id}', '${h(l.userName)}')" style="background:#ef4444;border-color:#dc2626;color:#fff;padding:5px 11px;font-size:11.5px;font-weight:700">
+                          ✕ Decline
+                        </button>
+                      </div>
+                    ` : `
+                      <div style="font-size:11.5px;color:#64748b">
+                        ${st === 'Approved' ? '✓ Processed' : '✕ Declined'}
+                      </div>
+                    `}
+                  </td>
+                </tr>
+              `;
+            }).join('') : `
+              <tr>
+                <td colspan="8" style="padding:44px 16px;text-align:center;color:#94a3b8">
+                  <div style="font-size:32px;margin-bottom:8px">🏖️</div>
+                  <div style="font-size:15px;font-weight:600;color:#64748b">No leave applications found</div>
+                  <div style="font-size:12px;color:#94a3b8;margin-top:4px">When staff submit leave requests, they will appear here for one-click approval.</div>
+                </td>
+              </tr>
+            `}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function filterAdminLeaves(val) {
+  const q = String(val || '').toLowerCase().trim();
+  document.querySelectorAll('.admin-leave-row').forEach(tr => {
+    const name = tr.getAttribute('data-name') || '';
+    tr.style.display = (!q || name.includes(q)) ? '' : 'none';
+  });
+}
+
+// -------------------------------------------------------------------------
+// 12. LEAVE ACTIONS: APPLY MODAL, REMINDER, APPROVAL, REJECTION, CANCELLATION
+// -------------------------------------------------------------------------
+async function openApplyLeaveModal(onSuccess) {
+  const me = await api('GET', 'me').catch(() => window.me || {});
+  const lp = me.leavePolicy || (me.permissions?.profile?.leavePolicy) || { pl: 12, cl: 6, sl: 6, plBalance: 12, clBalance: 6, slBalance: 6 };
+
+  const myLeaves = await api('GET', 'leaves', null, true).catch(() => []);
+  const pendingMap = {
+    'Paid Leave (PL)': 0,
+    'Casual Leave (CL)': 0,
+    'Sick Leave (SL)': 0
+  };
+  (myLeaves || []).filter(x => x.status === 'Pending').forEach(x => {
+    if (pendingMap[x.leaveType] !== undefined) pendingMap[x.leaveType] += (+x.days || 0);
+  });
+
+  const plBal = Math.max(0, +(lp.plBalance ?? 12) - pendingMap['Paid Leave (PL)']);
+  const clBal = Math.max(0, +(lp.clBalance ?? 6) - pendingMap['Casual Leave (CL)']);
+  const slBal = Math.max(0, +(lp.slBalance ?? 6) - pendingMap['Sick Leave (SL)']);
+
+  const overlay = document.createElement('div');
+  overlay.className = 'mail-modal-overlay';
+  overlay.id = 'applyLeaveModal';
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+
+  overlay.innerHTML = `
+    <div class="mail-modal-card" style="width:580px;max-width:96vw;max-height:94vh;overflow-y:auto;background:#ffffff;border-radius:12px;padding:0">
+      <div style="padding:16px 22px;background:#0f2b48;color:#fff;display:flex;align-items:center;justify-content:space-between;border-top-left-radius:12px;border-top-right-radius:12px">
+        <div style="font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px">
+          <span>🏖️</span>
+          <span>Apply For Leave</span>
+        </div>
+        <button type="button" id="closeApplyLeaveModal" style="background:none;border:none;font-size:24px;cursor:pointer;color:#94a3b8;line-height:1">×</button>
+      </div>
+
+      <div style="padding:22px 24px">
+        <!-- Live Leave Quotas & Balances -->
+        <div style="margin-bottom:18px">
+          <div style="font-size:12px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Your Available Leave Balances</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;text-align:center">
+            <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:8px;padding:10px 6px">
+              <div style="font-size:22px;font-weight:800;color:#1d4ed8" id="modal_plBal">${plBal}</div>
+              <div style="font-size:11px;font-weight:700;color:#2563eb">Paid Leave (PL)</div>
+              <div style="font-size:10px;color:#64748b">Quota: ${lp.pl || 12} ${pendingMap['Paid Leave (PL)'] ? `(${pendingMap['Paid Leave (PL)']} pend)` : ''}</div>
+            </div>
+            <div style="background:#fef3c7;border:1.5px solid #fde68a;border-radius:8px;padding:10px 6px">
+              <div style="font-size:22px;font-weight:800;color:#b45309" id="modal_clBal">${clBal}</div>
+              <div style="font-size:11px;font-weight:700;color:#d97706">Casual Leave (CL)</div>
+              <div style="font-size:10px;color:#64748b">Quota: ${lp.cl || 6} ${pendingMap['Casual Leave (CL)'] ? `(${pendingMap['Casual Leave (CL)']} pend)` : ''}</div>
+            </div>
+            <div style="background:#fee2e2;border:1.5px solid #fecaca;border-radius:8px;padding:10px 6px">
+              <div style="font-size:22px;font-weight:800;color:#b91c1c" id="modal_slBal">${slBal}</div>
+              <div style="font-size:11px;font-weight:700;color:#dc2626">Sick Leave (SL)</div>
+              <div style="font-size:10px;color:#64748b">Quota: ${lp.sl || 6} ${pendingMap['Sick Leave (SL)'] ? `(${pendingMap['Sick Leave (SL)']} pend)` : ''}</div>
+            </div>
+          </div>
+        </div>
+
+        <form id="applyLeaveForm" onsubmit="return false;">
+          <div style="margin-bottom:14px">
+            <label style="display:block;font-size:12px;font-weight:700;color:#334155;margin-bottom:4px">Select Leave Type <span style="color:#ef4444">*</span></label>
+            <select id="leave_type" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;background:#ffffff">
+              <option value="Paid Leave (PL)">🌴 Paid Leave (PL) — ${plBal} day(s) available</option>
+              <option value="Casual Leave (CL)">☕ Casual Leave (CL) — ${clBal} day(s) available</option>
+              <option value="Sick Leave (SL)">🩺 Sick Leave (SL) — ${slBal} day(s) available</option>
+            </select>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+            <div>
+              <label style="display:block;font-size:12px;font-weight:700;color:#334155;margin-bottom:4px">From Date <span style="color:#ef4444">*</span></label>
+              <input type="date" id="leave_from" value="${todayStr}" style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+            </div>
+            <div>
+              <label style="display:block;font-size:12px;font-weight:700;color:#334155;margin-bottom:4px">To Date <span style="color:#ef4444">*</span></label>
+              <input type="date" id="leave_to" value="${todayStr}" style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+            </div>
+          </div>
+
+          <div style="margin-bottom:14px">
+            <label style="display:block;font-size:12px;font-weight:700;color:#334155;margin-bottom:4px">Total Days <span style="color:#ef4444">*</span></label>
+            <input type="number" step="0.5" min="0.5" id="leave_days" value="1" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+            <div style="font-size:11px;color:#64748b;margin-top:3px">Automatically calculated from dates (supports 0.5 for half day)</div>
+          </div>
+
+          <!-- Dynamic Live Validation Status Box -->
+          <div id="leave_validation_box" style="margin-bottom:16px;padding:10px 14px;border-radius:6px;font-size:12.5px;display:flex;align-items:center;gap:8px"></div>
+
+          <div style="margin-bottom:18px">
+            <label style="display:block;font-size:12px;font-weight:700;color:#334155;margin-bottom:4px">Reason for Leave <span style="color:#ef4444">*</span></label>
+            <textarea id="leave_reason" rows="3" placeholder="Briefly describe the reason for your leave request…" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;font-family:inherit"></textarea>
+          </div>
+
+          <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;border-top:1px solid #f1f5f9;padding-top:16px">
+            <button type="button" class="btn ghost" id="cancelApplyLeaveBtn">Cancel</button>
+            <button type="submit" class="btn" id="submitLeaveBtn" style="background:#0f2b48;border-color:#0f2b48;color:#fff;font-weight:700;padding:8px 22px">
+              <span>🚀 Submit Leave Application</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  const typeEl = overlay.querySelector('#leave_type');
+  const fromEl = overlay.querySelector('#leave_from');
+  const toEl = overlay.querySelector('#leave_to');
+  const daysEl = overlay.querySelector('#leave_days');
+  const reasonEl = overlay.querySelector('#leave_reason');
+  const boxEl = overlay.querySelector('#leave_validation_box');
+  const submitBtn = overlay.querySelector('#submitLeaveBtn');
+
+  const getBalance = () => {
+    const val = typeEl.value;
+    if (val.includes('PL')) return plBal;
+    if (val.includes('CL')) return clBal;
+    if (val.includes('SL')) return slBal;
+    return plBal + clBal + slBal;
+  };
+
+  const updateValidation = () => {
+    const bal = getBalance();
+    const days = +daysEl.value || 0;
+    if (days <= 0) {
+      boxEl.style.display = 'block';
+      boxEl.style.background = '#fef2f2';
+      boxEl.style.border = '1px solid #fecaca';
+      boxEl.style.color = '#991b1b';
+      boxEl.innerHTML = '⚠️ Please enter at least 0.5 day for leave.';
+      submitBtn.disabled = true;
+      submitBtn.style.opacity = '0.5';
+      return;
+    }
+    if (days > bal) {
+      boxEl.style.display = 'block';
+      boxEl.style.background = '#fef2f2';
+      boxEl.style.border = '1px solid #fecaca';
+      boxEl.style.color = '#b91c1c';
+      boxEl.innerHTML = `<strong>⚠️ Insufficient Quota:</strong> You have only <strong>${bal} day(s)</strong> available for ${typeEl.value.split(' ')[0]}, but requested <strong>${days} day(s)</strong>. You cannot apply.`;
+      submitBtn.disabled = true;
+      submitBtn.style.opacity = '0.5';
+    } else {
+      boxEl.style.display = 'block';
+      boxEl.style.background = '#f0fdf4';
+      boxEl.style.border = '1px solid #bbf7d0';
+      boxEl.style.color = '#15803d';
+      boxEl.innerHTML = `<strong>✓ Quota Available:</strong> ${days} day(s) requested. <strong>${(bal - days).toFixed(1)} day(s)</strong> will remain in balance.`;
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = '1';
+    }
+  };
+
+  const calcDaysFromDates = () => {
+    if (fromEl.value && toEl.value) {
+      const d1 = new Date(fromEl.value);
+      const d2 = new Date(toEl.value);
+      if (d2 >= d1) {
+        const diffTime = d2.getTime() - d1.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+        daysEl.value = diffDays;
+      }
+    }
+    updateValidation();
+  };
+
+  fromEl.onchange = calcDaysFromDates;
+  toEl.onchange = calcDaysFromDates;
+  typeEl.onchange = updateValidation;
+  daysEl.oninput = updateValidation;
+
+  calcDaysFromDates();
+
+  const close = () => overlay.remove();
+  overlay.querySelector('#closeApplyLeaveModal').onclick = close;
+  overlay.querySelector('#cancelApplyLeaveBtn').onclick = close;
+  overlay.onclick = e => { if (e.target === overlay) close(); };
+
+  submitBtn.onclick = async () => {
+    const bal = getBalance();
+    const days = +daysEl.value || 0;
+    if (days > bal) {
+      return say(`Cannot apply: Insufficient leave balance (${bal} days available)`);
+    }
+    if (!reasonEl.value.trim()) {
+      return say('Please provide a reason for the leave');
+    }
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting & Notifying Admin…';
+
+    try {
+      await api('POST', 'leaves', {
+        leaveType: typeEl.value,
+        fromDate: fromEl.value,
+        toDate: toEl.value,
+        days: days,
+        reason: reasonEl.value.trim()
+      });
+      say('🎉 Leave applied successfully! All admins have been notified via email.', 1);
+      close();
+      if (typeof onSuccess === 'function') onSuccess();
+      else if (window.currentViewName === 'myleaves' || window.currentViewName === 'mypayslips' || window.currentViewName === 'leaves') {
+        go(window.currentViewName);
+      }
+    } catch (err) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = '🚀 Submit Leave Application';
+      say('Error: ' + err.message);
+    }
+  };
+}
+
+async function sendLeaveReminder(leaveId, btn) {
+  try {
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Sending…';
+    }
+    await api('POST', `leaves/${leaveId}/remind`);
+    say('🔔 Reminder email sent to Admin successfully!', 1);
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = '✓ Reminder Sent';
+      btn.style.color = '#059669';
+    }
+    setTimeout(() => {
+      if (window.currentViewName) go(window.currentViewName);
+    }, 1200);
+  } catch (err) {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '🔔 Send Reminder';
+    }
+    say('Failed to send reminder: ' + err.message);
+  }
+}
+
+async function approveLeave(leaveId, empName) {
+  if (!confirm(`Are you sure you want to APPROVE the leave request for ${empName}?\nThis will deduct the days from their quota and send an approval email confirmation.`)) return;
+  try {
+    await api('PUT', `leaves/${leaveId}`, { action: 'approve' });
+    say(`✅ Leave approved for ${empName}! Quota deducted and confirmation emailed.`, 1);
+    go(window.currentViewName || 'leaves');
+  } catch (err) {
+    say('Error approving leave: ' + err.message);
+  }
+}
+
+async function rejectLeavePrompt(leaveId, empName) {
+  const reason = prompt(`Enter reason for declining ${empName}'s leave request:`);
+  if (reason === null) return;
+  try {
+    await api('PUT', `leaves/${leaveId}`, { action: 'reject', rejectionReason: reason || 'Declined by Administrator' });
+    say(`❌ Leave request declined. Notification emailed to ${empName}.`, 1);
+    go(window.currentViewName || 'leaves');
+  } catch (err) {
+    say('Error declining leave: ' + err.message);
+  }
+}
+
+async function cancelLeaveRequest(leaveId) {
+  if (!confirm('Are you sure you want to withdraw / cancel this pending leave request?')) return;
+  try {
+    await api('DELETE', `leaves/${leaveId}`);
+    say('Leave request cancelled successfully.', 1);
+    go(window.currentViewName);
+  } catch (err) {
+    say('Error cancelling leave: ' + err.message);
+  }
 }
 
 </script></body></html>

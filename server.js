@@ -34,10 +34,11 @@ const SCHEMA = {
   ledgers: ['id','name','group','openingBalance','balanceType','contact','phone','gstin','address','createdBy','createdAt'],
   vouchers: ['id','voucherNo','voucherType','date','narration','entries','total','createdBy','createdAt'],
   salaryslips: ['id','employeeId','employeeName','month','year','date','designation','department','bankName','bankAccountNo','bankIfsc','panNo','uanNo','totalDays','paidDays','lopDays','basic','hra','conveyance','specialAllowance','grossEarnings','pf','pt','tds','otherDeductions','totalDeductions','netPay','netPayWords','status','createdBy','createdAt'],
+  leaves: ['id','userId','userName','leaveType','fromDate','toDate','days','reason','status','approvedBy','approvedAt','rejectionReason','appliedAt','reminderSentAt','createdBy','createdAt'],
 };
 const BOTH = ['admin','employee'], ADMIN = ['admin'];
-const PERM = { clients:{r:BOTH,c:BOTH}, products:{r:BOTH,c:BOTH}, invoices:{r:BOTH,c:BOTH}, purchases:{r:ADMIN,c:ADMIN}, users:{r:ADMIN,c:ADMIN}, workupdates:{r:BOTH,c:BOTH}, logins:{r:ADMIN,c:[]}, docs:{r:BOTH,c:BOTH}, sheets:{r:BOTH,c:BOTH}, ledgers:{r:BOTH,c:BOTH}, vouchers:{r:BOTH,c:BOTH}, salaryslips:{r:BOTH,c:ADMIN} };
-const REQUIRED = { clients:['name'], products:['name','rate'], purchases:['date','amount'], users:['username','role'], sheets:['title','type'], ledgers:['name','group'], vouchers:['voucherType','date'], salaryslips:['employeeId','month','year'] };
+const PERM = { clients:{r:BOTH,c:BOTH}, products:{r:BOTH,c:BOTH}, invoices:{r:BOTH,c:BOTH}, purchases:{r:ADMIN,c:ADMIN}, users:{r:ADMIN,c:ADMIN}, workupdates:{r:BOTH,c:BOTH}, logins:{r:ADMIN,c:[]}, docs:{r:BOTH,c:BOTH}, sheets:{r:BOTH,c:BOTH}, ledgers:{r:BOTH,c:BOTH}, vouchers:{r:BOTH,c:BOTH}, salaryslips:{r:BOTH,c:ADMIN}, leaves:{r:BOTH,c:BOTH} };
+const REQUIRED = { clients:['name'], products:['name','rate'], purchases:['date','amount'], users:['username','role'], sheets:['title','type'], ledgers:['name','group'], vouchers:['voucherType','date'], salaryslips:['employeeId','month','year'], leaves:['leaveType','fromDate','toDate'] };
 
 // ---------- CSV ----------
 const esc = v => { v = String(v ?? ''); return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
@@ -1150,6 +1151,7 @@ function hasPermission(user, mod, action) {
   if (mod === 'taxinvoice' || mod === 'invoice') mod = 'invoices';
   if (mod === 'docs') mod = 'quotation';
   if (mod === 'salaryslips') return action === 'view';
+  if (mod === 'leaves') return action === 'view' || action === 'create';
   if (mod === 'workupdates') return true;
   const userPerms = (user.permissions && typeof user.permissions === 'object' && Object.keys(user.permissions).length > 0)
     ? user.permissions
@@ -1290,7 +1292,11 @@ async function api(req, res, parts) {
     const vouchers = readTable('vouchers').length;
     const ledgers = readTable('ledgers').length;
     const salaryslips = readTable('salaryslips').length;
-    return send(res, 200, { clients, products, invoices, purchases, users, quotation, pi, po, sheets, vouchers, ledgers, salaryslips });
+    const allLeaves = readTable('leaves');
+    const leaves = user.role === 'admin'
+      ? allLeaves.filter(x => x.status === 'Pending').length
+      : allLeaves.filter(x => x.userId === user.id && x.status === 'Pending').length;
+    return send(res, 200, { clients, products, invoices, purchases, users, quotation, pi, po, sheets, vouchers, ledgers, salaryslips, leaves });
   }
   if (a === 'photo' && m === 'GET') {
     if (!/^[a-f0-9]+$/.test(id || '')) throw fail(404, 'Not found');
@@ -2283,9 +2289,72 @@ async function api(req, res, parts) {
     await locked(() => { const L = readTable(t), x = L.find(y => y.id === id); if (x) { x.emailStatus = st; writeTable(t, L); } });
     return send(res, 200, { emailStatus: st });
   }
+  if (t === 'leaves' && sub === 'remind' && m === 'POST') {
+    const all = readTable('leaves');
+    const lv = all.find(x => x.id === id);
+    if (!lv) throw fail(404, 'Leave request not found');
+    if (user.role !== 'admin' && lv.userId !== user.id) throw fail(403, 'Not allowed');
+    if (lv.status !== 'Pending') throw fail(400, 'This leave request is already ' + lv.status.toLowerCase());
+
+    lv.reminderSentAt = new Date().toISOString();
+    if (db.isDbActive()) {
+      await db.saveRecord('leaves', lv);
+      db.setCachedTable('leaves', all);
+    } else {
+      await writeTable('leaves', all);
+    }
+
+    // Send email reminder to all admins
+    setTimeout(async () => {
+      try {
+        const m = mailCfg();
+        const adminUsers = readTable('users').filter(u => u.role === 'admin' && u.email).map(u => u.email);
+        const configured = String(m.mailTo || '').split(',').map(s => s.trim()).filter(Boolean);
+        const co = readCompany();
+        const recipients = Array.from(new Set([...configured, ...adminUsers, co?.email].filter(e => EMAIL_RE.test(e || ''))));
+        if (recipients.length && m.smtpUser && m.smtpPass) {
+          const subject = `🔔 Reminder: Pending Leave Approval for ${lv.userName} (${lv.days} Days)`;
+          const html = emailHtml({
+            title: 'Pending Leave Reminder',
+            preheader: `Reminder: ${lv.userName} awaiting leave approval`,
+            body: `
+              <tr>
+                <td style="padding:26px 32px">
+                  <div style="font-size:11px;font-weight:700;color:#d97706;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Action Required &bull; Approval Reminder</div>
+                  <h2 style="margin:0 0 16px;font-size:19px;color:#0f2b48">🔔 Leave Approval Reminder: ${h(lv.userName)}</h2>
+                  <p style="font-size:13.5px;color:#334155;line-height:1.5">
+                    This is a reminder that <strong>${h(lv.userName)}</strong> has a pending leave application for <strong>${lv.days} day(s)</strong> (${h(lv.fromDate)} to ${h(lv.toDate)}) awaiting your approval.
+                  </p>
+                  <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:6px;padding:12px 14px;margin:16px 0;font-size:12.5px;color:#92400e">
+                    <strong>Leave Type:</strong> ${h(lv.leaveType)}<br>
+                    <strong>Reason:</strong> ${h(lv.reason || 'None specified')}<br>
+                    <strong>Applied On:</strong> ${h(new Date(lv.appliedAt || lv.createdAt).toLocaleDateString('en-IN'))}
+                  </div>
+                  <div style="margin-top:18px">
+                    <a href="${process.env.APP_URL || 'https://accounting-app-rosy-beta.vercel.app'}" style="background:#0f2b48;color:#fff;text-decoration:none;padding:10px 20px;border-radius:6px;font-weight:700;font-size:13px;display:inline-block">Open Portal to Review & Approve &rarr;</a>
+                  </div>
+                </td>
+              </tr>
+            `
+          });
+          await smtpSend(m, {
+            to: recipients.join(', '),
+            subject,
+            html,
+            images: mailImages(),
+            text: `Reminder: ${lv.userName} has a pending leave application for ${lv.days} day(s) (${lv.fromDate} to ${lv.toDate}). Please log into Accounts portal to approve.`
+          });
+        }
+      } catch (e) {
+        console.warn('Failed to send reminder email:', e.message);
+      }
+    }, 50);
+
+    return send(res, 200, { ok: true, reminderSentAt: lv.reminderSentAt });
+  }
   const P = PERM[t];
   if (m === 'GET' && !id) {
-    if (t === 'users' || t === 'purchases' || t === 'logins' || t === 'salaryslips' || t === 'workupdates') {
+    if (t === 'users' || t === 'purchases' || t === 'logins' || t === 'salaryslips' || t === 'workupdates' || t === 'leaves') {
       if (!P.r.includes(user.role)) throw fail(403, 'Not allowed');
     } else if (t === 'docs') {
       if (!hasPermission(user, 'quotation', 'view') && !hasPermission(user, 'pi', 'view') && !hasPermission(user, 'po', 'view')) {
@@ -2301,6 +2370,10 @@ async function api(req, res, parts) {
     if (t === 'salaryslips' && user.role !== 'admin') {
       L = L.filter(x => x.employeeId === user.id || String(x.employeeName || '').toLowerCase() === String(user.fullName || user.username).toLowerCase());
     }
+    if (t === 'leaves') {
+      if (user.role !== 'admin') L = L.filter(x => x.userId === user.id);
+      L = L.slice().sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    }
     return send(res, 200, L);
   }
   if (m === 'POST' && !id) {
@@ -2308,7 +2381,7 @@ async function api(req, res, parts) {
     const targetMod = t === 'docs' ? (b.type || 'quotation') : t;
     if (t === 'users' || t === 'purchases') {
       if (!P.c.includes(user.role)) throw fail(403, 'Not allowed');
-    } else if (t !== 'workupdates') {
+    } else if (t !== 'workupdates' && t !== 'leaves') {
       if (!hasPermission(user, targetMod, 'create')) throw fail(403, 'Permission denied: Cannot create ' + targetMod);
     }
     const row = await locked(async () => {
@@ -2321,6 +2394,7 @@ async function api(req, res, parts) {
       else if (t === 'ledgers') o = buildLedger(b, L, user);
       else if (t === 'vouchers') o = buildVoucher(b, L, user);
       else if (t === 'salaryslips') o = buildSalarySlip(b, L, user);
+      else if (t === 'leaves') o = buildLeave(b, L, user);
       else {
         o = clean(b, t);
         for (const k of REQUIRED[t] || []) if (!o[k]) throw fail(400, k + ' is required');
@@ -2370,6 +2444,11 @@ async function api(req, res, parts) {
       }
       if (['sheets','vouchers'].includes(t) && user.role !== 'admin' && L[i].createdBy && L[i].createdBy !== user.username) {
         throw fail(403, 'You can only edit or delete your own entries');
+      }
+      if (t === 'leaves') {
+        if (m === 'DELETE' && user.role !== 'admin' && (L[i].userId !== user.id || L[i].status !== 'Pending')) {
+          throw fail(403, 'You can only cancel your own pending leave requests');
+        }
       }
     }
     const row = await locked(async () => {
@@ -2439,6 +2518,150 @@ async function api(req, res, parts) {
         }
         if (t === 'salaryslips') {
           Object.assign(L[i], buildSalarySlip(b, L, user, L[i]));
+          if (db.isDbActive()) {
+            await db.saveRecord(t, L[i]);
+            db.setCachedTable(t, L);
+          } else {
+            await writeTable(t, L);
+          }
+          return L[i];
+        }
+        if (t === 'leaves') {
+          if (user.role !== 'admin') throw fail(403, 'Only administrators can approve or reject leaves');
+          const prevStatus = L[i].status;
+          const action = (b.action || b.status || '').toLowerCase();
+          if (action === 'approve' || action === 'approved') {
+            L[i].status = 'Approved';
+            L[i].approvedBy = user.fullName || user.username;
+            L[i].approvedAt = new Date().toISOString();
+            L[i].rejectionReason = '';
+
+            // If it wasn't approved already, deduct balance from employee's user record
+            if (prevStatus !== 'Approved') {
+              const allUsers = readTable('users');
+              const emp = allUsers.find(u => u.id === L[i].userId);
+              if (emp) {
+                const lp = { ...(emp.leavePolicy || emp.permissions?.profile?.leavePolicy || { pl: 12, cl: 6, sl: 6, plBalance: 12, clBalance: 6, slBalance: 6 }) };
+                const lt = String(L[i].leaveType || '').toUpperCase();
+                if (lt.includes('PL') || lt.includes('PAID')) lp.plBalance = Math.max(0, +(lp.plBalance ?? 12) - L[i].days);
+                else if (lt.includes('CL') || lt.includes('CASUAL')) lp.clBalance = Math.max(0, +(lp.clBalance ?? 6) - L[i].days);
+                else if (lt.includes('SL') || lt.includes('SICK')) lp.slBalance = Math.max(0, +(lp.slBalance ?? 6) - L[i].days);
+                else lp.plBalance = Math.max(0, +(lp.plBalance ?? 12) - L[i].days);
+
+                emp.leavePolicy = lp;
+                if (emp.permissions && typeof emp.permissions === 'object') {
+                  emp.permissions.profile = emp.permissions.profile || {};
+                  emp.permissions.profile.leavePolicy = lp;
+                }
+                if (db.isDbActive()) {
+                  await db.saveRecord('users', emp);
+                  db.setCachedTable('users', allUsers);
+                } else {
+                  await writeTable('users', allUsers);
+                }
+              }
+            }
+
+            // Send approval email to employee asynchronously
+            setTimeout(async () => {
+              try {
+                const empUser = readTable('users').find(u => u.id === L[i].userId);
+                if (empUser?.email) {
+                  const m = mailCfg();
+                  if (m.smtpUser && m.smtpPass) {
+                    const subject = `✅ Leave Approved: ${L[i].fromDate} to ${L[i].toDate} (${L[i].days} Days)`;
+                    const html = emailHtml({
+                      title: 'Leave Approved',
+                      preheader: `Your leave request has been approved`,
+                      body: `
+                        <tr>
+                          <td style="padding:26px 32px">
+                            <div style="font-size:11px;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Status Update &bull; Approved</div>
+                            <h2 style="margin:0 0 16px;font-size:19px;color:#0f2b48">✅ Your Leave Request is Approved</h2>
+                            <p style="font-size:13.5px;color:#334155;line-height:1.5">
+                              Hello ${h(L[i].userName)},<br>
+                              Your leave request for <strong>${L[i].days} day(s)</strong> of <strong>${h(L[i].leaveType)}</strong> from <strong>${h(L[i].fromDate)}</strong> to <strong>${h(L[i].toDate)}</strong> has been approved by <strong>${h(L[i].approvedBy)}</strong>.
+                            </p>
+                            <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:12px 14px;margin:16px 0;font-size:12.5px;color:#166534">
+                              <strong>Approved On:</strong> ${h(new Date(L[i].approvedAt).toLocaleString('en-IN'))}<br>
+                              <strong>Approved By:</strong> ${h(L[i].approvedBy)}
+                            </div>
+                          </td>
+                        </tr>
+                      `
+                    });
+                    await smtpSend(m, { to: empUser.email, subject, html, images: mailImages(), text: `Your leave request for ${L[i].days} day(s) from ${L[i].fromDate} to ${L[i].toDate} has been approved by ${L[i].approvedBy}.` });
+                  }
+                }
+              } catch (e) { console.warn('Approval email failed:', e.message); }
+            }, 100);
+
+          } else if (action === 'reject' || action === 'rejected') {
+            // If it was previously approved, restore balance
+            if (prevStatus === 'Approved') {
+              const allUsers = readTable('users');
+              const emp = allUsers.find(u => u.id === L[i].userId);
+              if (emp) {
+                const lp = { ...(emp.leavePolicy || emp.permissions?.profile?.leavePolicy || { pl: 12, cl: 6, sl: 6, plBalance: 12, clBalance: 6, slBalance: 6 }) };
+                const lt = String(L[i].leaveType || '').toUpperCase();
+                if (lt.includes('PL') || lt.includes('PAID')) lp.plBalance = Math.min(lp.pl || 12, +(lp.plBalance ?? 12) + L[i].days);
+                else if (lt.includes('CL') || lt.includes('CASUAL')) lp.clBalance = Math.min(lp.cl || 6, +(lp.clBalance ?? 6) + L[i].days);
+                else if (lt.includes('SL') || lt.includes('SICK')) lp.slBalance = Math.min(lp.sl || 6, +(lp.slBalance ?? 6) + L[i].days);
+                else lp.plBalance = Math.min(lp.pl || 12, +(lp.plBalance ?? 12) + L[i].days);
+
+                emp.leavePolicy = lp;
+                if (emp.permissions && typeof emp.permissions === 'object') {
+                  emp.permissions.profile = emp.permissions.profile || {};
+                  emp.permissions.profile.leavePolicy = lp;
+                }
+                if (db.isDbActive()) {
+                  await db.saveRecord('users', emp);
+                  db.setCachedTable('users', allUsers);
+                } else {
+                  await writeTable('users', allUsers);
+                }
+              }
+            }
+
+            L[i].status = 'Rejected';
+            L[i].approvedBy = user.fullName || user.username;
+            L[i].approvedAt = new Date().toISOString();
+            L[i].rejectionReason = b.rejectionReason || 'Declined by Administrator';
+
+            // Send rejection email to employee asynchronously
+            setTimeout(async () => {
+              try {
+                const empUser = readTable('users').find(u => u.id === L[i].userId);
+                if (empUser?.email) {
+                  const m = mailCfg();
+                  if (m.smtpUser && m.smtpPass) {
+                    const subject = `❌ Leave Request Update: ${L[i].fromDate} to ${L[i].toDate}`;
+                    const html = emailHtml({
+                      title: 'Leave Request Declined',
+                      preheader: `Update regarding your leave request`,
+                      body: `
+                        <tr>
+                          <td style="padding:26px 32px">
+                            <div style="font-size:11px;font-weight:700;color:#dc2626;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Status Update &bull; Declined</div>
+                            <h2 style="margin:0 0 16px;font-size:19px;color:#0f2b48">❌ Leave Request Declined</h2>
+                            <p style="font-size:13.5px;color:#334155;line-height:1.5">
+                              Hello ${h(L[i].userName)},<br>
+                              Your leave request for <strong>${L[i].days} day(s)</strong> (${h(L[i].fromDate)} to ${h(L[i].toDate)}) was not approved by <strong>${h(L[i].approvedBy)}</strong>.
+                            </p>
+                            <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:12px 14px;margin:16px 0;font-size:12.5px;color:#991b1b">
+                              <strong>Reason:</strong> ${h(L[i].rejectionReason)}
+                            </div>
+                          </td>
+                        </tr>
+                      `
+                    });
+                    await smtpSend(m, { to: empUser.email, subject, html, images: mailImages(), text: `Your leave request for ${L[i].days} day(s) from ${L[i].fromDate} to ${L[i].toDate} was declined by ${L[i].approvedBy}. Reason: ${L[i].rejectionReason}` });
+                  }
+                }
+              } catch (e) { console.warn('Rejection email failed:', e.message); }
+            }, 100);
+          }
+
           if (db.isDbActive()) {
             await db.saveRecord(t, L[i]);
             db.setCachedTable(t, L);
@@ -2540,6 +2763,106 @@ function buildSalarySlip(b, L, user, existing) {
     createdBy: user.username,
     createdAt: existing?.createdAt || new Date().toISOString()
   };
+}
+
+function buildLeave(b, L, user, existing) {
+  if (!b.fromDate) throw fail(400, 'From date is required');
+  if (!b.toDate) throw fail(400, 'To date is required');
+  if (!b.leaveType) throw fail(400, 'Leave type is required');
+
+  const requestedDays = Math.max(0.5, +(b.days || 1));
+
+  // Determine target employee
+  const targetUserId = (user.role === 'admin' && b.userId) ? b.userId : user.id;
+  const allUsers = readTable('users');
+  const empUser = allUsers.find(u => u.id === targetUserId) || user;
+  const lp = empUser.leavePolicy || (empUser.permissions?.profile?.leavePolicy) || { pl: 12, cl: 6, sl: 6, plBalance: 12, clBalance: 6, slBalance: 6 };
+
+  let balance = 0;
+  const lt = String(b.leaveType || '').toUpperCase();
+  if (lt.includes('PL') || lt.includes('PAID')) balance = +(lp.plBalance ?? 12);
+  else if (lt.includes('CL') || lt.includes('CASUAL')) balance = +(lp.clBalance ?? 6);
+  else if (lt.includes('SL') || lt.includes('SICK')) balance = +(lp.slBalance ?? 6);
+  else balance = +(lp.plBalance ?? 12) + +(lp.clBalance ?? 6) + +(lp.slBalance ?? 6);
+
+  // Check pending requests of this type for this user (excluding existing one if updating)
+  const pendingDays = L.filter(x => x.userId === targetUserId && x.status === 'Pending' && x.leaveType === b.leaveType && (!existing || x.id !== existing.id))
+    .reduce((s, x) => s + (+x.days || 0), 0);
+  const available = Math.max(0, balance - pendingDays);
+
+  if (requestedDays > available) {
+    throw fail(400, `Insufficient leave balance! You have ${available} day(s) available for ${b.leaveType} (${pendingDays} pending approval), but requested ${requestedDays} day(s).`);
+  }
+
+  const o = {
+    id: existing?.id || b.id || newId(),
+    userId: targetUserId,
+    userName: empUser.fullName || empUser.username || user.fullName || user.username,
+    leaveType: String(b.leaveType || 'Paid Leave (PL)').slice(0, 100),
+    fromDate: String(b.fromDate || '').slice(0, 32),
+    toDate: String(b.toDate || '').slice(0, 32),
+    days: requestedDays,
+    reason: String(b.reason || '').slice(0, 500),
+    status: existing ? (b.status || existing.status) : 'Pending',
+    approvedBy: existing?.approvedBy || '',
+    approvedAt: existing?.approvedAt || '',
+    rejectionReason: existing?.rejectionReason || '',
+    appliedAt: existing?.appliedAt || new Date().toISOString(),
+    reminderSentAt: existing?.reminderSentAt || '',
+    createdBy: user.username,
+    createdAt: existing?.createdAt || new Date().toISOString()
+  };
+
+  // If this is a new leave application, notify all Admins by email asynchronously
+  if (!existing) {
+    setTimeout(async () => {
+      try {
+        const m = mailCfg();
+        const adminUsers = readTable('users').filter(u => u.role === 'admin' && u.email).map(u => u.email);
+        const configured = String(m.mailTo || '').split(',').map(s => s.trim()).filter(Boolean);
+        const co = readCompany();
+        const recipients = Array.from(new Set([...configured, ...adminUsers, co?.email].filter(e => EMAIL_RE.test(e || ''))));
+        if (!recipients.length || !m.smtpUser || !m.smtpPass) return;
+
+        const subject = `🏖️ Leave Request: ${o.userName} (${o.days} Days: ${o.fromDate} to ${o.toDate})`;
+        const html = emailHtml({
+          title: 'Leave Application Received',
+          preheader: `${o.userName} applied for ${o.days} days leave`,
+          body: `
+            <tr>
+              <td style="padding:26px 32px">
+                <div style="font-size:11px;font-weight:700;color:#2563eb;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Leave Application Submitted</div>
+                <h2 style="margin:0 0 16px;font-size:19px;color:#0f2b48">🏖️ ${h(o.userName)} has applied for ${o.days} day(s) leave</h2>
+                <table style="width:100%;border-collapse:collapse;margin:14px 0;font-size:13px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px">
+                  <tr><td style="padding:8px 12px;color:#64748b;width:35%;border-bottom:1px solid #e2e8f0">Employee:</td><td style="padding:8px 12px;font-weight:700;color:#0f2b48;border-bottom:1px solid #e2e8f0">${h(o.userName)} (${h(empUser.designation || 'Staff')})</td></tr>
+                  <tr><td style="padding:8px 12px;color:#64748b;border-bottom:1px solid #e2e8f0">Leave Type:</td><td style="padding:8px 12px;font-weight:700;color:#1e3a8a;border-bottom:1px solid #e2e8f0">${h(o.leaveType)}</td></tr>
+                  <tr><td style="padding:8px 12px;color:#64748b;border-bottom:1px solid #e2e8f0">Duration:</td><td style="padding:8px 12px;font-weight:700;color:#0f2b48;border-bottom:1px solid #e2e8f0">${h(o.fromDate)} to ${h(o.toDate)} (${o.days} Days)</td></tr>
+                  <tr><td style="padding:8px 12px;color:#64748b;border-bottom:1px solid #e2e8f0">Reason:</td><td style="padding:8px 12px;color:#1e293b;border-bottom:1px solid #e2e8f0">${h(o.reason || 'None specified')}</td></tr>
+                  <tr><td style="padding:8px 12px;color:#64748b">Current Quotas:</td><td style="padding:8px 12px;color:#059669;font-weight:700">PL: ${lp.plBalance ?? 12} | CL: ${lp.clBalance ?? 6} | SL: ${lp.slBalance ?? 6}</td></tr>
+                </table>
+                <p style="font-size:13px;color:#475569;margin:14px 0">Please log in to the Accounts Portal to review and approve or reject this leave request.</p>
+                <div style="margin-top:18px">
+                  <a href="${process.env.APP_URL || 'https://accounting-app-rosy-beta.vercel.app'}" style="background:#0f2b48;color:#fff;text-decoration:none;padding:10px 20px;border-radius:6px;font-weight:700;font-size:13px;display:inline-block">Open Portal to Review &rarr;</a>
+                </div>
+              </td>
+            </tr>
+          `
+        });
+
+        await smtpSend(m, {
+          to: recipients.join(', '),
+          subject,
+          html,
+          images: mailImages(),
+          text: `${o.userName} applied for ${o.days} day(s) ${o.leaveType} from ${o.fromDate} to ${o.toDate}. Reason: ${o.reason}. Please log into Accounts portal to approve.`
+        });
+      } catch (e) {
+        console.warn('Failed to send leave email notification:', e.message);
+      }
+    }, 100);
+  }
+
+  return o;
 }
 
 function buildDoc(b, L, user, existing) {
