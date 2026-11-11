@@ -1598,7 +1598,9 @@ async function api(req, res, parts) {
   if (a === 'logout' && m === 'POST') { sessions.delete(cookie(req).sid); res.setHeader('Set-Cookie', 'sid=; Max-Age=0; Path=/'); return send(res, 200, {}); }
   if (a === 'me') {
     const fresh = readTable('users').find(x => x.id === user.id);
-    return send(res, 200, fresh ? safeUser(fresh) : safeUser(user));
+    const safeFresh = fresh ? safeUser(fresh) : safeUser(user);
+    if (s && safeFresh) s.user = safeFresh;
+    return send(res, 200, safeFresh);
   }
   if (a === 'counts' && m === 'GET') {
     const clients = readTable('clients').length;
@@ -2784,7 +2786,23 @@ async function api(req, res, parts) {
     }
     if (t === 'workupdates' && !isAdminOrOps) L = L.filter(x => x.userId === user.id);
     if (t === 'salaryslips' && !isAdminOrOps) {
-      L = L.filter(x => x.employeeId === user.id || String(x.employeeName || '').toLowerCase() === String(user.fullName || user.username).toLowerCase());
+      const uId = String(user.id || '').toLowerCase().trim();
+      const uEmpId = String(user.empId || '').toLowerCase().trim();
+      const uShortId = ('ae-' + String(user.id || '').slice(0, 4)).toLowerCase();
+      const uName = String(user.username || '').toLowerCase().trim();
+      const uFull = String(user.fullName || '').toLowerCase().trim();
+
+      L = L.filter(x => {
+        const empId = String(x.employeeId || '').toLowerCase().trim();
+        const empName = String(x.employeeName || '').toLowerCase().trim();
+
+        const idMatch = empId && (empId === uId || empId === uEmpId || empId === uShortId);
+        const nameMatch = empName && (
+          (uFull && (empName === uFull || empName.includes(uFull) || uFull.includes(empName))) ||
+          (uName && (empName === uName || empName.includes(uName) || uName.includes(empName)))
+        );
+        return idMatch || nameMatch;
+      });
     }
     if (t === 'leaves') {
       if (!isAdminOrOps) L = L.filter(x => x.userId === user.id);
@@ -3111,6 +3129,16 @@ async function api(req, res, parts) {
               ? b.permissions
               : (typeof b.permissions === 'string' ? (() => { try { return JSON.parse(b.permissions || '{}'); } catch { return {}; } })() : {});
           }
+
+          // Ensure permissions.profile stays 100% in sync with leavePolicy and salaryStructure
+          const curPerms = (o.permissions !== undefined ? o.permissions : L[i].permissions) || {};
+          const permsObj = typeof curPerms === 'object' && curPerms !== null ? { ...curPerms } : (() => { try { return JSON.parse(curPerms || '{}'); } catch { return {}; } })();
+          permsObj.profile = permsObj.profile || {};
+          if (o.leavePolicy !== undefined) permsObj.profile.leavePolicy = o.leavePolicy;
+          if (o.salaryStructure !== undefined) permsObj.profile.salaryStructure = o.salaryStructure;
+          if (o.annualCtc !== undefined && o.annualCtc != null) permsObj.profile.annualCtc = o.annualCtc;
+          o.permissions = permsObj;
+
           applyFace(o, b, L[i].id);
           checkUser(o, L[i], b);
         }
@@ -3120,6 +3148,15 @@ async function api(req, res, parts) {
           db.setCachedTable(t, L);
         } else {
           await writeTable(t, L);
+        }
+
+        // Live update active sessions for this user on the server
+        if (t === 'users') {
+          for (const [sid, sess] of sessions.entries()) {
+            if (sess.user && sess.user.id === L[i].id) {
+              sess.user = safeUser(L[i]);
+            }
+          }
         }
         return L[i];
       }

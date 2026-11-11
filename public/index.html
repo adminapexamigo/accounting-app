@@ -3846,18 +3846,27 @@ function startLiveSyncPolling() {
             SessionCache.remove('counts');
             anyUpdated = true;
             const cur = window.currentViewName;
-            if (cur === table || (table === 'docs' && ['quotation', 'pi', 'po'].includes(cur)) || (['ledgers', 'vouchers'].includes(table) && cur === 'tally') || (table === 'users' && ['employees', 'myprofile'].includes(cur)) || (table === 'salaryslips' && ['payroll', 'mypayslips'].includes(cur))) {
-              if (cur === 'myprofile') {
-                myProfileView();
-              } else if (cur === 'mypayslips') {
-                myPayslipsView();
-              } else if (cur === 'payroll') {
-                payrollView();
-              } else if (cur === 'employees') {
-                employeesView();
-              } else {
-                load(table, true).then(() => { if (window.currentViewName === cur) go(cur); });
-              }
+            if (table === 'users') {
+              SessionCache.remove('me');
+              api('GET', 'me', null, true).then(freshMe => {
+                if (freshMe) { me = freshMe; window.me = freshMe; }
+                if (cur === 'myprofile') myProfileView();
+                else if (cur === 'mypayslips') myPayslipsView();
+                else if (cur === 'myleaves') myLeavesView();
+                else if (cur === 'employees') employeesView();
+              }).catch(() => {});
+            } else if (table === 'salaryslips') {
+              SessionCache.remove('salaryslips');
+              delete window._salarySlipsMap;
+              if (cur === 'mypayslips') myPayslipsView();
+              else if (cur === 'payroll') payrollView();
+            } else if (table === 'leaves') {
+              SessionCache.remove('leaves');
+              if (cur === 'myleaves') myLeavesView();
+              else if (cur === 'mypayslips') myPayslipsView();
+              else if (cur === 'leaves') leavesView();
+            } else if (cur === table || (table === 'docs' && ['quotation', 'pi', 'po'].includes(cur)) || (['ledgers', 'vouchers'].includes(table) && cur === 'tally')) {
+              load(table, true).then(() => { if (window.currentViewName === cur) go(cur); });
             }
           }
           lastKnownRevisions[table] = rev;
@@ -5657,7 +5666,13 @@ function showLogin(){
 }
 async function boot(){
   applyVideoSpeed();
-  try{ me = await api('GET', 'me'); co = await api('GET', 'company'); start(); }
+  try{
+    me = await api('GET', 'me');
+    window.me = me;
+    co = await api('GET', 'company');
+    window.co = co;
+    start();
+  }
   catch{ showLogin(); }
 }
 $('#lbtn').onclick=async()=>{
@@ -5673,7 +5688,9 @@ $('#lbtn').onclick=async()=>{
     }
     showOtpLoader('Access Granted', 'Loading workspace and billing system…', '🚀');
     me=r;
+    window.me=r;
     co=await api('GET','company');
+    window.co=co;
     $('#lmsg').innerHTML='';
     start();
   }catch(e){
@@ -12233,13 +12250,20 @@ async function openOnboardModal(userId) {
       netPay: net
     };
 
+    const parseNum = (sel, def = 0) => {
+      const v = overlay.querySelector(sel)?.value;
+      if (v === '' || v === undefined || v === null) return def;
+      const n = Number(v);
+      return isNaN(n) ? def : n;
+    };
+
     const leavePolicy = {
-      pl: +overlay.querySelector('#ob_plQuota').value || 12,
-      plBalance: +overlay.querySelector('#ob_plBalance').value || 12,
-      cl: +overlay.querySelector('#ob_clQuota').value || 6,
-      clBalance: +overlay.querySelector('#ob_clBalance').value || 6,
-      sl: +overlay.querySelector('#ob_slQuota').value || 6,
-      slBalance: +overlay.querySelector('#ob_slBalance').value || 6
+      pl: parseNum('#ob_plQuota', 12),
+      plBalance: parseNum('#ob_plBalance', 12),
+      cl: parseNum('#ob_clQuota', 6),
+      clBalance: parseNum('#ob_clBalance', 6),
+      sl: parseNum('#ob_slQuota', 6),
+      slBalance: parseNum('#ob_slBalance', 6)
     };
 
     const payload = {
@@ -12278,9 +12302,13 @@ async function openOnboardModal(userId) {
     try {
       if (isEdit) {
         await api('PUT', 'users/' + user.id, payload);
+        SessionCache.remove('users');
+        SessionCache.remove('me');
         say('Employee profile updated successfully', 1);
       } else {
         await api('POST', 'users', payload);
+        SessionCache.remove('users');
+        SessionCache.remove('me');
         say('New employee onboarded successfully', 1);
       }
       closeModal();
@@ -12766,6 +12794,8 @@ async function payrollView() {
       }
     }
 
+    SessionCache.remove('salaryslips');
+    delete window._salarySlipsMap;
     say(`Batch generation completed! ${generatedCount} salary slips created.`, 1);
     payrollView();
   };
@@ -12775,6 +12805,8 @@ async function deleteSalarySlip(id) {
   if (!confirm('Are you sure you want to delete this salary slip?')) return;
   try {
     await api('DELETE', 'salaryslips/' + id);
+    SessionCache.remove('salaryslips');
+    delete window._salarySlipsMap;
     say('Salary slip deleted', 1);
     payrollView();
   } catch (e) {
@@ -13023,9 +13055,13 @@ async function openGenerateSlipModal(selectedEmpId, existingSlip) {
     try {
       if (isEdit) {
         await api('PUT', 'salaryslips/' + existingSlip.id, payload);
+        SessionCache.remove('salaryslips');
+        delete window._salarySlipsMap;
         say('Salary slip updated successfully', 1);
       } else {
         await api('POST', 'salaryslips', payload);
+        SessionCache.remove('salaryslips');
+        delete window._salarySlipsMap;
         say('Salary slip created successfully', 1);
       }
       closeModal();
@@ -13077,17 +13113,20 @@ function printPayslipDirect(slipId) {
 }
 
 async function showSalarySlip(slipOrId) {
-  let slip = slipOrId;
-  if (!slip || typeof slip === 'string') {
-    const slipId = typeof slipOrId === 'string' ? slipOrId : '';
-    if (window._salarySlipsMap && slipId && window._salarySlipsMap[slipId]) {
-      slip = window._salarySlipsMap[slipId];
-    } else {
-      const all = await api('GET', 'salaryslips', null, true).catch(() => []);
-      window._salarySlipsMap = window._salarySlipsMap || {};
-      all.forEach(x => { window._salarySlipsMap[x.id] = x; });
-      slip = slipId ? all.find(x => x.id === slipId) : all[0];
-    }
+  let slip = typeof slipOrId === 'object' && slipOrId !== null ? slipOrId : null;
+  const slipId = typeof slipOrId === 'string' ? slipOrId : (slip?.id || '');
+
+  // Always fetch fresh salaryslips to ensure latest admin edits reflect immediately
+  const all = await api('GET', 'salaryslips', null, true).catch(() => []);
+  window._salarySlipsMap = window._salarySlipsMap || {};
+  all.forEach(x => { window._salarySlipsMap[x.id] = x; });
+
+  if (slipId && window._salarySlipsMap[slipId]) {
+    slip = window._salarySlipsMap[slipId];
+  } else if (!slip && slipId) {
+    slip = all.find(x => x.id === slipId);
+  } else if (!slip) {
+    slip = all[0];
   }
   if (!slip) return say('Salary slip not found');
 
@@ -13297,19 +13336,22 @@ async function showSalarySlip(slipOrId) {
 async function myProfileView() {
   SessionCache.remove('me');
   const meFresh = await api('GET', 'me', null, true).catch(() => null);
-  if (meFresh) window.me = meFresh;
-  const me = window.me || {};
+  if (meFresh) {
+    me = meFresh;
+    window.me = meFresh;
+  }
+  const currentMe = meFresh || window.me || me || {};
   const view = $('#view');
   if (!view) return;
 
-  const empIdStr = me.empId || ('AE-' + String(me.id || '').slice(0, 4).toUpperCase());
-  const leave = me.leavePolicy || { pl: 12, cl: 6, sl: 6, plBalance: 12, clBalance: 6, slBalance: 6 };
-  const ctc = me.salaryStructure || (me.annualCtc ? calcCtcBreakdown(me.annualCtc) : null);
-  const docs = me.documents || {};
+  const empIdStr = currentMe.empId || ('AE-' + String(currentMe.id || '').slice(0, 4).toUpperCase());
+  const leave = currentMe.leavePolicy || currentMe.permissions?.profile?.leavePolicy || { pl: 12, cl: 6, sl: 6, plBalance: 12, clBalance: 6, slBalance: 6 };
+  const ctc = currentMe.salaryStructure || currentMe.permissions?.profile?.salaryStructure || (currentMe.annualCtc ? calcCtcBreakdown(currentMe.annualCtc) : null);
+  const docs = currentMe.documents || {};
 
-  const avatar = me.photo
-    ? `<img src="/api/photo/${me.id}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid #818cf8;box-shadow:0 4px 14px rgba(0,0,0,0.1)">`
-    : `<div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:26px;box-shadow:0 4px 14px rgba(79,70,229,0.3)">${h((me.fullName||me.username)[0].toUpperCase())}</div>`;
+  const avatar = currentMe.photo
+    ? `<img src="/api/photo/${currentMe.id}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid #818cf8;box-shadow:0 4px 14px rgba(0,0,0,0.1)">`
+    : `<div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:26px;box-shadow:0 4px 14px rgba(79,70,229,0.3)">${h((currentMe.fullName||currentMe.username)[0].toUpperCase())}</div>`;
 
   view.innerHTML = `
     <!-- Profile Header Banner -->
@@ -13318,20 +13360,20 @@ async function myProfileView() {
         ${avatar}
         <div>
           <div style="display:flex;align-items:center;gap:10px">
-            <h2 style="margin:0;font-size:22px;font-weight:800;color:#f8fafc">${h(me.fullName || me.username)}</h2>
+            <h2 style="margin:0;font-size:22px;font-weight:800;color:#f8fafc">${h(currentMe.fullName || currentMe.username)}</h2>
             <span style="background:rgba(255,255,255,0.15);padding:2px 10px;border-radius:99px;font-size:11px;font-weight:700;letter-spacing:0.4px">${h(empIdStr)}</span>
           </div>
           <div style="font-size:13.5px;color:#c7d2fe;margin-top:4px">
-            <span>${h(me.designation || 'Staff Member')}</span> • <span>${h(me.department || 'General')}</span>
+            <span>${h(currentMe.designation || 'Staff Member')}</span> • <span>${h(currentMe.department || 'General')}</span>
           </div>
           <div style="font-size:12px;color:#a5b4fc;margin-top:4px">
-            Joining Date: ${h(me.joiningDate || '—')} • Email: ${h(me.email || '—')} • Contact: ${h(me.contact || '—')}
+            Joining Date: ${h(currentMe.joiningDate || '—')} • Email: ${h(currentMe.email || '—')} • Contact: ${h(currentMe.contact || '—')}
           </div>
         </div>
       </div>
 
       <div style="display:flex;gap:10px">
-        <button class="btn" onclick="openDocVaultModal('${me.id}')" style="background:#4f46e5;color:#fff;font-weight:700;padding:8px 18px;display:flex;align-items:center;gap:6px">
+        <button class="btn" onclick="openDocVaultModal('${currentMe.id}')" style="background:#4f46e5;color:#fff;font-weight:700;padding:8px 18px;display:flex;align-items:center;gap:6px">
           <span>📁 Manage My Documents</span>
         </button>
       </div>
@@ -13341,11 +13383,11 @@ async function myProfileView() {
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px 18px;margin-bottom:18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;font-size:12.5px">
       <div>
         <span style="color:#64748b;display:block;font-size:11px;font-weight:600;text-transform:uppercase">Date of Birth & Gender</span>
-        <span style="font-weight:600;color:#1e293b">${h(me.dob || '—')} ${me.gender ? ('(' + h(me.gender) + ')') : ''}</span>
+        <span style="font-weight:600;color:#1e293b">${h(currentMe.dob || '—')} ${currentMe.gender ? ('(' + h(currentMe.gender) + ')') : ''}</span>
       </div>
       <div>
         <span style="color:#64748b;display:block;font-size:11px;font-weight:600;text-transform:uppercase">Blood Group</span>
-        <span style="font-weight:600;color:#1e293b">${h(me.bloodGroup || '—')}</span>
+        <span style="font-weight:600;color:#1e293b">${h(currentMe.bloodGroup || '—')}</span>
       </div>
       <div>
         <span style="color:#64748b;display:block;font-size:11px;font-weight:600;text-transform:uppercase">Father / Guardian</span>
@@ -13521,17 +13563,24 @@ async function myProfileView() {
 async function myPayslipsView() {
   SessionCache.remove('salaryslips');
   SessionCache.remove('leaves');
-  const [slips, myLeaves, me] = await Promise.all([
+  SessionCache.remove('me');
+  delete window._salarySlipsMap;
+  const [slips, myLeaves, freshMe] = await Promise.all([
     api('GET', 'salaryslips', null, true).catch(() => []),
     api('GET', 'leaves', null, true).catch(() => []),
-    api('GET', 'me').catch(() => window.me || {})
+    api('GET', 'me', null, true).catch(() => null)
   ]);
+  if (freshMe) {
+    me = freshMe;
+    window.me = freshMe;
+  }
   window._salarySlipsMap = window._salarySlipsMap || {};
   (slips || []).forEach(s => { window._salarySlipsMap[s.id] = s; });
   const view = $('#view');
   if (!view) return;
 
-  const lp = me.leavePolicy || (me.permissions?.profile?.leavePolicy) || { pl: 12, cl: 6, sl: 6, plBalance: 12, clBalance: 6, slBalance: 6 };
+  const currentMe = freshMe || window.me || me || {};
+  const lp = currentMe.leavePolicy || (currentMe.permissions?.profile?.leavePolicy) || { pl: 12, cl: 6, sl: 6, plBalance: 12, clBalance: 6, slBalance: 6 };
   const pendingPL = (myLeaves || []).filter(x => x.status === 'Pending' && x.leaveType.includes('PL')).reduce((s, x) => s + (+x.days || 0), 0);
   const pendingCL = (myLeaves || []).filter(x => x.status === 'Pending' && x.leaveType.includes('CL')).reduce((s, x) => s + (+x.days || 0), 0);
   const pendingSL = (myLeaves || []).filter(x => x.status === 'Pending' && x.leaveType.includes('SL')).reduce((s, x) => s + (+x.days || 0), 0);
@@ -13686,8 +13735,14 @@ async function myPayslipsView() {
 // -------------------------------------------------------------------------
 async function myLeavesView() {
   SessionCache.remove('leaves');
-  const me = await api('GET', 'me').catch(() => window.me || {});
-  const lp = me.leavePolicy || (me.permissions?.profile?.leavePolicy) || { pl: 12, cl: 6, sl: 6, plBalance: 12, clBalance: 6, slBalance: 6 };
+  SessionCache.remove('me');
+  const freshMe = await api('GET', 'me', null, true).catch(() => null);
+  if (freshMe) {
+    me = freshMe;
+    window.me = freshMe;
+  }
+  const currentMe = freshMe || window.me || me || {};
+  const lp = currentMe.leavePolicy || (currentMe.permissions?.profile?.leavePolicy) || { pl: 12, cl: 6, sl: 6, plBalance: 12, clBalance: 6, slBalance: 6 };
   const leaves = await api('GET', 'leaves', null, true).catch(() => []);
 
   const view = $('#view');
@@ -13979,8 +14034,14 @@ function filterAdminLeaves(val) {
 // 12. LEAVE ACTIONS: APPLY MODAL, REMINDER, APPROVAL, REJECTION, CANCELLATION
 // -------------------------------------------------------------------------
 async function openApplyLeaveModal(onSuccess) {
-  const me = await api('GET', 'me').catch(() => window.me || {});
-  const lp = me.leavePolicy || (me.permissions?.profile?.leavePolicy) || { pl: 12, cl: 6, sl: 6, plBalance: 12, clBalance: 6, slBalance: 6 };
+  SessionCache.remove('me');
+  const freshMe = await api('GET', 'me', null, true).catch(() => null);
+  if (freshMe) {
+    me = freshMe;
+    window.me = freshMe;
+  }
+  const currentMe = freshMe || window.me || me || {};
+  const lp = currentMe.leavePolicy || (currentMe.permissions?.profile?.leavePolicy) || { pl: 12, cl: 6, sl: 6, plBalance: 12, clBalance: 6, slBalance: 6 };
 
   const myLeaves = await api('GET', 'leaves', null, true).catch(() => []);
   const pendingMap = {
