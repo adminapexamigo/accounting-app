@@ -14121,7 +14121,7 @@ async function catalogueView() {
         pointer-events: none;
         user-select: none;
         z-index: 0;
-        opacity: 0.055;
+        opacity: 0.10;
         width: 540px;
         text-align: center;
       }
@@ -14530,8 +14530,8 @@ function printCatalogue() {
         justify-content: center !important;
         pointer-events: none !important;
         user-select: none !important;
-        z-index: 10 !important;
-        opacity: 0.065 !important;
+        z-index: 0 !important;
+        opacity: 0.10 !important;
         width: 540px !important;
         text-align: center !important;
         -webkit-print-color-adjust: exact !important;
@@ -14596,8 +14596,8 @@ function printCatalogue() {
       justify-content: center;
       pointer-events: none;
       user-select: none;
-      z-index: 10;
-      opacity: 0.055;
+      z-index: 0;
+      opacity: 0.10;
       width: 540px;
       text-align: center;
     }
@@ -14678,7 +14678,7 @@ function printCatalogue() {
       pointer-events: none;
       user-select: none;
       z-index: 0;
-      opacity: 0.055;
+      opacity: 0.10;
       width: 520px;
       text-align: center;
     }
@@ -15047,7 +15047,7 @@ function renderCatalogueAllPagesHTML(forceReadOnly = false) {
   const p6Products = d.products.filter(p => p.page === 6);
 
   const watermarkCommon = `
-    <div class="cat-watermark" style="position: absolute !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) rotate(-25deg) !important; display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; pointer-events: none !important; user-select: none !important; z-index: 0 !important; opacity: 0.055 !important; width: 540px !important; text-align: center !important; margin: 0 !important; padding: 0 !important;">
+    <div class="cat-watermark" style="position: absolute !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) rotate(-25deg) !important; display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; pointer-events: none !important; user-select: none !important; z-index: 0 !important; opacity: 0.10 !important; width: 540px !important; text-align: center !important; margin: 0 !important; padding: 0 !important;">
       <img src="${h(d.logo || '/logo.png')}" alt="Amigo Watermark Logo" class="cat-watermark-logo" style="width: 240px !important; max-width: 240px !important; height: auto !important; object-fit: contain !important; margin-bottom: 14px !important; display: block !important;">
       <div class="cat-watermark-text" style="font-size: 36px !important; font-weight: 900 !important; color: #1e3a8a !important; letter-spacing: 5px !important; text-transform: uppercase !important; white-space: nowrap !important;">AMIGO ENTERPRISES</div>
     </div>
@@ -15371,9 +15371,7 @@ function renderCatalogueAllPagesHTML(forceReadOnly = false) {
     <div class="cat-page" id="cat-page-7" style="display:flex; flex-direction:column; justify-content:space-between; text-align:center;">
       ${watermarkCommon}
       <div>
-        ${headerCommon(d.subtitle)}
-
-        <div style="margin:40px 0 20px 0;">
+        <div style="margin:55px 0 24px 0;">
           <img src="${h(d.logo)}" style="height:70px; width:auto; object-fit:contain; margin-bottom:14px;" alt="Logo">
           <div style="font-size:26px; font-weight:900; color:#1e3a8a; letter-spacing:0.8px;">${h(d.companyName)}</div>
           <div style="font-size:12px; font-weight:700; color:#0284c7; letter-spacing:0.5px; text-transform:uppercase; margin-top:4px;">${h(d.subtitle)}</div>
@@ -15386,7 +15384,7 @@ function renderCatalogueAllPagesHTML(forceReadOnly = false) {
         <!-- Contact Cards -->
         <div style="max-width:580px; margin:0 auto; display:flex; flex-direction:column; gap:16px; text-align:left;">
           <!-- Office Address Card -->
-          <div style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:8px; padding:16px 20px; display:flex; align-items:flex-start; gap:16px;">
+          <div style="background:#f8fafc; border:2.5px solid #0284c7; border-radius:8px; padding:16px 20px; display:flex; align-items:flex-start; gap:16px; box-shadow:0 4px 12px rgba(2,132,199,0.06);">
             <span style="font-size:24px; color:#0284c7;">📍</span>
             <div>
               <div style="font-size:13px; font-weight:800; color:#0f172a; margin-bottom:4px;">REGISTERED OFFICE</div>
@@ -15399,7 +15397,7 @@ function renderCatalogueAllPagesHTML(forceReadOnly = false) {
           </div>
 
           <!-- Direct Line Card -->
-          <div style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:8px; padding:16px 20px; display:flex; align-items:flex-start; gap:16px;">
+          <div style="background:#f8fafc; border:2.5px solid #0284c7; border-radius:8px; padding:16px 20px; display:flex; align-items:flex-start; gap:16px; box-shadow:0 4px 12px rgba(2,132,199,0.06);">
             <span style="font-size:24px; color:#0284c7;">📞</span>
             <div style="flex:1;">
               <div style="font-size:13px; font-weight:800; color:#0f172a; margin-bottom:4px;">DIRECT CONTACT & ENQUIRIES</div>
@@ -15415,7 +15413,7 @@ function renderCatalogueAllPagesHTML(forceReadOnly = false) {
           </div>
 
           <!-- Statutory Credentials Card -->
-          <div style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:8px; padding:16px 20px; display:flex; align-items:flex-start; gap:16px;">
+          <div style="background:#f8fafc; border:2.5px solid #0284c7; border-radius:8px; padding:16px 20px; display:flex; align-items:flex-start; gap:16px; box-shadow:0 4px 12px rgba(2,132,199,0.06);">
             <span style="font-size:24px; color:#0284c7;">🏛️</span>
             <div style="flex:1;">
               <div style="font-size:13px; font-weight:800; color:#0f172a; margin-bottom:4px;">STATUTORY REGISTRATIONS</div>
