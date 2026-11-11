@@ -11952,6 +11952,8 @@ async function payrollView() {
     api('GET', 'users'),
     api('GET', 'salaryslips').catch(() => [])
   ]);
+  window._salarySlipsMap = window._salarySlipsMap || {};
+  (slipsList || []).forEach(s => { window._salarySlipsMap[s.id] = s; });
 
   const view = $('#view');
   if (!view) return;
@@ -12438,21 +12440,31 @@ async function openGenerateSlipModal(selectedEmpId, existingSlip) {
 // 7. PRINTABLE STANDARD CORPORATE INDIAN PAYSLIP MODAL
 // -------------------------------------------------------------------------
 function printPayslipDirect(slipId) {
-  const slip = (window._salarySlipsMap && window._salarySlipsMap[slipId]) || {};
-  const printArea = document.getElementById('payslipPrintArea');
-  if (!printArea) return window.print();
-  const w = window.open('', '_blank', 'width=900,height=800');
-  if (!w) return window.print();
-  w.document.write(`<!DOCTYPE html><html><head><title>Salary Slip - ${slip.employeeName || 'Staff'} - ${slip.month || ''}/${slip.year || ''}</title>
-  <style>
-    body { font-family: 'Segoe UI', Arial, Helvetica, sans-serif; color: #000; margin: 20px; background: #ffffff; }
-    table { border-collapse: collapse; width: 100%; }
-    @page { size: A4 portrait; margin: 10mm 12mm; }
-    @media print { body { margin: 0; padding: 0; } }
-  </style></head><body>${printArea.innerHTML}</body></html>`);
-  w.document.close();
-  w.focus();
-  setTimeout(() => { w.print(); }, 250);
+  try {
+    const slip = (window._salarySlipsMap && window._salarySlipsMap[slipId]) || {};
+    const printArea = document.getElementById('payslipPrintArea');
+    if (!printArea) return window.print();
+    const w = window.open('', '_blank', 'width=900,height=800');
+    if (!w) {
+      window.print();
+      return;
+    }
+    w.document.write(`<!DOCTYPE html><html><head><title>Salary Slip - ${slip.employeeName || 'Staff'} - ${slip.month || ''}/${slip.year || ''}</title>
+    <style>
+      body { font-family: 'Segoe UI', Arial, Helvetica, sans-serif; color: #000; margin: 20px; background: #ffffff; }
+      table { border-collapse: collapse; width: 100%; }
+      @page { size: A4 portrait; margin: 10mm 12mm; }
+      @media print { body { margin: 0; padding: 0; } }
+    </style></head><body>${printArea.innerHTML}</body></html>`);
+    w.document.close();
+    w.focus();
+    setTimeout(() => {
+      try { w.print(); } catch (e) { window.print(); }
+    }, 300);
+  } catch (err) {
+    console.error('printPayslipDirect error:', err);
+    window.print();
+  }
 }
 
 async function showSalarySlip(slipOrId) {
@@ -12476,7 +12488,13 @@ async function showSalarySlip(slipOrId) {
   const monthNames = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   const monthLabel = monthNames[+slip.month] || slip.month;
 
-  const co = company();
+  const co = (typeof window.co === 'object' && window.co && Object.keys(window.co).length)
+    ? window.co
+    : (await api('GET', 'company').catch(() => ({}))) || {};
+
+  // Remove any previously opened payslip modal
+  const existingModal = document.getElementById('payslipPrintModal');
+  if (existingModal) existingModal.remove();
 
   const overlay = document.createElement('div');
   overlay.className = 'mail-modal-overlay';
@@ -12639,6 +12657,7 @@ async function showSalarySlip(slipOrId) {
 
   document.body.appendChild(overlay);
   overlay.querySelector('#closePayslipModal').onclick = () => overlay.remove();
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
 }
 
 // -------------------------------------------------------------------------
