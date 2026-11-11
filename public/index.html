@@ -2383,7 +2383,22 @@ body.mobile-sidebar-open {
 
 /* === Print === */
 @media print {
-  body > *:not(#invoiceView):not(#payslipPrintModal) { display: none !important; }
+  body:not(.printing-catalogue) > *:not(#invoiceView):not(#payslipPrintModal) { display: none !important; }
+  body.printing-catalogue #nav,
+  body.printing-catalogue #header,
+  body.printing-catalogue .cat-no-print { display: none !important; }
+  body.printing-catalogue,
+  body.printing-catalogue #app,
+  body.printing-catalogue #main,
+  body.printing-catalogue #view {
+    background: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    box-shadow: none !important;
+  }
   #invoiceView { position: static; display: block !important; background: #fff; padding: 0; }
   .bar { display: none; }
   .sheet { box-shadow: none; padding: 0; max-width: none; }
@@ -13997,7 +14012,134 @@ function toggleCatalogueEditMode() {
 }
 
 function printCatalogue() {
-  window.print();
+  const origin = window.location.origin || '';
+  const pagesHtml = renderCatalogueAllPagesHTML(true);
+
+  // Attempt dedicated popup print window with base href (isolates styles from main app)
+  const w = window.open('', '_blank', 'width=950,height=1000');
+  if (!w) {
+    // If popup blocked, use in-window printing with the body class
+    document.body.classList.add('printing-catalogue');
+    window.print();
+    setTimeout(() => document.body.classList.remove('printing-catalogue'), 1500);
+    return;
+  }
+
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
+  <title>AMIGO ENTERPRISES - Company Catalogue</title>
+  <base href="${origin}/">
+  <style>
+    * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #ffffff;
+      color: #1e293b;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+    @page {
+      size: A4 portrait;
+      margin: 6mm 8mm;
+    }
+    @media print {
+      body { margin: 0; padding: 0; }
+      .cat-page {
+        page-break-after: always !important;
+        break-after: page !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        width: 100% !important;
+        min-height: 275mm !important;
+        height: 275mm !important;
+        margin: 0 0 10mm 0 !important;
+        padding: 8mm 10mm !important;
+        box-shadow: none !important;
+        border: none !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+      }
+    }
+    .cat-page {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0 auto 30px auto;
+      padding: 12mm 15mm;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      page-break-after: always;
+      break-after: page;
+    }
+    .cat-page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px solid #0284c7;
+      padding-bottom: 10px;
+      margin-bottom: 14px;
+    }
+    .cat-page-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1.5px solid #cbd5e1;
+      padding-top: 8px;
+      margin-top: 14px;
+      font-size: 11px;
+      color: #64748b;
+      font-weight: 600;
+    }
+    .cat-product-card {
+      border: 1.5px solid #0284c7;
+      border-radius: 8px;
+      background: #ffffff;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px;
+      text-align: center;
+      height: 172px;
+      position: relative;
+    }
+    .cat-product-img-box {
+      width: 100%;
+      height: 116px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f8fafc;
+      border-radius: 5px;
+      padding: 4px;
+      overflow: hidden;
+    }
+    .cat-product-img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+    .cat-product-title {
+      font-size: 10px;
+      font-weight: 800;
+      color: #0f172a;
+      margin-top: 5px;
+      text-transform: uppercase;
+      line-height: 1.2;
+      letter-spacing: 0.3px;
+      width: 100%;
+      text-align: center;
+    }
+    .cat-no-print, .cat-photo-replace-btn { display: none !important; }
+  </style></head><body>${pagesHtml}</body></html>`);
+  w.document.close();
+  w.focus();
+  setTimeout(() => {
+    try { w.print(); } catch (e) { window.print(); }
+  }, 600);
 }
 
 async function saveCatalogueChanges() {
@@ -14152,9 +14294,9 @@ function onCatFieldChange(path, val) {
 // ------------------------------------------
 // HTML GENERATOR FOR ALL 7 PAGES
 // ------------------------------------------
-function renderCatalogueAllPagesHTML() {
+function renderCatalogueAllPagesHTML(forceReadOnly = false) {
   const d = window.catData;
-  const isEdit = window.catEditMode;
+  const isEdit = forceReadOnly ? false : window.catEditMode;
 
   const headerCommon = (subtitle) => `
     <div class="cat-page-header">
