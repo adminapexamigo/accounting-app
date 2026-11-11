@@ -869,6 +869,32 @@ const DEFAULT_CATALOGUE = {
     icon: '/catalogue/icon_vision.png',
     text: 'To be recognized as India\'s premier, most dependable engineering partner for Electrostatic Precipitator overhauling, emission control retrofits, and precision industrial spares, driven by uncompromising quality, rapid turnaround, and unmatched technical excellence.'
   },
+  primeCustomers: [
+    {
+      id: 1,
+      name: 'UltraTech Cement Ltd.',
+      logo: '/catalogue/catalogue_logo.jpeg',
+      info: 'Supplying high-grade collecting & discharge electrodes with shutdown overhaul services.'
+    },
+    {
+      id: 2,
+      name: 'Tata Power Company Ltd.',
+      logo: '/catalogue/catalogue_logo.jpeg',
+      info: 'Turnaround engineering, insulator heater retrofits, and TR controller calibrations.'
+    },
+    {
+      id: 3,
+      name: 'JSW Steel Limited',
+      logo: '/catalogue/catalogue_logo.jpeg',
+      info: 'Precision rapping mechanism overhaul, GD screens alignment, and plant spare parts.'
+    },
+    {
+      id: 4,
+      name: 'NTPC Limited',
+      logo: '/catalogue/catalogue_logo.jpeg',
+      info: 'High-voltage support insulator replacement, spark rate tuning, and emissions compliance.'
+    }
+  ],
   contact: {
     companyName: 'AMIGO ENTERPRISES',
     address: 'S.NO.6/17 FLAT NO 401 CHOVISAWADI Pimpri Chinchwad, Pune, Maharashtra, 412105',
@@ -1577,7 +1603,11 @@ async function api(req, res, parts) {
           if (fs.existsSync(catFile)) data = JSON.parse(fs.readFileSync(catFile, 'utf8'));
         } catch {}
       }
-      return send(res, 200, data || DEFAULT_CATALOGUE);
+      if (!data) data = JSON.parse(JSON.stringify(DEFAULT_CATALOGUE));
+      if (data && !Array.isArray(data.primeCustomers)) {
+        data.primeCustomers = DEFAULT_CATALOGUE.primeCustomers;
+      }
+      return send(res, 200, data);
     }
     if (m === 'PUT') {
       if (user.role !== 'admin') throw fail(403, 'Admin only: only administrators can edit the catalogue');
