@@ -3442,7 +3442,13 @@ function showOperationError(method, url, err) {
 }
 
 async function api(m,u,b,silent=false){
-  const isMutation = ['POST', 'PUT', 'DELETE'].includes(m.toUpperCase()) && !u.startsWith('activity/') && !u.startsWith('sync/live');
+  const isMutation = ['POST', 'PUT', 'DELETE'].includes(m.toUpperCase())
+    && !u.startsWith('activity/')
+    && !u.startsWith('sync/live')
+    && !u.startsWith('login')
+    && !u.startsWith('reset')
+    && !u.startsWith('password')
+    && u !== 'logout';
   if (isMutation) {
     showOperationLoader(m, u);
   } else if (!silent) {
@@ -5137,7 +5143,7 @@ $('#lbtn').onclick=async()=>{
     start();
   }catch(e){
     hideOtpLoader();
-    $('#lmsg').innerHTML=`<div class="msg">${h(e.message)}</div>`;
+    $('#lmsg').innerHTML = /^(Cancelled|Login cancelled)$/i.test(e.message) ? '' : `<div class="msg">${h(e.message)}</div>`;
   }
 };
 $('#forgot').onclick=async()=>{const r=await resetDialog($('#lu').value);if(r){$('#lu').value=r.user;$('#lp').value='';$('#lmsg').innerHTML='<div class="msg ok">Password changed. Log in with your new password.</div>'}};

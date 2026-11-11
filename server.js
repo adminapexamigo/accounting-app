@@ -112,10 +112,17 @@ function session(req) {
   return s;
 }
 const safeUser = u => {
-  const perms = typeof u.permissions === 'object' && u.permissions !== null
-    ? u.permissions
+  let perms = typeof u.permissions === 'object' && u.permissions !== null
+    ? JSON.parse(JSON.stringify(u.permissions))
     : (typeof u.permissions === 'string' ? (() => { try { return JSON.parse(u.permissions || '{}'); } catch { return {}; } })() : {});
   const prof = perms.profile || {};
+  if (prof.documents && typeof prof.documents === 'object') {
+    for (const k of Object.keys(prof.documents)) {
+      if (prof.documents[k] && prof.documents[k].dataUrl) {
+        delete prof.documents[k].dataUrl;
+      }
+    }
+  }
   const joinDate = u.joiningDate || prof.joiningDate || (u.createdAt ? (typeof u.createdAt === 'string' ? u.createdAt.slice(0, 10) : new Date(u.createdAt).toISOString().slice(0, 10)) : '');
   return {
     id: u.id,
@@ -535,9 +542,16 @@ async function sendOtp(p, u) { // e-mails a fresh 6-digit code; returns '' on su
 const dist = (a, b) => Math.sqrt(a.reduce((s, x, i) => s + (x - b[i]) ** 2, 0));
 function startSession(res, u) {
   let sid;
+  const sessionUser = {
+    id: u.id,
+    username: u.username,
+    role: u.role,
+    fullName: u.fullName || u.username,
+    designation: u.designation || ''
+  };
   try {
     const jwt = require('jsonwebtoken');
-    sid = jwt.sign({ u: safeUser(u) }, process.env.JWT_SECRET || 'amigo-accounting-production-jwt-secret-key-2026', { expiresIn: '8h' });
+    sid = jwt.sign({ u: sessionUser }, process.env.JWT_SECRET || 'amigo-accounting-production-jwt-secret-key-2026', { expiresIn: '8h' });
   } catch {
     sid = crypto.randomBytes(24).toString('hex');
   }
@@ -1226,7 +1240,9 @@ async function api(req, res, parts) {
     if (!p || p.exp < Date.now() || !p.methods.includes('face')) { if (b.token) pending.delete(b.token); throw fail(401, 'Login expired. Enter your password again.'); }
     const u = readTable('users').find(x => x.id === p.id), d = Array.isArray(b.descriptor) ? b.descriptor.map(Number) : [];
     if (!u || d.length !== 128 || d.some(x => !isFinite(x))) throw fail(400, 'Invalid face data');
-    if (dist(d, JSON.parse(u.faceDescriptor)) > FACE_THRESHOLD) {
+    const userDesc = typeof u.faceDescriptor === 'string' ? (() => { try { return JSON.parse(u.faceDescriptor); } catch { return null; } })() : (Array.isArray(u.faceDescriptor) ? u.faceDescriptor : null);
+    if (!userDesc || userDesc.length !== 128) throw fail(400, 'No face profile enrolled');
+    if (dist(d, userDesc) > FACE_THRESHOLD) {
       if (++p.tries >= 5) { if (b.token) pending.delete(b.token); throw fail(429, 'Too many failed face attempts. Log in again.'); }
       throw fail(401, 'Face not recognised');
     }
