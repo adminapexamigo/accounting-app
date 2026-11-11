@@ -5024,7 +5024,7 @@ function quoteHTML(doc,d,w){
  `;
 
  // Height budget parameters (in px for A4 page):
- const PAGE_MAX=940;
+ const PAGE_MAX=960;
  const p1TopHeight=280;
  const contTopHeight=135;
  const thHeight=32;
@@ -5032,7 +5032,7 @@ function quoteHTML(doc,d,w){
 
  const getItemHeight=item=>{
    const lines=String(item.desc||'').split('\n').length;
-   return Math.max(30,16+lines*16);
+   return Math.max(28,14+lines*15);
  };
 
  const termsHeight=termsList.length?(38+termsList.length*22):0;
@@ -5069,7 +5069,7 @@ function quoteHTML(doc,d,w){
    return `<div class="dd qq single-page"><div class="qpage" style="page-break-after:avoid !important;break-after:avoid !important;page-break-inside:avoid !important;break-inside:avoid !important;border-bottom:none;margin-bottom:0;padding-bottom:0">${p1Content}</div></div>`;
  }
 
- // === CASE 2: MULTI-PAGE DYNAMIC PAGINATION ===
+ // === CASE 2: MULTI-PAGE DYNAMIC GREEDY PACKING ===
  const pagesData=[];
  let currentItemIdx=0;
  let pageNum=1;
@@ -5081,12 +5081,12 @@ function quoteHTML(doc,d,w){
 
    const pageItems=[];
 
-   // Check if ALL remaining items + footerBlockHeight fit on this page
    let remH=0;
    for(let j=currentItemIdx;j<items.length;j++){
      remH+=getItemHeight(items[j]);
    }
 
+   // 1. Can ALL remaining items + footerBlock fit on this page?
    if(remH+footerBlockHeight<=availH){
      for(let j=currentItemIdx;j<items.length;j++){
        pageItems.push(items[j]);
@@ -5101,6 +5101,29 @@ function quoteHTML(doc,d,w){
      break;
    }
 
+   // 2. Can ALL remaining items + TOTAL row fit on this page? (Terms & Sign go to next page)
+   if(remH+totalHeight<=availH){
+     for(let j=currentItemIdx;j<items.length;j++){
+       pageItems.push(items[j]);
+     }
+     currentItemIdx=items.length;
+     pagesData.push({
+       pageNum,
+       items:pageItems,
+       hasTotal:true,
+       hasTermsAndSign:false
+     });
+     // Footer page
+     pagesData.push({
+       pageNum:pageNum+1,
+       items:[],
+       hasTotal:false,
+       hasTermsAndSign:true
+     });
+     break;
+   }
+
+   // 3. Otherwise fill this page with as many items as fit
    while(currentItemIdx<items.length){
      const itemH=getItemHeight(items[currentItemIdx]);
      if(availH-itemH<0&&pageItems.length>0){
@@ -5120,6 +5143,7 @@ function quoteHTML(doc,d,w){
    pageNum++;
  }
 
+ // If last page has items but no footer
  const lastPage=pagesData[pagesData.length-1];
  if(!lastPage.hasTermsAndSign){
    const isFirst=(lastPage.pageNum===1);
@@ -5129,43 +5153,12 @@ function quoteHTML(doc,d,w){
      lastPage.hasTotal=true;
      lastPage.hasTermsAndSign=true;
    }else{
-     if(lastPage.items.length>2){
-       const movedItem=lastPage.items.pop();
-       lastPage.hasTotal=false;
-       pagesData.push({
-         pageNum:pagesData.length+1,
-         items:[movedItem],
-         hasTotal:true,
-         hasTermsAndSign:true
-       });
-     }else{
-       lastPage.hasTotal=false;
-       pagesData.push({
-         pageNum:pagesData.length+1,
-         items:[],
-         hasTotal:true,
-         hasTermsAndSign:true
-       });
-     }
-   }
- }
-
- // Re-balancing pass across pages:
- for(let p=pagesData.length-1;p>0;p--){
-   const curP=pagesData[p];
-   const prevP=pagesData[p-1];
-   const curTopH=curP.pageNum===1?p1TopHeight:contTopHeight;
-   const curFooterH=curP.hasTermsAndSign?footerBlockHeight:(curP.hasTotal?totalHeight:0);
-
-   while(prevP.items.length>curP.items.length+2&&prevP.items.length>4){
-     const candidate=prevP.items[prevP.items.length-1];
-     const candH=getItemHeight(candidate);
-     const curItemsH=curP.items.reduce((s,it)=>s+getItemHeight(it),0);
-     if(curTopH+thHeight+curItemsH+candH+curFooterH<=PAGE_MAX-40){
-       curP.items.unshift(prevP.items.pop());
-     }else{
-       break;
-     }
+     pagesData.push({
+       pageNum:pagesData.length+1,
+       items:[],
+       hasTotal:false,
+       hasTermsAndSign:true
+     });
    }
  }
 
@@ -5209,6 +5202,15 @@ function quoteHTML(doc,d,w){
        </table>
        ${pData.hasTermsAndSign?`${termsHtml}${signBlockHtml}`:''}`;
    }else{
+     const isTermsOnlyPage=(pItems.length===0);
+     const continuationTitle=isTermsOnlyPage
+       ? 'QUOTATION — Terms &amp; Conditions &amp; Signatory'
+       : `QUOTATION (Continuation) — Ref: <b>${h(doc.number)}</b>`;
+
+     const continuationSub=isTermsOnlyPage
+       ? `Ref: <b>${h(doc.number)}</b> &nbsp;|&nbsp; M/s <b>${h(d.toName)}</b>`
+       : `Party: <b>${h(d.toName)}</b>`;
+
      const tableHtml=pItems.length?`
        <table class="qi">
          <thead>
@@ -5218,22 +5220,16 @@ function quoteHTML(doc,d,w){
            ${tableRows}
          </tbody>
        </table>
-     `:(pData.hasTotal?`
-       <table class="qi">
-         <tbody>
-           <tr style="height:38px"><td class="c" style="width:9%"></td><td style="font-weight:bold">&nbsp;TOTAL</td><td style="width:8%"></td><td style="width:15%"></td><td class="r" style="width:15%;font-weight:bold">${fm(d.total)}</td></tr>
-         </tbody>
-       </table>
-     `:'');
+     `:'';
 
      pageContent=`${hdr}
        <table style="width:100%;border-collapse:collapse;margin:2px 0 8px;border-bottom:1px solid #94a3b8;padding-bottom:3px">
          <tr>
            <td style="text-align:left;font-size:13px;font-weight:bold;color:#1a1aff;font-family:'Times New Roman',Times,serif">
-             QUOTATION (Continuation) — Ref: <b>${h(doc.number)}</b>
+             ${continuationTitle}
            </td>
            <td style="text-align:center;font-size:12px;color:#334155;font-family:'Times New Roman',Times,serif">
-             Party: <b>${h(d.toName)}</b>
+             ${continuationSub}
            </td>
            <td style="text-align:right;font-size:12px;font-weight:bold;color:#475569;font-family:'Times New Roman',Times,serif">
              Page ${pageNumber} of ${totalPages}
