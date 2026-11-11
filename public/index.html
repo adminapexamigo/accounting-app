@@ -13786,16 +13786,27 @@ async function catalogueView() {
         background: #ffffff;
         color: #1e293b;
         margin: 0 auto 36px auto;
-        padding: 28px 34px;
+        padding: 26px 32px;
         box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
-        border-radius: 6px;
+        border-radius: 4px;
         box-sizing: border-box;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
         position: relative;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        border: 1px solid #e2e8f0;
+        border: 2.5px solid #1e3a8a;
+      }
+      .cat-page::before {
+        content: '';
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        right: 5px;
+        bottom: 5px;
+        border: 1.5px solid #0284c7;
+        pointer-events: none;
+        border-radius: 2px;
       }
       .cat-page-header {
         display: flex;
@@ -14017,11 +14028,25 @@ async function catalogueView() {
           max-height: 297mm !important;
           margin: 0 !important;
           padding: 10mm 14mm !important;
-          border: none !important;
+          border: 2.5px solid #1e3a8a !important;
           box-shadow: none !important;
           border-radius: 0 !important;
           box-sizing: border-box !important;
           overflow: hidden !important;
+          position: relative !important;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+        .cat-page::before {
+          content: '' !important;
+          position: absolute !important;
+          top: 3mm !important;
+          left: 3mm !important;
+          right: 3mm !important;
+          bottom: 3mm !important;
+          border: 1.5px solid #0284c7 !important;
+          pointer-events: none !important;
+          display: block !important;
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
         }
@@ -14149,9 +14174,21 @@ function printCatalogue() {
         margin: 0 !important;
         padding: 10mm 14mm !important;
         box-shadow: none !important;
-        border: none !important;
+        border: 2.5px solid #1e3a8a !important;
         box-sizing: border-box !important;
         overflow: hidden !important;
+        position: relative !important;
+      }
+      .cat-page::before {
+        content: '' !important;
+        position: absolute !important;
+        top: 3mm !important;
+        left: 3mm !important;
+        right: 3mm !important;
+        bottom: 3mm !important;
+        border: 1.5px solid #0284c7 !important;
+        pointer-events: none !important;
+        display: block !important;
       }
     }
     .cat-page {
@@ -14161,13 +14198,25 @@ function printCatalogue() {
       margin: 0 auto 30px auto;
       padding: 10mm 14mm;
       background: #ffffff;
-      border: 1px solid #cbd5e1;
+      border: 2.5px solid #1e3a8a;
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       page-break-after: always;
       break-after: page;
+      position: relative;
+    }
+    .cat-page::before {
+      content: '';
+      position: absolute;
+      top: 3.5mm;
+      left: 3.5mm;
+      right: 3.5mm;
+      bottom: 3.5mm;
+      border: 1.5px solid #0284c7;
+      pointer-events: none;
+      border-radius: 2px;
     }
     .cat-page-header {
       display: flex;
