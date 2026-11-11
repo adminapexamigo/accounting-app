@@ -3190,7 +3190,7 @@ const DEFAULT_EMPLOYEE_PERMISSIONS = {
   purchases:   { view: false, create: false, edit: false, delete: false },
   ledgers:     { view: true, create: true, edit: true, delete: false },
   vouchers:    { view: true, create: true, edit: true, delete: false },
-  catalogue:   { view: true, edit: false },
+  catalogue:   { view: true, edit: false, mail: true },
   dash:        { view: false },
   hr:          { view: false, manage: false },
   salaryslips: { view: true, create: false, edit: false, delete: false },
@@ -3215,7 +3215,7 @@ const ROLE_PERMISSIONS_MAP = {
     products:    { view: true, create: true, edit: true, delete: false },
     ledgers:     { view: true, create: true, edit: true, delete: false },
     vouchers:    { view: true, create: true, edit: true, delete: false },
-    catalogue:   { view: true, edit: true },
+    catalogue:   { view: true, edit: true, mail: true },
     dash:        { view: true },
     hr:          { view: true, manage: true },
     workupdates: { view: true, create: true }
@@ -3231,7 +3231,7 @@ const ROLE_PERMISSIONS_MAP = {
     products:    { view: true, create: true, edit: true, delete: false },
     ledgers:     { view: true, create: true, edit: true, delete: false },
     vouchers:    { view: true, create: true, edit: true, delete: false },
-    catalogue:   { view: true, edit: true },
+    catalogue:   { view: true, edit: true, mail: true },
     dash:        { view: false },
     hr:          { view: false, manage: false },
     workupdates: { view: true, create: true }
@@ -3247,7 +3247,7 @@ const ROLE_PERMISSIONS_MAP = {
     products:    { view: true, create: false, edit: false, delete: false },
     ledgers:     { view: false, create: false, edit: false, delete: false },
     vouchers:    { view: false, create: false, edit: false, delete: false },
-    catalogue:   { view: true, edit: false },
+    catalogue:   { view: true, edit: false, mail: true },
     dash:        { view: false },
     hr:          { view: false, manage: false },
     workupdates: { view: true, create: true }
@@ -3263,7 +3263,7 @@ const ROLE_PERMISSIONS_MAP = {
     products:    { view: true, create: false, edit: false, delete: false },
     ledgers:     { view: false, create: false, edit: false, delete: false },
     vouchers:    { view: false, create: false, edit: false, delete: false },
-    catalogue:   { view: true, edit: false },
+    catalogue:   { view: true, edit: false, mail: true },
     dash:        { view: false },
     hr:          { view: false, manage: false },
     workupdates: { view: true, create: true }
@@ -3377,6 +3377,7 @@ function can(mod, action) {
     return !!(eff.hr?.manage || eff.hr?.view);
   }
   if (mod === 'workupdates') return true;
+  if (mod === 'catalogue' && (action === 'view' || action === 'mail')) return true;
 
   const eff = getEffectivePermissions(me);
   const modPerms = eff[mod] || {};
@@ -4140,12 +4141,23 @@ function wuAlert(){const o=document.createElement('div');o.id='wuAlert';o.style.
  try{if(window.Notification&&Notification.permission=='granted')new Notification('Work update pending',{body:'Please submit today\'s work update.'})}catch{}
  $('#wa1').onclick=()=>{o.remove();go('workupdates')};$('#wa2').onclick=()=>{wu.snooze=Date.now()+30*60e3;o.remove()}}
 const tmf=i=>i?new Date(i).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'—';
-async function workupdates(){const[L,st]=await Promise.all([api('GET','workupdates'),api('GET','workupdates/today')]);wu={...wu,...st};drawBanner();const adm=me.role=='admin';
- L.sort((a,b)=>b.submittedAt.localeCompare(a.submittedAt));
+async function workupdates(){
+  try {
+    const[L,st]=await Promise.all([api('GET','workupdates'),api('GET','workupdates/today')]);
+    wu={...wu,...st};
+    drawBanner();
+    const adm=me.role=='admin';
+    const list = Array.isArray(L) ? L : [];
+    list.sort((a,b)=>String(b.submittedAt||'').localeCompare(String(a.submittedAt||'')));
  const form=adm?'':st.submitted?'<div class="msg ok">✓ Today\'s update is submitted. Thank you!</div>':`<div class="card"><h3>Today's work update — ${dmy(st.date)}</h3><div class="field-label-ai"><label style="margin:0">What work did you do today? *</label><button type="button" class="btn-ai-assist" onclick="openAiMenu('wk','workupdate',this)">✨ AI Assist <span style="font-size:9px">▼</span></button></div><textarea id="wk" rows="5" placeholder="e.g. Created 3 invoices, followed up with client X, updated stock list…"></textarea><br><br><div class="grid"><div><div class="field-label-ai"><label style="margin:0">Pending / blockers (optional)</label><button type="button" class="btn-ai-assist" onclick="openAiMenu('wp','workupdate',this)">✨ AI Assist <span style="font-size:9px">▼</span></button></div><textarea id="wp" rows="2"></textarea></div><div><label>Hours worked (optional)</label><input id="wh" type="number" min="0" max="24" step="0.5"></div></div><br><button class="btn" id="wsub">Submit &amp; email update</button></div>`;
  $('#view').innerHTML=`<h1>${adm?'Daily work updates':'My work update'}</h1>${form}<div class="card" style="overflow:auto"><table><tr><th>Date</th>${adm?'<th>Employee</th>':''}<th>Login</th><th>Submitted</th><th>Hrs</th><th>Work done</th><th>Pending</th><th>Email</th>${adm?'<th>Actions</th>':''}</tr>${L.map(r=>`<tr><td>${dmy(r.date)}</td>${adm?`<td>${h(r.fullName||r.username)}</td>`:''}<td>${tmf(r.loginTime)}</td><td>${tmf(r.submittedAt)}</td><td>${h(r.hours)}</td><td style="white-space:pre-wrap;max-width:320px">${h(r.work)}</td><td style="white-space:pre-wrap;max-width:200px">${h(r.pending)}</td><td>${h(r.emailStatus)}</td>${adm?`<td class="n" style="white-space:nowrap"><button class="btn ghost sm" data-r="${r.id}">Resend email</button> <button class="btn red sm" data-d="${r.id}">Delete</button></td>`:''}</tr>`).join('')||'<tr><td>No updates yet</td></tr>'}</table></div>`;
  if($('#wsub'))$('#wsub').onclick=async e=>{e.target.disabled=true;e.target.textContent='Submitting…';try{const r=await api('POST','workupdates',{work:$('#wk').value,pending:$('#wp').value,hours:$('#wh').value});wu.submitted=true;await workupdates();say(/^sent/.test(r.emailStatus)?'Update submitted and emailed.':'Update saved, but the email did not go out ('+r.emailStatus+'). The admin can resend it.',/^sent/.test(r.emailStatus))}catch(er){e.target.disabled=false;e.target.textContent='Submit & email update';say(er.message)}};
- $('#view').onclick=async e=>{const d=e.target.dataset;try{if(d.r){e.target.textContent='Sending…';const r=await api('POST','workupdates/'+d.r+'/resend');await workupdates();say('Email: '+r.emailStatus,/^sent/.test(r.emailStatus))}if(d.d&&confirm('Delete this update?')){await api('DELETE','workupdates/'+d.d);workupdates()}}catch(er){say(er.message)}}}
+ $('#view').onclick=async e=>{const d=e.target.dataset;try{if(d.r){e.target.textContent='Sending…';const r=await api('POST','workupdates/'+d.r+'/resend');await workupdates();say('Email: '+r.emailStatus,/^sent/.test(r.emailStatus))}if(d.d&&confirm('Delete this update?')){await api('DELETE','workupdates/'+d.d);workupdates()}}catch(er){say(er.message)}};
+  } catch(err) {
+    say(err.message || 'Error loading work updates');
+    $('#view').innerHTML = `<div class="card" style="padding:32px;text-align:center"><div style="font-size:32px;margin-bottom:8px">💼</div><h3>Daily Work Update</h3><p style="color:var(--mute)">${h(err.message || 'Please check your connection and retry.')}</p><button class="btn sm" onclick="workupdates()">Retry</button></div>`;
+  }
+}
 async function logins(){const L=(await api('GET','logins')).sort((a,b)=>b.loginAt.localeCompare(a.loginAt)).slice(0,300);
  $('#view').innerHTML=`<h1>Login log</h1><div class="card" style="overflow:auto"><table><tr><th>User</th><th>Date</th><th>Time</th></tr>${L.map(r=>`<tr><td>${h(r.username)}</td><td>${dmy(new Date(r.loginAt).toLocaleDateString('en-CA'))}</td><td>${tmf(r.loginAt)}</td></tr>`).join('')||'<tr><td>No logins yet</td></tr>'}</table></div>`}
 async function mail(){const c=await api('GET','mail');
@@ -14728,6 +14740,12 @@ async function catalogueView() {
         </div>
 
         <div class="cat-toolbar-right">
+          <button class="btn" style="background:linear-gradient(135deg, #0284c7 0%, #1d4ed8 100%); font-size:12px; font-weight:700; padding:6px 15px; box-shadow:0 3px 10px rgba(2,132,199,0.35); border:none;" onclick="openSendCatalogueProfileModal()">
+            📧 Send Company Profile
+          </button>
+          <button class="btn ghost" style="font-size:12px; font-weight:600; padding:6px 12px; border-color:rgba(255,255,255,0.25); color:#f8fafc;" onclick="openCatalogueMailHistoryModal()" id="btnCatMailHistory">
+            📜 Sent History
+          </button>
           <button class="btn" style="background:#0284c7; font-size:12px; font-weight:700; padding:6px 14px;" onclick="printCatalogue()">
             📥 Download PDF / Print
           </button>
@@ -15696,6 +15714,831 @@ function renderPrimeCustomerCardHTML(c, isEdit) {
       </div>
     </div>
   `;
+}
+
+
+// ============================================================================
+// COMPANY CATALOGUE & PROFILE EMAIL SENDER & TRACKING (Dynamic & AI-Powered)
+// ============================================================================
+
+const OFFICIAL_CATALOGUE_EMAIL_DRAFT = (clientName = '', senderName = 'Ashwini Kharat', senderPhone = '8421159145', senderEmail = 'amigo.sales6423@gmail.com') => `Dear Sir/Madam${clientName ? ` (Attn: ${clientName})` : ''},
+Greetings from Amigo Enterprises, Pune!
+
+We are pleased to introduce Amigo Enterprises, a reliable supplier of mechanical and electrical spare parts and a service provider specializing in Electrostatic Precipitator (ESP) spares, maintenance, inspection, and retrofitting services.
+
+We aim to help our customers improve ESP performance, minimize downtime, and resolve operational issues during preventive maintenance and plant shutdowns. Our team provides both mechanical and electrical support, focusing on quality, dependable service, and competitive pricing.
+
+Our Product Range – ESP Spares:
+• Collecting Electrodes
+• Discharge Electrodes
+• Rectifier Transformers and Spares
+• Rapper Panels and Spares
+• Rapper Spares – Rapper Coils, Boot Seals, and FRP Components
+• All Types of Insulators and Gaskets
+• Access Doors, Hopper Doors, and Penthouse Doors
+• Heaters – Hopper Heaters, Support Insulator Heaters, and Purge Air Blower Heaters
+• All Types of Tumbling Hammers
+• Rotary Air Valves (RAV)
+• Top and Bottom Tadpole Seals
+• Gas Distribution Screens
+
+Our Services:
+• Mechanical Maintenance
+• Electrical Maintenance
+• Retrofitting of Old Panels with New Panels
+• Mechanical and Electrical Inspection of ESP Systems
+
+Our Esteemed Customers:
+We are proud to have served reputed organizations across various industries, including:
+• Emami Papers Pvt. Ltd. | Shree Cement Pvt. Ltd.
+• Chakra Cement Pvt. Ltd. | Reliance Cement Corporation Pvt. Ltd.
+• Garden Silk Mill Pvt. Ltd. | BRFL Textile Pvt. Ltd.
+• Shri Ambalika Sugar Pvt. Ltd. | EID Parry Pvt. Ltd.
+• Thanush Ispat Pvt. Ltd. | Shree Mega Power Ltd.
+• Suvan Steel Pvt. Ltd. | Shree Kanak Durga Steel Pvt. Ltd.
+• Durva Infratech Pvt. Ltd.
+
+We would be pleased to share our company credentials, product catalogue, and details of our previous work for your reference.
+
+At Amigo Enterprises, we are committed to delivering quality products, competitive prices, and reliable technical support to meet our customers' requirements.
+
+If you have any requirements related to ESP spare parts, maintenance, shutdown activities, inspections, or panel retrofitting, please feel free to contact us. We would welcome the opportunity to serve your organization and provide the most suitable solutions for your needs.
+
+We look forward to establishing a long-term and mutually beneficial business relationship with your esteemed organization.
+
+Thank you for your time and consideration.
+
+--
+${senderName}
+${senderPhone}
+AMIGO ENTERPRISES PUNE
+Office No:- 401, Baban Villa, Sno-6/17, Chovisawadi,
+Haveli Pune, Pimpri Chinchwad. (M Corp.) 412105
+Gmail : ${senderEmail}`;
+
+function buildClientCompanyProfileHtml({ clientName, subject, bodyText, senderName, senderPhone, senderEmail, senderDesignation }) {
+  const origin = window.location.origin || '';
+  const logoUrl = origin + '/logo.png';
+  const brand = `<img src="${logoUrl}" width="105" alt="Amigo Enterprises" style="display:block;border:0;outline:none;height:auto;max-height:48px;object-fit:contain">`;
+
+  const productPills = [
+    'Collecting Electrodes',
+    'Discharge Electrodes',
+    'Rectifier Transformers & Spares',
+    'Rapper Panels & Spares',
+    'Rapper Spares (Coils, Boot Seals, FRP)',
+    'All Types of Insulators & Gaskets',
+    'Access, Hopper & Penthouse Doors',
+    'Heaters (Hopper, Insulator & Purge Air)',
+    'All Types of Tumbling Hammers',
+    'Rotary Air Valves (RAV)',
+    'Top & Bottom Tadpole Seals',
+    'Gas Distribution (GD) Screens'
+  ];
+
+  const servicesList = [
+    { title: 'Mechanical Maintenance', desc: 'Overhauling, alignment & replacement of internal mechanical parts.' },
+    { title: 'Electrical Maintenance', desc: 'Inspection, troubleshooting & optimization of electrical control panels.' },
+    { title: 'Panel Retrofitting', desc: 'Upgrading legacy controllers with modern microprocessor-based panels.' },
+    { title: 'Inspection & Audits', desc: 'Complete mechanical & electrical assessment of ESP systems & shutdown planning.' }
+  ];
+
+  const customersList = [
+    'Emami Papers Pvt. Ltd.',
+    'Shree Cement Pvt. Ltd.',
+    'Chakra Cement Pvt. Ltd.',
+    'Reliance Cement Corporation Pvt. Ltd.',
+    'Garden Silk Mill Pvt. Ltd.',
+    'BRFL Textile Pvt. Ltd.',
+    'Shri Ambalika Sugar Pvt. Ltd.',
+    'EID Parry Pvt. Ltd.',
+    'Thanush Ispat Pvt. Ltd.',
+    'Shree Mega Power Ltd.',
+    'Suvan Steel Pvt. Ltd.',
+    'Shree Kanak Durga Steel Pvt. Ltd.',
+    'Durva Infratech Pvt. Ltd.'
+  ];
+
+  const sName = senderName || 'Ashwini Kharat';
+  const sPhone = senderPhone || '8421159145';
+  const sEmail = senderEmail || 'amigo.sales6423@gmail.com';
+  const sDesig = senderDesignation || 'Sales Executive';
+
+  const formattedBody = (bodyText || '')
+    .split(/\n\n+/)
+    .map(p => p.trim())
+    .filter(Boolean)
+    .map(p => `<p style="margin:0 0 14px;font-size:14px;line-height:1.75;color:#334155">${h(p).replace(/\n/g, '<br>')}</p>`)
+    .join('');
+
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${h(subject || 'Company Profile & Product Catalogue | Amigo Enterprises')}</title></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:28px 12px">
+<tr><td align="center">
+  <table role="presentation" width="650" cellpadding="0" cellspacing="0" style="width:100%;max-width:650px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.06);border:1px solid #e2e8f0">
+    
+    <!-- Top Branding Header -->
+    <tr><td style="background:linear-gradient(135deg, #091e3a 0%, #0f2b48 100%);padding:26px 32px;color:#ffffff">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td valign="middle" width="115">${brand}</td>
+          <td valign="middle" style="padding-left:14px;border-left:1px solid rgba(255,255,255,0.18)">
+            <div style="font-size:20px;font-weight:800;letter-spacing:0.5px;color:#ffffff;line-height:1.2">AMIGO ENTERPRISES</div>
+            <div style="font-size:11px;color:#93c5fd;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-top:3px">Pune, Maharashtra &bull; Committed To Serve Better Services</div>
+            <div style="font-size:11px;color:#cbd5e1;margin-top:2px">Electrostatic Precipitator (ESP) Spares &bull; Maintenance &bull; Retrofitting</div>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+    
+    <!-- Accent Color Stripe -->
+    <tr><td style="height:4px;background:#0284c7;border-bottom:2px solid #e11d48">&nbsp;</td></tr>
+
+    <!-- Main Message / Custom Pitch -->
+    <tr><td style="padding:28px 32px 18px">
+      ${clientName ? `<div style="display:inline-block;background:#f0fdf4;color:#166534;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;border:1px solid #bbf7d0;margin-bottom:14px;letter-spacing:0.5px">EXCLUSIVELY FOR: ${h(clientName).toUpperCase()}</div>` : ''}
+      <div style="font-size:14px;line-height:1.75;color:#1e293b">
+        ${formattedBody || `<p style="margin:0 0 14px;font-size:15px;line-height:1.7;color:#1e293b"><b>Dear Sir/Madam, Greetings from Amigo Enterprises, Pune!</b></p><p style="margin:0 0 14px;font-size:14px;line-height:1.75;color:#334155">We are pleased to introduce <b>Amigo Enterprises</b>, a reliable supplier of mechanical and electrical spare parts and a trusted service provider specializing in <b>Electrostatic Precipitator (ESP) spares, maintenance, inspection, and retrofitting services</b>.</p><p style="margin:0 0 14px;font-size:14px;line-height:1.75;color:#334155">We aim to help our customers improve ESP performance, minimize downtime, and resolve operational issues during preventive maintenance and plant shutdowns. Our team provides both mechanical and electrical support, focusing on quality, dependable service, and competitive pricing.</p>`}
+      </div>
+    </td></tr>
+
+    <!-- Product Range Card Section -->
+    <tr><td style="padding:4px 32px 20px">
+      <div style="background:#f8fafc;border-radius:12px;padding:20px;border:1px solid #e2e8f0">
+        <div style="font-size:13px;font-weight:800;color:#0f2b48;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:12px">
+          ⚙️ Our Product Range &ndash; ESP Spares
+        </div>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+          ${productPills.reduce((acc, curr, idx) => {
+            if (idx % 2 === 0) acc.push([curr]);
+            else acc[acc.length - 1].push(curr);
+            return acc;
+          }, []).map(pair => `
+            <tr>
+              <td width="50%" valign="top" style="padding:4px 8px 4px 0">
+                <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:6px;padding:8px 12px;font-size:12px;font-weight:600;color:#1e293b;display:block">
+                  <span style="color:#0284c7;font-weight:800;margin-right:6px">&bull;</span>${h(pair[0])}
+                </div>
+              </td>
+              ${pair[1] ? `
+              <td width="50%" valign="top" style="padding:4px 0 4px 8px">
+                <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:6px;padding:8px 12px;font-size:12px;font-weight:600;color:#1e293b;display:block">
+                  <span style="color:#0284c7;font-weight:800;margin-right:6px">&bull;</span>${h(pair[1])}
+                </div>
+              </td>` : `<td width="50%"></td>`}
+            </tr>
+          `).join('')}
+        </table>
+      </div>
+    </td></tr>
+
+    <!-- Services Section -->
+    <tr><td style="padding:4px 32px 20px">
+      <div style="background:#f0f9ff;border-radius:12px;padding:20px;border:1px solid #bae6fd">
+        <div style="font-size:13px;font-weight:800;color:#0369a1;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:12px">
+          🛠️ Specialized Technical Services
+        </div>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+          ${servicesList.map(s => `
+            <tr><td style="padding:5px 0">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td width="20" valign="top" style="color:#0284c7;font-size:16px;line-height:1.2">✔</td>
+                  <td valign="top" style="padding-left:8px">
+                    <span style="font-size:13px;font-weight:700;color:#0f2b48">${h(s.title)}:</span>
+                    <span style="font-size:12px;color:#334155;margin-left:4px">${h(s.desc)}</span>
+                  </td>
+                </tr>
+              </table>
+            </td></tr>
+          `).join('')}
+        </table>
+      </div>
+    </td></tr>
+
+    <!-- Esteemed Customers Section -->
+    <tr><td style="padding:4px 32px 22px">
+      <div style="background:#fafafa;border-radius:12px;padding:20px;border:1px solid #e5e7eb">
+        <div style="font-size:13px;font-weight:800;color:#374151;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:12px">
+          🏆 Our Esteemed Customers Across Industries
+        </div>
+        <div style="font-size:12px;line-height:2;color:#475569">
+          ${customersList.map(c => `<span style="display:inline-block;background:#ffffff;border:1px solid #d1d5db;border-radius:4px;padding:3px 10px;margin:2px 4px 2px 0;font-size:11px;font-weight:600;color:#1e293b">${h(c)}</span>`).join('')}
+        </div>
+      </div>
+    </td></tr>
+
+    <!-- PDF Attachment Badge Callout -->
+    <tr><td style="padding:0 32px 24px">
+      <div style="background:#ecfdf5;border:1px dashed #059669;border-radius:10px;padding:14px 18px">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td width="36" valign="middle" style="font-size:26px">📎</td>
+            <td valign="middle" style="padding-left:10px">
+              <div style="font-size:13px;font-weight:800;color:#065f46">Attached: Official 7-Page Company &amp; Product Catalogue (PDF)</div>
+              <div style="font-size:11px;color:#047857;margin-top:2px">Complete technical drawings, specifications, spares catalog &amp; company credentials.</div>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </td></tr>
+
+    <!-- Sender Signature Card -->
+    <tr><td style="padding:0 32px 30px">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0f2b48;border-radius:12px;padding:20px 24px;color:#ffffff">
+        <tr>
+          <td valign="top">
+            <div style="font-size:16px;font-weight:800;color:#ffffff;line-height:1.2">${h(sName)}</div>
+            <div style="font-size:12px;color:#93c5fd;font-weight:600;margin-top:2px">${h(sDesig)}</div>
+            <div style="font-size:13px;font-weight:700;color:#f8fafc;margin-top:10px;letter-spacing:0.3px">AMIGO ENTERPRISES PUNE</div>
+            <div style="font-size:11px;color:#cbd5e1;line-height:1.5;margin-top:3px">
+              Office No:- 401, Baban Villa, Sno-6/17, Chovisawadi,<br>
+              Haveli Pune, Pimpri Chinchwad. (M Corp.) 412105
+            </div>
+            <div style="font-size:12px;color:#ffffff;margin-top:12px;font-weight:600">
+              📞 <a href="tel:${h(sPhone)}" style="color:#ffffff;text-decoration:none;margin-right:14px">${h(sPhone)}</a>
+              ✉️ <a href="mailto:${h(sEmail)}" style="color:#93c5fd;text-decoration:none">${h(sEmail)}</a>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+
+    <!-- Footer -->
+    <tr><td style="background:#f8fafc;padding:16px 28px;text-align:center;color:#64748b;font-size:11px;line-height:1.5;border-top:1px solid #e2e8f0">
+      <b>AMIGO ENTERPRISES</b> &bull; Quality Products, Dependable Service &amp; Competitive Pricing.<br>
+      Electrostatic Precipitator (ESP) Spares, Maintenance, Inspection &amp; Retrofitting Services.
+    </td></tr>
+
+  </table>
+</td></tr>
+</table>
+</body></html>`;
+}
+
+async function generateCataloguePdfBlob() {
+  await ensurePdfLibs();
+  const pagesHtml = renderCatalogueAllPagesHTML(true);
+  const css = `
+    .cat-page {
+      width: 700px !important;
+      min-width: 700px !important;
+      max-width: 700px !important;
+      min-height: 990px !important;
+      max-height: 990px !important;
+      height: 990px !important;
+      padding: 10mm 14mm !important;
+      background: #ffffff !important;
+      border: none !important;
+      box-sizing: border-box !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: space-between !important;
+      page-break-after: always !important;
+      position: relative !important;
+      overflow: hidden !important;
+    }
+    .cat-page::before {
+      content: '' !important;
+      position: absolute !important;
+      top: 3.5mm !important;
+      left: 3.5mm !important;
+      right: 3.5mm !important;
+      bottom: 3.5mm !important;
+      border: 1.5px solid #0284c7 !important;
+      pointer-events: none !important;
+      border-radius: 3px !important;
+    }
+    .cat-page > div { position: relative !important; z-index: 1 !important; }
+    .cat-page-header { display: flex !important; align-items: center !important; justify-content: space-between !important; border-bottom: 2px solid #0284c7 !important; padding-bottom: 8px !important; margin-bottom: 12px !important; }
+    .cat-page-footer { display: flex !important; align-items: center !important; justify-content: space-between !important; border-top: 1.5px solid #cbd5e1 !important; padding-top: 8px !important; margin-top: 12px !important; font-size: 11px !important; color: #64748b !important; font-weight: 600 !important; }
+    .cat-product-card { border: 1.5px solid #0284c7 !important; border-radius: 8px !important; background: #ffffff !important; overflow: hidden !important; display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: space-between !important; padding: 6px !important; text-align: center !important; height: 172px !important; position: relative !important; }
+    .cat-product-img-box { width: 100% !important; height: 116px !important; display: flex !important; align-items: center !important; justify-content: center !important; background: #f8fafc !important; border-radius: 5px !important; padding: 4px !important; overflow: hidden !important; }
+    .cat-product-img { max-width: 100% !important; max-height: 100% !important; object-fit: contain !important; }
+    .cat-product-title { font-size: 10px !important; font-weight: 800 !important; color: #0f172a !important; margin-top: 5px !important; text-transform: uppercase !important; line-height: 1.2 !important; letter-spacing: 0.3px !important; width: 100% !important; text-align: center !important; }
+    .cat-client-card { background: #ffffff !important; border: 1.5px solid #cbd5e1 !important; border-radius: 6px !important; padding: 6px 10px !important; display: flex !important; align-items: center !important; gap: 10px !important; min-height: 48px !important; page-break-inside: avoid !important; }
+    .cat-client-logo-box { width: 52px !important; height: 42px !important; border-radius: 4px !important; background: #f8fafc !important; border: 1px solid #e2e8f0 !important; display: flex !important; align-items: center !important; justify-content: center !important; padding: 3px !important; flex-shrink: 0 !important; }
+    .cat-client-logo { max-width: 100% !important; max-height: 100% !important; object-fit: contain !important; }
+    .cat-card-del-btn, .cat-product-card-add, .cat-photo-replace-btn, .cat-no-print { display: none !important; }
+  `;
+  return await generatePdfFromHtml(pagesHtml, css, 'Amigo_Enterprises_Company_Catalogue.pdf');
+}
+
+async function openSendCatalogueProfileModal(defaultClient = null) {
+  let clients = [];
+  try {
+    clients = (await load('clients')) || [];
+    clients.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
+  } catch (err) {}
+
+  const normDes = normalizeDesignation(me?.designation);
+  const defaultSenderName = me?.fullName || (normDes === 'sales executive' ? 'Ashwini Kharat' : (me?.username || 'Ashwini Kharat'));
+  const defaultSenderPhone = me?.contact || '8421159145';
+  const defaultSenderEmail = me?.email || (normDes === 'sales executive' ? 'amigo.sales6423@gmail.com' : 'amigo.sales6423@gmail.com');
+  const defaultSenderDesig = me?.designation || (normDes === 'sales executive' ? 'Sales Executive' : 'Sales Executive');
+
+  let selectedClientName = defaultClient?.name || '';
+  let defaultTo = defaultClient?.email || '';
+  let defaultSubject = `Company Profile & Product Catalogue | Amigo Enterprises Pune${selectedClientName ? ' - ' + selectedClientName : ''}`;
+  let defaultBody = OFFICIAL_CATALOGUE_EMAIL_DRAFT(selectedClientName, defaultSenderName, defaultSenderPhone, defaultSenderEmail);
+
+  let existing = document.getElementById('catProfileMailModal');
+  if (existing) existing.remove();
+
+  const o = document.createElement('div');
+  o.id = 'catProfileMailModal';
+  o.className = 'mail-modal-overlay';
+  o.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.8);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;overflow-y:auto;';
+
+  o.innerHTML = `
+    <div class="card" style="width:780px;max-width:96vw;max-height:92vh;margin:0;display:flex;flex-direction:column;padding:0;background:#ffffff;border-radius:14px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.35);border:1px solid #cbd5e1;overflow:hidden">
+      <!-- Modal Header -->
+      <div style="padding:18px 24px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg, #091e3a 0%, #0f2b48 100%);color:#ffffff">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:26px">📧</span>
+          <div>
+            <h2 style="margin:0;font-size:18px;font-weight:800;letter-spacing:0.3px;color:#ffffff">Send Company Profile &amp; Catalogue</h2>
+            <div style="font-size:12px;color:#93c5fd;margin-top:2px">Share official ESP spares credentials, product range &amp; PDF catalogue with clients</div>
+          </div>
+        </div>
+        <button type="button" class="btn ghost sm" id="btnCloseCatMail" style="color:#ffffff;border-color:rgba(255,255,255,0.3);font-size:18px;line-height:1;padding:4px 10px;border-radius:6px">✕</button>
+      </div>
+
+      <!-- Modal Body (Scrollable) -->
+      <div style="padding:22px 26px;overflow-y:auto;flex:1">
+        <form id="fCatProfileMail" onsubmit="return false;">
+          
+          <!-- Client Selector -->
+          <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:14px 16px;margin-bottom:16px">
+            <label style="margin:0 0 6px 0;font-weight:700;color:#0f2b48;display:flex;align-items:center;justify-content:space-between">
+              <span>🎯 Target Client / Company:</span>
+              <span style="font-size:11px;font-weight:normal;color:#64748b">Selecting auto-fills recipient, greeting &amp; subject</span>
+            </label>
+            <div class="grid" style="grid-template-columns:1fr 1fr;gap:12px">
+              <div>
+                <select id="cpmClientSelect" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #94a3b8;font-size:13px;background:#ffffff">
+                  <option value="">-- Choose Existing Client from Master Data --</option>
+                  ${clients.map(c => `<option value="${h(c.id)}" data-name="${h(c.name)}" data-email="${h(c.email || '')}" ${defaultClient?.id === c.id ? 'selected' : ''}>${h(c.name)}${c.email ? ' (' + h(c.email) + ')' : ''}</option>`).join('')}
+                </select>
+              </div>
+              <div>
+                <input id="cpmClientName" placeholder="Or enter client company name here..." value="${h(selectedClientName)}" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #94a3b8;font-size:13px">
+              </div>
+            </div>
+          </div>
+
+          <!-- Email Addressing -->
+          <div class="grid" style="grid-template-columns:2fr 1fr 1fr;gap:12px;margin-bottom:14px">
+            <div>
+              <label style="font-weight:700;color:#1e293b">To (Recipient Email) *</label>
+              <input id="cpmTo" placeholder="client.procurement@domain.com" value="${h(defaultTo)}" required style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #94a3b8;font-size:13px">
+            </div>
+            <div>
+              <label style="font-weight:600;color:#64748b">Cc (Optional)</label>
+              <input id="cpmCc" placeholder="e.g. sales@amigo.in" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #cbd5e1;font-size:13px">
+            </div>
+            <div>
+              <label style="font-weight:600;color:#64748b">Bcc (Optional)</label>
+              <input id="cpmBcc" placeholder="e.g. kuldeep.amigo@gmail.com" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #cbd5e1;font-size:13px">
+            </div>
+          </div>
+
+          <!-- Subject Line -->
+          <div style="margin-bottom:14px">
+            <label style="font-weight:700;color:#1e293b">Email Subject *</label>
+            <input id="cpmSubject" value="${h(defaultSubject)}" required style="width:100%;padding:9px 12px;border-radius:6px;border:1px solid #94a3b8;font-size:13.5px;font-weight:600;color:#0f2b48">
+          </div>
+
+          <!-- AI Toolbar & Body Editor -->
+          <div style="margin-bottom:16px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:8px">
+              <label style="margin:0;font-weight:700;color:#1e293b">Company Profile Pitch &amp; Introduction:</label>
+              <div style="display:flex;align-items:center;gap:6px">
+                <span style="font-size:11px;font-weight:700;color:#7c3aed">✨ AI Tools:</span>
+                <button type="button" class="btn ghost sm" id="btnAiPolish" style="font-size:11px;padding:3px 8px;border-color:#ddd6fe;color:#6d28d9" title="Polish grammar, clarity & business tone">
+                  ✨ Polish Tone
+                </button>
+                <button type="button" class="btn ghost sm" id="btnAiPersonalize" style="font-size:11px;padding:3px 8px;border-color:#ddd6fe;color:#6d28d9" title="Personalize specifically for this client/industry">
+                  🎯 Personalize
+                </button>
+                <button type="button" class="btn ghost sm" id="btnAiConcise" style="font-size:11px;padding:3px 8px;border-color:#ddd6fe;color:#6d28d9" title="Create concise elevator pitch">
+                  ⚡ Elevator Pitch
+                </button>
+                <button type="button" class="btn ghost sm" id="btnResetDraft" style="font-size:11px;padding:3px 8px;border-color:#cbd5e1;color:#475569" title="Reset to official full draft">
+                  🔄 Reset Draft
+                </button>
+              </div>
+            </div>
+            <textarea id="cpmBody" rows="11" style="width:100%;padding:12px;border-radius:8px;border:1px solid #cbd5e1;font-size:12.5px;line-height:1.6;font-family:inherit;color:#1e293b;resize:vertical">${h(defaultBody)}</textarea>
+          </div>
+
+          <!-- Dynamic Sender Signature Profile -->
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px;margin-bottom:16px">
+            <div style="font-size:12px;font-weight:700;color:#0f2b48;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+              <span>👤 Sender Profile Signature (Dynamic for Current User)</span>
+            </div>
+            <div class="grid" style="grid-template-columns:1fr 1fr 1.2fr 1fr;gap:10px">
+              <div>
+                <label style="font-size:11px;margin:0 0 2px;color:#64748b">Sender Name</label>
+                <input id="cpmSenderName" value="${h(defaultSenderName)}" style="width:100%;padding:6px 8px;border-radius:4px;border:1px solid #cbd5e1;font-size:12px;font-weight:600">
+              </div>
+              <div>
+                <label style="font-size:11px;margin:0 0 2px;color:#64748b">Phone / Mobile</label>
+                <input id="cpmSenderPhone" value="${h(defaultSenderPhone)}" style="width:100%;padding:6px 8px;border-radius:4px;border:1px solid #cbd5e1;font-size:12px">
+              </div>
+              <div>
+                <label style="font-size:11px;margin:0 0 2px;color:#64748b">Official Email</label>
+                <input id="cpmSenderEmail" value="${h(defaultSenderEmail)}" style="width:100%;padding:6px 8px;border-radius:4px;border:1px solid #cbd5e1;font-size:12px">
+              </div>
+              <div>
+                <label style="font-size:11px;margin:0 0 2px;color:#64748b">Designation</label>
+                <input id="cpmSenderDesig" value="${h(defaultSenderDesig)}" style="width:100%;padding:6px 8px;border-radius:4px;border:1px solid #cbd5e1;font-size:12px">
+              </div>
+            </div>
+            <div style="font-size:11px;color:#64748b;margin-top:8px">
+              🏢 <b>AMIGO ENTERPRISES PUNE:</b> Office No:- 401, Baban Villa, Sno-6/17, Chovisawadi, Haveli Pune, Pimpri Chinchwad. (M Corp.) 412105
+            </div>
+          </div>
+
+          <!-- PDF Attachment Option -->
+          <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">
+            <label style="margin:0;display:flex;align-items:center;gap:10px;color:#065f46;font-weight:700;font-size:13px;cursor:pointer">
+              <input type="checkbox" id="cpmAttachPdf" checked style="width:18px;height:18px;accent-color:#059669;cursor:pointer">
+              <span>📎 Attach Official 7-Page Product Catalogue PDF (Amigo_Enterprises_Company_Catalogue.pdf)</span>
+            </label>
+            <span style="font-size:11px;color:#047857;background:#d1fae5;padding:3px 8px;border-radius:12px;font-weight:600">
+              Live Catalogue PDF
+            </span>
+          </div>
+
+          <!-- Status / Progress Banner -->
+          <div id="cpmStatusBanner" style="display:none;margin-bottom:14px"></div>
+
+        </form>
+      </div>
+
+      <!-- Modal Footer -->
+      <div style="padding:14px 24px;border-top:1px solid #e2e8f0;background:#f8fafc;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div>
+          <button type="button" class="btn ghost" id="btnPreviewCatEmail" style="font-size:13px;font-weight:600;padding:8px 16px">
+            👁️ Preview Email
+          </button>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button type="button" class="btn ghost" id="btnCancelCatMail" style="font-size:13px;padding:8px 16px">
+            Cancel
+          </button>
+          <button type="button" class="btn" id="btnSubmitCatMail" style="background:linear-gradient(135deg, #0284c7 0%, #1d4ed8 100%);color:#ffffff;font-size:13px;font-weight:700;padding:8px 24px;box-shadow:0 4px 12px rgba(2,132,199,0.35);border:none">
+            🚀 Send Profile &amp; Catalogue
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(o);
+
+  // Close handlers
+  const close = () => o.remove();
+  o.querySelector('#btnCloseCatMail').onclick = close;
+  o.querySelector('#btnCancelCatMail').onclick = close;
+
+  // Client Selection logic
+  const clientSelect = o.querySelector('#cpmClientSelect');
+  const clientNameInp = o.querySelector('#cpmClientName');
+  const toInp = o.querySelector('#cpmTo');
+  const subjInp = o.querySelector('#cpmSubject');
+  const bodyTextarea = o.querySelector('#cpmBody');
+  const senderNameInp = o.querySelector('#cpmSenderName');
+  const senderPhoneInp = o.querySelector('#cpmSenderPhone');
+  const senderEmailInp = o.querySelector('#cpmSenderEmail');
+  const senderDesigInp = o.querySelector('#cpmSenderDesig');
+
+  clientSelect.onchange = () => {
+    const opt = clientSelect.options[clientSelect.selectedIndex];
+    if (opt && opt.value) {
+      const name = opt.getAttribute('data-name') || '';
+      const email = opt.getAttribute('data-email') || '';
+      clientNameInp.value = name;
+      if (email) toInp.value = email;
+      subjInp.value = `Company Profile & Product Catalogue | Amigo Enterprises Pune - ${name}`;
+      // Update greeting in body
+      bodyTextarea.value = OFFICIAL_CATALOGUE_EMAIL_DRAFT(name, senderNameInp.value, senderPhoneInp.value, senderEmailInp.value);
+    }
+  };
+
+  clientNameInp.oninput = () => {
+    const name = clientNameInp.value.trim();
+    if (name) {
+      subjInp.value = `Company Profile & Product Catalogue | Amigo Enterprises Pune - ${name}`;
+    }
+  };
+
+  // AI Toolbar Handlers
+  const handleAiAction = async (action, actionLabel) => {
+    const text = bodyTextarea.value.trim();
+    if (!text) {
+      say('Please enter some text in the body first');
+      return;
+    }
+    const cName = clientNameInp.value.trim();
+    const btn = o.querySelector(`#btnAi${actionLabel}`);
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = '⏳ Processing...';
+    }
+    try {
+      say('✨ AI Assistant is refining your company profile email...', 0);
+      const res = await api('POST', 'ai/transform', {
+        text,
+        action,
+        context: cName || 'Client'
+      });
+      if (res && res.result) {
+        bodyTextarea.value = res.result;
+        say('✨ AI update applied successfully!', 1);
+      }
+    } catch (err) {
+      say('AI Assist note: ' + err.message);
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = (actionLabel === 'Polish' ? '✨ Polish Tone' : (actionLabel === 'Personalize' ? '🎯 Personalize' : '⚡ Elevator Pitch'));
+      }
+    }
+  };
+
+  o.querySelector('#btnAiPolish').onclick = () => handleAiAction('polish', 'Polish');
+  o.querySelector('#btnAiPersonalize').onclick = () => handleAiAction('profile_personalize', 'Personalize');
+  o.querySelector('#btnAiConcise').onclick = () => handleAiAction('profile_concise', 'Concise');
+  o.querySelector('#btnResetDraft').onclick = () => {
+    const cName = clientNameInp.value.trim();
+    bodyTextarea.value = OFFICIAL_CATALOGUE_EMAIL_DRAFT(cName, senderNameInp.value, senderPhoneInp.value, senderEmailInp.value);
+    say('🔄 Reset to official Amigo Enterprises draft.', 1);
+  };
+
+  // Preview Email Handler
+  o.querySelector('#btnPreviewCatEmail').onclick = () => {
+    const cName = clientNameInp.value.trim();
+    const subj = subjInp.value.trim();
+    const bodyTxt = bodyTextarea.value.trim();
+    const sName = senderNameInp.value.trim();
+    const sPhone = senderPhoneInp.value.trim();
+    const sEmail = senderEmailInp.value.trim();
+    const sDesig = senderDesigInp.value.trim();
+
+    previewCatalogueProfileEmail({
+      clientName: cName,
+      subject: subj,
+      bodyText: bodyTxt,
+      senderName: sName,
+      senderPhone: sPhone,
+      senderEmail: sEmail,
+      senderDesignation: sDesig
+    });
+  };
+
+  // Submit & Send Handler
+  const sendBtn = o.querySelector('#btnSubmitCatMail');
+  sendBtn.onclick = async () => {
+    const to = toInp.value.trim();
+    const cc = o.querySelector('#cpmCc').value.trim();
+    const bcc = o.querySelector('#cpmBcc').value.trim();
+    const subject = subjInp.value.trim();
+    const bodyText = bodyTextarea.value.trim();
+    const clientName = clientNameInp.value.trim();
+    const senderName = senderNameInp.value.trim();
+    const senderPhone = senderPhoneInp.value.trim();
+    const senderEmail = senderEmailInp.value.trim();
+    const senderDesignation = senderDesigInp.value.trim();
+    const attachPdf = o.querySelector('#cpmAttachPdf').checked;
+
+    if (!to) {
+      toInp.focus();
+      say('Recipient email ("To") is required.');
+      return;
+    }
+    if (!subject) {
+      subjInp.focus();
+      say('Email subject is required.');
+      return;
+    }
+    if (!bodyText) {
+      bodyTextarea.focus();
+      say('Email message body cannot be empty.');
+      return;
+    }
+
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = '⏳ Sending...';
+
+    const statusBanner = o.querySelector('#cpmStatusBanner');
+    statusBanner.style.display = 'block';
+    statusBanner.innerHTML = `<div class="msg" style="background:#e0f2fe;color:#0369a1;display:flex;align-items:center;gap:10px"><span>⏳</span><span>Preparing email &amp; generating catalogue attachment...</span></div>`;
+
+    let attachments = [];
+    if (attachPdf) {
+      try {
+        statusBanner.innerHTML = `<div class="msg" style="background:#e0f2fe;color:#0369a1;display:flex;align-items:center;gap:10px"><span>⏳</span><span>Generating official 7-page catalogue PDF...</span></div>`;
+        const pdfAtt = await generateCataloguePdfBlob();
+        if (pdfAtt) attachments.push(pdfAtt);
+      } catch (pdfErr) {
+        console.warn('PDF generation failed:', pdfErr);
+        statusBanner.innerHTML = `<div class="msg" style="background:#fef3c7;color:#92400e;display:flex;align-items:center;gap:10px"><span>⚠️</span><span>PDF generator warning (${pdfErr.message}). Continuing to send email...</span></div>`;
+      }
+    }
+
+    try {
+      statusBanner.innerHTML = `<div class="msg" style="background:#e0f2fe;color:#0369a1;display:flex;align-items:center;gap:10px"><span>⏳</span><span>Dispatching email via Amigo SMTP server...</span></div>`;
+      const res = await api('POST', 'catalogue/send-mail', {
+        to,
+        cc,
+        bcc,
+        clientName,
+        subject,
+        bodyText,
+        senderName,
+        senderPhone,
+        senderEmail,
+        senderDesignation,
+        attachments
+      });
+
+      say('✅ ' + (res.message || 'Company Profile sent successfully!'), 1);
+      o.remove();
+
+      // Trigger history count refresh
+      const histBtn = document.getElementById('btnCatMailHistory');
+      if (histBtn && res.totalSent) {
+        histBtn.innerHTML = `📜 Sent History (${res.totalSent})`;
+      }
+    } catch (sendErr) {
+      statusBanner.innerHTML = `<div class="msg" style="background:#fee2e2;color:#991b1b;display:flex;align-items:center;gap:10px"><span>❌</span><span>Failed to send: ${h(sendErr.message)}</span></div>`;
+      sendBtn.disabled = false;
+      sendBtn.innerHTML = '🚀 Send Profile &amp; Catalogue';
+      say('Error: ' + sendErr.message);
+    }
+  };
+}
+
+function previewCatalogueProfileEmail(data) {
+  let existing = document.getElementById('catMailPreviewModal');
+  if (existing) existing.remove();
+
+  const previewHtml = buildClientCompanyProfileHtml(data);
+
+  const pModal = document.createElement('div');
+  pModal.id = 'catMailPreviewModal';
+  pModal.className = 'mail-modal-overlay';
+  pModal.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.85);backdrop-filter:blur(5px);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;';
+
+  pModal.innerHTML = `
+    <div class="card" style="width:750px;max-width:96vw;max-height:92vh;margin:0;display:flex;flex-direction:column;padding:0;background:#ffffff;border-radius:14px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);border:1px solid #cbd5e1;overflow:hidden">
+      <div style="padding:14px 20px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;background:#0f2b48;color:#ffffff">
+        <div style="font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px">
+          <span>👁️ Email Preview:</span>
+          <span style="font-size:13px;color:#93c5fd;font-weight:normal">${h(data.subject)}</span>
+        </div>
+        <button type="button" class="btn ghost sm" id="btnCloseCatPreview" style="color:#ffffff;border-color:rgba(255,255,255,0.3);font-size:16px;line-height:1;padding:3px 8px">✕</button>
+      </div>
+      <div style="flex:1;overflow:hidden;background:#f1f5f9;display:flex;flex-direction:column">
+        <iframe id="catPreviewIframe" style="width:100%;height:100%;border:none;flex:1"></iframe>
+      </div>
+      <div style="padding:12px 20px;border-top:1px solid #e2e8f0;background:#ffffff;display:flex;align-items:center;justify-content:flex-end">
+        <button type="button" class="btn" id="btnDoneCatPreview" style="font-size:12px;padding:6px 16px">Done</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(pModal);
+
+  const iframe = pModal.querySelector('#catPreviewIframe');
+  const doc = iframe.contentWindow.document;
+  doc.open();
+  doc.write(previewHtml);
+  doc.close();
+
+  const close = () => pModal.remove();
+  pModal.querySelector('#btnCloseCatPreview').onclick = close;
+  pModal.querySelector('#btnDoneCatPreview').onclick = close;
+}
+
+async function openCatalogueMailHistoryModal() {
+  let existing = document.getElementById('catMailHistoryModal');
+  if (existing) existing.remove();
+
+  const m = document.createElement('div');
+  m.id = 'catMailHistoryModal';
+  m.className = 'mail-modal-overlay';
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.8);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;';
+
+  m.innerHTML = `
+    <div class="card" style="width:900px;max-width:96vw;max-height:90vh;margin:0;display:flex;flex-direction:column;padding:0;background:#ffffff;border-radius:14px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.35);border:1px solid #cbd5e1;overflow:hidden">
+      <div style="padding:18px 24px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg, #091e3a 0%, #0f2b48 100%);color:#ffffff">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:24px">📜</span>
+          <div>
+            <h2 style="margin:0;font-size:18px;font-weight:800;color:#ffffff">Sent Company Profile Emails History</h2>
+            <div style="font-size:12px;color:#93c5fd;margin-top:2px">Audit log and tracking of catalogue pitches sent through the portal</div>
+          </div>
+        </div>
+        <button type="button" class="btn ghost sm" id="btnCloseCatHist" style="color:#ffffff;border-color:rgba(255,255,255,0.3);font-size:18px;line-height:1;padding:4px 10px">✕</button>
+      </div>
+      <div id="catHistContent" style="padding:20px;overflow-y:auto;flex:1">
+        <div style="text-align:center;padding:32px;color:#64748b">
+          <div class="view-spinner-ring" style="margin:0 auto 12px"></div>
+          <div>Loading sent emails history...</div>
+        </div>
+      </div>
+      <div style="padding:12px 20px;border-top:1px solid #e2e8f0;background:#f8fafc;display:flex;align-items:center;justify-content:space-between">
+        <button type="button" class="btn sm" style="background:#0284c7;color:#fff" onclick="openSendCatalogueProfileModal()">
+          + Send Another Profile Email
+        </button>
+        <button type="button" class="btn ghost sm" id="btnCloseCatHistBottom">Close</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(m);
+  const close = () => m.remove();
+  m.querySelector('#btnCloseCatHist').onclick = close;
+  m.querySelector('#btnCloseCatHistBottom').onclick = close;
+
+  try {
+    const history = (await api('GET', 'catalogue/mail-history')) || [];
+    const container = m.querySelector('#catHistContent');
+    if (!history.length) {
+      container.innerHTML = `
+        <div style="text-align:center;padding:48px 20px;color:#64748b">
+          <div style="font-size:42px;margin-bottom:12px">📭</div>
+          <div style="font-size:16px;font-weight:700;color:#1e293b">No Catalogue Emails Sent Yet</div>
+          <div style="font-size:13px;margin-top:6px;color:#64748b">Use the "Send Company Profile" button to send your first catalogue pitch with attached PDF.</div>
+          <button class="btn sm" style="margin-top:16px;background:#0284c7;color:#fff" onclick="document.getElementById('catMailHistoryModal').remove();openSendCatalogueProfileModal()">
+            📧 Compose First Company Profile Email
+          </button>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = `
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:12.5px">
+          <thead>
+            <tr style="border-bottom:2px solid #e2e8f0;color:#475569;text-align:left">
+              <th style="padding:8px 10px">Date / Time</th>
+              <th style="padding:8px 10px">Client Company</th>
+              <th style="padding:8px 10px">Recipient ("To")</th>
+              <th style="padding:8px 10px">Sent By</th>
+              <th style="padding:8px 10px">Catalogue PDF</th>
+              <th style="padding:8px 10px">Status</th>
+              <th style="padding:8px 10px;text-align:center">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${history.map(item => `
+              <tr style="border-bottom:1px solid #f1f5f9;transition:background 0.15s" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+                <td style="padding:10px;white-space:nowrap;color:#64748b">
+                  ${new Date(item.sentAt).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' })}
+                  <div style="font-size:11px;color:#94a3b8">${new Date(item.sentAt).toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' })}</div>
+                </td>
+                <td style="padding:10px;font-weight:700;color:#0f2b48">
+                  ${h(item.clientName || 'Prospect')}
+                </td>
+                <td style="padding:10px;color:#1e293b">
+                  ${h(item.to)}
+                  ${item.cc ? `<div style="font-size:11px;color:#64748b">Cc: ${h(item.cc)}</div>` : ''}
+                </td>
+                <td style="padding:10px;color:#334155">
+                  ${h(item.senderName || item.sentBy)}
+                  <div style="font-size:11px;color:#64748b">${h(item.senderDesignation || 'Sales')}</div>
+                </td>
+                <td style="padding:10px">
+                  ${item.pdfAttached ? '<span style="background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600">📎 7-Page PDF</span>' : '<span style="color:#94a3b8;font-size:11px">None</span>'}
+                </td>
+                <td style="padding:10px">
+                  <span style="background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700">
+                    ✔ Sent
+                  </span>
+                </td>
+                <td style="padding:10px;text-align:center">
+                  <button class="btn ghost sm" style="font-size:11px;padding:3px 8px" onclick="document.getElementById('catMailHistoryModal').remove();openSendCatalogueProfileModal({ name:${JSON.stringify(item.clientName || '')}, email:${JSON.stringify(item.to || '')} })">
+                    🔄 Resend
+                  </button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  } catch (err) {
+    m.querySelector('#catHistContent').innerHTML = `
+      <div style="text-align:center;padding:32px;color:#ef4444">
+        Failed to load mail history: ${h(err.message)}
+      </div>
+    `;
+  }
 }
 
 </script></body></html>
