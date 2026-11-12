@@ -15770,7 +15770,7 @@ Office No:- 401, Baban Villa, Sno-6/17, Chovisawadi, Haveli Pune, 412105`;
 function buildClientCompanyProfileHtml({ clientName, subject, bodyText, senderName, senderPhone, senderEmail, senderDesignation }) {
   const origin = window.location.origin || '';
   const logoUrl = origin + '/logo.png';
-  const brand = `<img src="${logoUrl}" width="95" alt="Amigo Enterprises" style="display:block;border:0;outline:none;height:auto;max-height:36px;object-fit:contain">`;
+  const brand = `<img src="${logoUrl}" width="115" alt="Amigo Enterprises" style="display:block;border:0;outline:none;height:auto;max-height:42px;object-fit:contain">`;
 
   const sName = senderName || 'Ashwini Kharat';
   const sPhone = senderPhone || '8421159145';
@@ -15781,73 +15781,175 @@ function buildClientCompanyProfileHtml({ clientName, subject, bodyText, senderNa
     .split(/\n\n+/)
     .map(p => p.trim())
     .filter(Boolean)
-    .map(p => `<p style="margin:0 0 10px;font-size:13px;line-height:1.58;color:#1e293b">${h(p).replace(/\n/g, '<br>')}</p>`)
+    .map(p => `<p style="margin:0 0 10px;font-size:13.5px;line-height:1.62;color:#1e293b">${h(p).replace(/\n/g, '<br>')}</p>`)
     .join('');
 
   return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${h(subject || 'Company Profile & Product Catalogue | Amigo Enterprises')}</title></head>
-<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:16px 8px">
+<body style="margin:0;padding:0;background:#eef2f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef2f6;padding:24px 12px">
 <tr><td align="center">
-  <table role="presentation" width="800" cellpadding="0" cellspacing="0" style="width:100%;max-width:800px;background:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 3px 12px rgba(0,0,0,0.06);border:1px solid #cbd5e1">
+  <table role="presentation" width="1100" cellpadding="0" cellspacing="0" style="width:100%;max-width:1100px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(15,23,42,0.08);border:1px solid #cbd5e1">
     
-    <!-- Compact Slim Header (Height ~44px) -->
-    <tr><td style="background:#0f2b48;padding:10px 18px;border-bottom:3px solid #0284c7">
+    <!-- Top Amigo Brand Accent Stripe: Crimson Red & Royal Sky Blue -->
+    <tr><td style="background:linear-gradient(90deg, #c1272d 0%, #c1272d 28%, #0284c7 28%, #0b4f8a 100%);height:5px;font-size:0;line-height:0">&nbsp;</td></tr>
+
+    <!-- Executive Header with Logo & Credential Badges -->
+    <tr><td style="background:linear-gradient(135deg, #091e3a 0%, #0f2b48 55%, #0b4f8a 100%);padding:16px 28px;color:#ffffff">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
         <tr>
-          <td valign="middle" width="95">${brand}</td>
-          <td valign="middle" style="padding-left:12px;border-left:1px solid rgba(255,255,255,0.2)">
-            <div style="font-size:15px;font-weight:800;color:#ffffff;letter-spacing:0.4px;line-height:1.1">AMIGO ENTERPRISES</div>
-            <div style="font-size:10.5px;color:#93c5fd;font-weight:600;margin-top:2px">Electrostatic Precipitator (ESP) Spares &bull; Maintenance &bull; Retrofitting &bull; Pune</div>
+          <!-- Logo & Brand Title -->
+          <td valign="middle" width="135" style="padding-right:16px">
+            <div style="background:#ffffff;padding:5px 12px;border-radius:8px;display:inline-block;box-shadow:0 2px 6px rgba(0,0,0,0.15)">
+              ${brand}
+            </div>
           </td>
+          <td valign="middle" style="padding-left:14px;border-left:1px solid rgba(255,255,255,0.18)">
+            <table role="presentation" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="font-size:20px;font-weight:900;color:#ffffff;letter-spacing:0.6px;line-height:1">AMIGO ENTERPRISES</td>
+                <td style="padding-left:10px">
+                  <span style="background:#c1272d;color:#ffffff;font-size:9.5px;font-weight:800;padding:2px 7px;border-radius:3px;letter-spacing:0.5px;text-transform:uppercase">PUNE</span>
+                </td>
+              </tr>
+            </table>
+            <div style="font-size:11.5px;color:#93c5fd;font-weight:600;margin-top:4px">
+              Electrostatic Precipitator (ESP) Spares &bull; Maintenance, Inspection &bull; Retrofitting Services
+            </div>
+          </td>
+          <!-- Right Credentials & Contact -->
           <td valign="middle" align="right">
-            <span style="font-size:9.5px;font-weight:700;color:#ffffff;background:rgba(2,132,199,0.35);padding:3px 7px;border-radius:4px;border:1px solid rgba(2,132,199,0.5)">ISO 9001:2015</span>
+            <table role="presentation" cellpadding="0" cellspacing="0" style="display:inline-table">
+              <tr>
+                <td style="padding-right:8px">
+                  <span style="display:inline-block;background:rgba(2,132,199,0.3);color:#bae6fd;border:1px solid rgba(56,189,248,0.4);font-size:10px;font-weight:700;padding:4px 9px;border-radius:5px">
+                    🛡️ ISO 9001:2015 CERTIFIED
+                  </span>
+                </td>
+                <td>
+                  <span style="display:inline-block;background:rgba(255,255,255,0.12);color:#ffffff;border:1px solid rgba(255,255,255,0.25);font-size:10px;font-weight:700;padding:4px 10px;border-radius:5px">
+                    📞 +91 ${sPhone}
+                  </span>
+                </td>
+              </tr>
+            </table>
           </td>
         </tr>
       </table>
     </td></tr>
 
-    <!-- Main Message Body -->
-    <tr><td style="padding:16px 20px 12px">
-      ${clientName ? `<div style="display:inline-block;background:#f0fdf4;color:#166534;font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;border:1px solid #bbf7d0;margin-bottom:10px">EXCLUSIVELY FOR: ${h(clientName).toUpperCase()}</div>` : ''}
-      <div style="font-size:13px;line-height:1.58;color:#1e293b">
+    <!-- Exclusive Client Strip -->
+    ${clientName ? `
+    <tr><td style="background:linear-gradient(90deg, #f0f7ff 0%, #e0f2fe 100%);padding:8px 28px;border-bottom:1px solid #bae6fd">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td valign="middle">
+            <span style="font-size:10.5px;font-weight:800;color:#0b4f8a;letter-spacing:0.5px;text-transform:uppercase">🎯 EXCLUSIVELY PREPARED FOR:</span>
+            <span style="font-size:12px;font-weight:800;color:#0369a1;margin-left:6px;background:#ffffff;padding:2px 10px;border-radius:4px;border:1px solid #7dd3fc">${h(clientName)}</span>
+          </td>
+          <td valign="middle" align="right">
+            <span style="font-size:10.5px;color:#0284c7;font-weight:600">Amigo ESP Spares &amp; Services Outreach</span>
+          </td>
+        </tr>
+      </table>
+    </td></tr>` : ''}
+
+    <!-- Main Message & Content Area -->
+    <tr><td style="padding:22px 28px 16px">
+      <!-- Body Text -->
+      <div style="font-size:13.5px;line-height:1.62;color:#1e293b;margin-bottom:18px">
         ${formattedBody || `<p style="margin:0 0 10px;font-size:13.5px;line-height:1.55;color:#1e293b"><b>Dear Sir/Madam, Greetings from Amigo Enterprises, Pune!</b></p><p style="margin:0 0 10px;font-size:13px;line-height:1.58;color:#334155">We are pleased to introduce <b>Amigo Enterprises</b>, a trusted supplier of mechanical and electrical spare parts specializing in <b>Electrostatic Precipitator (ESP) spares, maintenance, inspection, and retrofitting services</b>.</p><p style="margin:0 0 10px;font-size:13px;line-height:1.58;color:#334155">Our goal is to help our plant customers improve ESP collection efficiency, minimize downtime, and resolve operational issues during preventive maintenance and plant shutdowns.</p>`}
       </div>
-    </td></tr>
 
-    <!-- Attached Catalogue PDF Strip -->
-    <tr><td style="padding:0 20px 12px">
-      <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:6px;padding:7px 12px">
+      <!-- 3-Column Highlights Strip Across 1100px -->
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:18px">
+        <tr>
+          <!-- Card 1: Spares Range -->
+          <td width="32%" valign="top" style="background:#f8fafc;border:1px solid #e2e8f0;border-top:3px solid #0b4f8a;border-radius:8px;padding:12px 16px">
+            <div style="font-size:12px;font-weight:800;color:#0b4f8a;margin-bottom:5px">
+              ⚡ ESP SPARES RANGE
+            </div>
+            <div style="font-size:11px;color:#475569;line-height:1.5">
+              Collecting &amp; Discharge Electrodes, Transformers, Rapper Panels, Coils, Boot Seals, FRP, Insulators, Gaskets, RAV, Heaters &amp; GD Screens.
+            </div>
+          </td>
+          <td width="2%">&nbsp;</td>
+          <!-- Card 2: Plant Services -->
+          <td width="32%" valign="top" style="background:#f8fafc;border:1px solid #e2e8f0;border-top:3px solid #c1272d;border-radius:8px;padding:12px 16px">
+            <div style="font-size:12px;font-weight:800;color:#c1272d;margin-bottom:5px">
+              🛠️ TECHNICAL SERVICES
+            </div>
+            <div style="font-size:11px;color:#475569;line-height:1.5">
+              Mechanical &amp; Electrical Maintenance, Overhauling, Microprocessor Panel Retrofitting, Efficiency Audits &amp; Shutdown Support.
+            </div>
+          </td>
+          <td width="2%">&nbsp;</td>
+          <!-- Card 3: Esteemed Clients -->
+          <td width="32%" valign="top" style="background:#f8fafc;border:1px solid #e2e8f0;border-top:3px solid #059669;border-radius:8px;padding:12px 16px">
+            <div style="font-size:12px;font-weight:800;color:#059669;margin-bottom:5px">
+              🏆 ESTEEMED CLIENTS
+            </div>
+            <div style="font-size:11px;color:#475569;line-height:1.5">
+              Emami Papers, Shree Cement, Chakra Cement, Reliance Cement, Garden Silk, BRFL, Shri Ambalika Sugar, EID Parry, Thanush Ispat &amp; more.
+            </div>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Attached Catalogue PDF Banner Callout -->
+      <div style="background:linear-gradient(90deg, #ecfdf5 0%, #f0fdf4 100%);border:1.5px solid #10b981;border-radius:8px;padding:10px 18px">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
           <tr>
-            <td width="20" valign="middle" style="font-size:15px;line-height:1">📎</td>
-            <td valign="middle" style="padding-left:6px">
-              <span style="font-size:11.5px;font-weight:700;color:#065f46">Attached: Official 7-Page Product Catalogue &amp; Specifications (PDF)</span>
-              <span style="font-size:10.5px;color:#047857;margin-left:6px">&mdash; Complete technical drawings, spares portfolio &amp; credentials</span>
+            <td width="26" valign="middle" style="font-size:20px;line-height:1">📎</td>
+            <td valign="middle" style="padding-left:8px">
+              <span style="font-size:12px;font-weight:800;color:#065f46">ATTACHED: Official 7-Page ESP Spares &amp; Services Technical Catalogue (PDF)</span>
+              <span style="font-size:11px;color:#047857;margin-left:8px">&bull; Complete drawings, OEM compatibility, material specifications &amp; project credentials</span>
+            </td>
+            <td valign="middle" align="right">
+              <span style="background:#059669;color:#ffffff;font-size:9.5px;font-weight:700;padding:3px 9px;border-radius:4px;letter-spacing:0.3px">VERIFIED PDF ATTACHED</span>
             </td>
           </tr>
         </table>
       </div>
+
     </td></tr>
 
-    <!-- Compact Executive Signature & Contact -->
-    <tr><td style="background:#f8fafc;padding:12px 20px;border-top:1px solid #e2e8f0">
+    <!-- Executive Footer & Signature (3 Columns) -->
+    <tr><td style="background:#f8fafc;padding:14px 28px;border-top:1px solid #e2e8f0">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
         <tr>
-          <td valign="middle">
-            <div style="font-size:13.5px;font-weight:800;color:#0f2b48;line-height:1.2">
+          <!-- Sender Contact -->
+          <td valign="top" width="34%">
+            <div style="font-size:13.5px;font-weight:800;color:#091e3a;line-height:1.2">
               ${h(sName)} <span style="font-size:11px;font-weight:600;color:#0284c7;margin-left:4px">| ${h(sDesig)}</span>
             </div>
             <div style="font-size:11.5px;color:#334155;margin-top:3px;font-weight:600">
-              📞 <a href="tel:${h(sPhone)}" style="color:#0f2b48;text-decoration:none;margin-right:12px">${h(sPhone)}</a>
+              📞 <a href="tel:${h(sPhone)}" style="color:#091e3a;text-decoration:none;margin-right:10px">${h(sPhone)}</a>
               ✉️ <a href="mailto:${h(sEmail)}" style="color:#0284c7;text-decoration:none">${h(sEmail)}</a>
             </div>
           </td>
-          <td valign="middle" align="right" style="padding-left:10px">
-            <div style="font-size:11px;font-weight:700;color:#0f2b48">AMIGO ENTERPRISES PUNE</div>
-            <div style="font-size:10px;color:#64748b;margin-top:1px">Office 401, Baban Villa, Chovisawadi, Haveli Pune 412105</div>
+          <!-- Pune Office Details -->
+          <td valign="top" width="38%" style="padding-left:16px;border-left:1px solid #e2e8f0">
+            <div style="font-size:11.5px;font-weight:800;color:#0b4f8a">
+              🏢 AMIGO ENTERPRISES PUNE
+            </div>
+            <div style="font-size:10.5px;color:#64748b;line-height:1.4;margin-top:2px">
+              Office No:- 401, Baban Villa, Sno-6/17, Chovisawadi, Haveli Pune, 412105
+            </div>
+          </td>
+          <!-- Core Value Proposition -->
+          <td valign="top" width="28%" align="right" style="padding-left:16px;border-left:1px solid #e2e8f0">
+            <div style="font-size:11px;font-weight:700;color:#091e3a">Quality &bull; Service &bull; Pricing</div>
+            <div style="font-size:10px;color:#0284c7;font-weight:600;margin-top:2px">Complete ESP Spares &amp; Retrofit Partner</div>
           </td>
         </tr>
       </table>
+    </td></tr>
+
+    <!-- Bottom Midnight Micro Bar -->
+    <tr><td style="background:#091e3a;padding:7px 28px;text-align:center">
+      <div style="font-size:10px;color:#94a3b8">
+        &copy; Amigo Enterprises, Pune &bull; Electrostatic Precipitator Spares, Maintenance &amp; Panel Retrofitting &bull; Confidential Business Communication
+      </div>
     </td></tr>
 
   </table>
@@ -16025,7 +16127,7 @@ async function sendProfileView(activeTab = 'compose', prefillClient = null) {
   let defaultBody = OFFICIAL_CATALOGUE_EMAIL_DRAFT(selectedClientName, defaultSenderName, defaultSenderPhone, defaultSenderEmail);
 
   view.innerHTML = `
-    <div class="sendprofile-page" style="max-width:1280px;margin:0 auto;padding-bottom:50px;">
+    <div class="sendprofile-page" style="max-width:1340px;margin:0 auto;padding-bottom:50px;">
       <!-- Hero Top Bar -->
       <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:20px;background:#ffffff;padding:20px 24px;border-radius:14px;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
         <div>
@@ -16850,7 +16952,7 @@ function previewCatalogueProfileEmail(data) {
   pModal.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.85);backdrop-filter:blur(5px);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;';
 
   pModal.innerHTML = `
-    <div class="card" style="width:920px;max-width:96vw;max-height:92vh;margin:0;display:flex;flex-direction:column;padding:0;background:#ffffff;border-radius:14px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);border:1px solid #cbd5e1;overflow:hidden">
+    <div class="card" style="width:1200px;max-width:98vw;max-height:94vh;margin:0;display:flex;flex-direction:column;padding:0;background:#ffffff;border-radius:14px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);border:1px solid #cbd5e1;overflow:hidden">
       <div style="padding:14px 20px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;background:#0f2b48;color:#ffffff">
         <div style="font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px">
           <span>👁️ Email Preview:</span>
