@@ -169,7 +169,11 @@ const safeUser = u => {
     createdAt: u.createdAt
   };
 };
-const needsFace = u => u.role === 'employee' && mailCfg().faceEmployees !== false; // face check is an allowed way to verify for employees
+const needsFace = u => {
+  if (u.faceRequired === 'no' || u.faceRequired === 'false' || u.faceRequired === false) return false;
+  if (u.faceRequired === 'yes' || u.faceRequired === 'true' || u.faceRequired === true) return true;
+  return u.role === 'employee' && mailCfg().faceEmployees !== false;
+};
 // ---- HTML e-mail templates (table layout + inline CSS so Gmail/Outlook render them; logo is embedded as a CID image) ----
 const hx = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 let LOGO = null; const logoBuf = () => { if (LOGO === null) { try { LOGO = fs.readFileSync(path.join(PUB, 'logo.png')); } catch { LOGO = false; } } return LOGO; };
@@ -766,7 +770,11 @@ async function checkInactivityAlerts() {
   }
 }
 
-const needsOtp = u => (u.role === 'employee' ? mailCfg().otpEmployees !== false : (mailCfg().otpAdmin !== false && !!u.email));
+const needsOtp = u => {
+  if (u.otpRequired === 'no' || u.otpRequired === 'false' || u.otpRequired === false) return false;
+  if (u.otpRequired === 'yes' || u.otpRequired === 'true' || u.otpRequired === true) return true;
+  return (u.role === 'employee' ? mailCfg().otpEmployees !== false : (mailCfg().otpAdmin !== false && !!u.email));
+};
 const resets = new Map(), resetIp = new Map(); // admin password-reset codes
 const pending = new Map(); // password-verified logins waiting for the face check and/or the e-mailed code
 const maskEmail = e => { const [n, d] = String(e).split('@'); return n[0] + '*'.repeat(Math.max(1, n.length - 2)) + (n.length > 1 ? n.slice(-1) : '') + '@' + d; };
@@ -827,7 +835,7 @@ async function sendOtp(p, u) { // e-mails a fresh 6-digit code; returns '' on su
   const code = String(crypto.randomInt(0, 1000000)).padStart(6, '0'), salt = crypto.randomBytes(8).toString('hex');
   p.otp = { h: otpHash(code, salt), salt, exp: now + 10 * 60e3, tries: 0 }; p.lastSent = now; p.sends = (p.sends || 0) + 1; p.exp = now + 15 * 60e3; p.stage = 'otp';
   try { await smtpSend(mailCfg(), { to: u.email, subject: 'Your Accounts login code', html: otpHtml(code), images: mailImages(), text: `Your one-time login code is ${code}\n\nIt is valid for 10 minutes. If you did not try to log in, ignore this email and tell the admin.` }); return ''; }
-  catch (e) { console.error('OTP email failed:', e.message); return 'The code could not be emailed. Ask the admin to check the mail settings.'; }
+  catch (e) { console.error('OTP email failed:', e.message); return 'The code could not be emailed (' + (e.message || 'SMTP authentication failed') + '). Ask the admin to check the mail settings.'; }
 }
 const dist = (a, b) => Math.sqrt(a.reduce((s, x, i) => s + (x - b[i]) ** 2, 0));
 function startSession(res, u) {
@@ -886,6 +894,7 @@ const mailCfg = () => {
     if (fs.existsSync(mf)) fileSetting = JSON.parse(fs.readFileSync(mf, 'utf8'));
   } catch {}
   const combined = { ...MAIL_DEFAULTS, ...fileSetting, ...dbSetting };
+  if (process.env.SMTP_USER) combined.smtpUser = process.env.SMTP_USER;
   if (process.env.SMTP_PASS) combined.smtpPass = process.env.SMTP_PASS;
   return combined;
 };
