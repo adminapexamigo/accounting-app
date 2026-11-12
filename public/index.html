@@ -2956,13 +2956,13 @@ body.mobile-sidebar-open {
       <div class="op-loader-ring"></div>
       <div class="op-loader-icon" id="opLoaderIcon">💾</div>
     </div>
-    <div class="op-loader-title" id="opLoaderTitle">Saving to Database...</div>
-    <div class="op-loader-sub" id="opLoaderSub">Writing permanent record to cloud PostgreSQL... Please wait.</div>
+    <div class="op-loader-title" id="opLoaderTitle">Saving Changes...</div>
+    <div class="op-loader-sub" id="opLoaderSub">Saving your changes... Please wait.</div>
     <div class="op-loader-progress-track">
       <div class="op-loader-progress-fill"></div>
     </div>
     <div class="op-loader-badge" id="opLoaderBadge">
-      <span>☁️</span> <span>Committing to Cloud DB</span>
+      <span>🔒</span> <span>Secure Cloud Sync</span>
     </div>
   </div>
 </div>
@@ -3606,19 +3606,19 @@ function showOperationLoader(method, url) {
 
   if (m === 'POST') {
     if (icon) icon.textContent = '💾';
-    if (title) title.textContent = `Saving ${name} to Database...`;
-    if (sub) sub.textContent = 'Writing permanent record to Supabase PostgreSQL cloud database.';
-    if (badge) badge.innerHTML = '<span>☁️</span> <span>Committing to Cloud DB</span>';
+    if (title) title.textContent = `Saving ${name}...`;
+    if (sub) sub.textContent = 'Saving record securely... Please wait.';
+    if (badge) badge.innerHTML = '<span>☁️</span> <span>Secure Cloud Sync</span>';
   } else if (m === 'PUT') {
     if (icon) icon.textContent = '🔄';
-    if (title) title.textContent = `Updating ${name} in Database...`;
-    if (sub) sub.textContent = 'Saving modifications permanently to Supabase PostgreSQL.';
-    if (badge) badge.innerHTML = '<span>☁️</span> <span>Updating Cloud DB</span>';
+    if (title) title.textContent = `Updating ${name}...`;
+    if (sub) sub.textContent = 'Saving your modifications... Please wait.';
+    if (badge) badge.innerHTML = '<span>☁️</span> <span>Updating Record</span>';
   } else if (m === 'DELETE') {
     if (icon) icon.textContent = '🗑️';
-    if (title) title.textContent = `Deleting ${name} from Database...`;
-    if (sub) sub.textContent = 'Permanently removing record from Supabase PostgreSQL.';
-    if (badge) badge.innerHTML = '<span>☁️</span> <span>Deleting from Cloud DB</span>';
+    if (title) title.textContent = `Deleting ${name}...`;
+    if (sub) sub.textContent = 'Removing record... Please wait.';
+    if (badge) badge.innerHTML = '<span>☁️</span> <span>Removing Record</span>';
   }
 
   overlay.style.display = 'flex';
@@ -3640,16 +3640,16 @@ function showOperationSuccess(method, url) {
   if (icon) icon.textContent = '✅';
 
   if (m === 'POST') {
-    if (title) title.textContent = 'Permanently Saved in Database!';
-    if (sub) sub.textContent = 'Your record is verified and stored in PostgreSQL cloud database.';
+    if (title) title.textContent = 'Saved Successfully!';
+    if (sub) sub.textContent = 'Your record has been saved successfully.';
   } else if (m === 'PUT') {
-    if (title) title.textContent = 'Updated Permanently in Database!';
-    if (sub) sub.textContent = 'Modifications committed and verified in cloud PostgreSQL.';
+    if (title) title.textContent = 'Updated Successfully!';
+    if (sub) sub.textContent = 'Your changes have been updated successfully.';
   } else if (m === 'DELETE') {
-    if (title) title.textContent = 'Deleted Successfully from Database!';
-    if (sub) sub.textContent = 'Record permanently removed from cloud PostgreSQL.';
+    if (title) title.textContent = 'Deleted Successfully!';
+    if (sub) sub.textContent = 'Record removed successfully.';
   }
-  if (badge) badge.innerHTML = '<span>✅</span> <span>DB Transaction Confirmed</span>';
+  if (badge) badge.innerHTML = '<span>✅</span> <span>Changes Confirmed</span>';
 
   setTimeout(() => {
     overlay.classList.remove('active');
@@ -3672,7 +3672,7 @@ function showOperationError(method, url, err) {
   card.classList.add('is-error');
   if (icon) icon.textContent = '❌';
   if (title) title.textContent = 'Database Operation Failed';
-  if (sub) sub.textContent = err?.message || 'Could not commit to database. Please check connection.';
+  if (sub) sub.textContent = err?.message || 'Could not save changes. Please check your internet connection.';
   if (badge) badge.innerHTML = '<span>⚠️</span> <span>Operation Failed</span>';
 
   setTimeout(() => {
@@ -4737,7 +4737,7 @@ async function docs(type){
           ${scope === 'own' ? '<span style="font-size:11px;font-weight:700;background:#e0f2fe;color:#0284c7;padding:3px 8px;border-radius:12px;display:inline-flex;align-items:center;gap:4px">👤 My Documents Only</span>' : ''}
         </h1>
         <div style="display:flex;gap:10px">
-          <button class="btn ghost" id="docRefreshBtn" title="Fetch fresh records directly from database">🔄 Refresh</button>
+          <button class="btn ghost" id="docRefreshBtn" title="Fetch fresh records">🔄 Refresh</button>
           <button class="btn ghost" id="docExportBtn">📊 Export Excel</button>
           ${can(type, 'create') ? `<button class="btn" id="new">+ New ${T.l.toLowerCase()}</button>` : ''}
         </div>
@@ -4815,7 +4815,7 @@ async function docs(type){
         SessionCache.remove('docs');
         await load('docs', true);
         go(type);
-        say('Refreshed latest ' + type + ' from database.', 1);
+        say('Refreshed latest ' + type + '.', 1);
       };
     }
     $('#docExportBtn').onclick = () => {
@@ -6232,7 +6232,7 @@ function go(t) {
             <div class="view-spinner-icon">📊</div>
           </div>
           <div class="view-loading-title">Loading ${h(title)}…</div>
-          <div class="view-loading-sub">Fetching live records from Supabase PostgreSQL database</div>
+          <div class="view-loading-sub">Loading latest records... Please wait.</div>
           <div class="view-loading-bar-track">
             <div class="view-loading-bar-fill"></div>
           </div>
@@ -6716,7 +6716,7 @@ async function invoices(){
           <span class="header-count-pill">${L.length} Total</span>
         </h1>
         <div style="display:flex;gap:10px">
-          <button class="btn ghost" id="invRefreshBtn" title="Fetch fresh records directly from database">🔄 Refresh</button>
+          <button class="btn ghost" id="invRefreshBtn" title="Fetch fresh records">🔄 Refresh</button>
           <button class="btn ghost" id="invExportBtn">📊 Export Excel</button>
           ${can('invoices', 'create') ? `<button class="btn" id="new">+ New invoice</button>` : ''}
         </div>
@@ -6796,7 +6796,7 @@ async function invoices(){
         SessionCache.remove('invoices');
         await load('invoices', true);
         go('invoices');
-        say('Refreshed latest invoices from database.', 1);
+        say('Refreshed latest invoices.', 1);
       };
     }
     $('#invExportBtn').onclick = () => {
@@ -15034,7 +15034,7 @@ async function saveCatalogueChanges() {
   try {
     await api('PUT', 'catalogue', window.catData);
     window.catModified = false;
-    say('✅ Catalogue changes saved successfully to database!', 1);
+    say('✅ Catalogue changes saved successfully!', 1);
     if (btn) {
       btn.disabled = false;
       btn.textContent = '💾 Save Changes';
