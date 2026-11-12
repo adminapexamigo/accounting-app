@@ -272,7 +272,7 @@ function buildCompanyProfileEmailHtml({ clientName, subject, bodyText, senderNam
 <body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:16px 8px">
 <tr><td align="center">
-  <table role="presentation" width="620" cellpadding="0" cellspacing="0" style="width:100%;max-width:620px;background:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 3px 12px rgba(0,0,0,0.06);border:1px solid #cbd5e1">
+  <table role="presentation" width="800" cellpadding="0" cellspacing="0" style="width:100%;max-width:800px;background:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 3px 12px rgba(0,0,0,0.06);border:1px solid #cbd5e1">
     
     <!-- Compact Slim Header (Height ~44px) -->
     <tr><td style="background:#0f2b48;padding:10px 18px;border-bottom:3px solid #0284c7">
