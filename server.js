@@ -254,46 +254,8 @@ function offlineAlertHtml({ employee, inactiveMins, lastSeenAt, actions = [], da
 
 function buildCompanyProfileEmailHtml({ clientName, subject, bodyText, senderName, senderPhone, senderEmail, senderDesignation }) {
   const co = company(), logo = logoBuf();
-  const brand = logo ? `<img src="cid:amigo-logo" width="110" alt="${hx(co.name)}" style="display:block;border:0;outline:none;height:auto">` : `<span style="font-size:22px;font-weight:800;color:#0b4f8a">${hx(co.name)}</span>`;
+  const brand = logo ? `<img src="cid:amigo-logo" width="95" alt="${hx(co.name)}" style="display:block;border:0;outline:none;height:auto;max-height:36px;object-fit:contain">` : `<span style="font-size:16px;font-weight:800;color:#ffffff">${hx(co.name)}</span>`;
   
-  const productPills = [
-    'Collecting Electrodes',
-    'Discharge Electrodes',
-    'Rectifier Transformers & Spares',
-    'Rapper Panels & Spares',
-    'Rapper Spares (Coils, Boot Seals, FRP)',
-    'All Types of Insulators & Gaskets',
-    'Access, Hopper & Penthouse Doors',
-    'Heaters (Hopper, Insulator & Purge Air)',
-    'All Types of Tumbling Hammers',
-    'Rotary Air Valves (RAV)',
-    'Top & Bottom Tadpole Seals',
-    'Gas Distribution (GD) Screens'
-  ];
-
-  const servicesList = [
-    { title: 'Mechanical Maintenance', desc: 'Overhauling, alignment & replacement of internal mechanical parts.' },
-    { title: 'Electrical Maintenance', desc: 'Inspection, troubleshooting & optimization of electrical control panels.' },
-    { title: 'Panel Retrofitting', desc: 'Upgrading legacy controllers with modern microprocessor-based panels.' },
-    { title: 'Inspection & Audits', desc: 'Complete mechanical & electrical assessment of ESP systems & shutdown planning.' }
-  ];
-
-  const customersList = [
-    'Emami Papers Pvt. Ltd.',
-    'Shree Cement Pvt. Ltd.',
-    'Chakra Cement Pvt. Ltd.',
-    'Reliance Cement Corporation Pvt. Ltd.',
-    'Garden Silk Mill Pvt. Ltd.',
-    'BRFL Textile Pvt. Ltd.',
-    'Shri Ambalika Sugar Pvt. Ltd.',
-    'EID Parry Pvt. Ltd.',
-    'Thanush Ispat Pvt. Ltd.',
-    'Shree Mega Power Ltd.',
-    'Suvan Steel Pvt. Ltd.',
-    'Shree Kanak Durga Steel Pvt. Ltd.',
-    'Durva Infratech Pvt. Ltd.'
-  ];
-
   const sName = senderName || 'Ashwini Kharat';
   const sPhone = senderPhone || '8421159145';
   const sEmail = senderEmail || 'amigo.sales6423@gmail.com';
@@ -303,147 +265,73 @@ function buildCompanyProfileEmailHtml({ clientName, subject, bodyText, senderNam
     .split(/\n\n+/)
     .map(p => p.trim())
     .filter(Boolean)
-    .map(p => `<p style="margin:0 0 14px;font-size:14px;line-height:1.75;color:#334155">${hx(p).replace(/\n/g, '<br>')}</p>`)
+    .map(p => `<p style="margin:0 0 10px;font-size:13px;line-height:1.58;color:#1e293b">${hx(p).replace(/\n/g, '<br>')}</p>`)
     .join('');
 
   return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${hx(subject || 'Company Profile & Product Catalogue | Amigo Enterprises')}</title></head>
 <body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased">
-<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#f1f5f9;font-size:1px">AMIGO ENTERPRISES - Reliable Supplier of ESP Spares & Maintenance Services</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:32px 12px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:16px 8px">
 <tr><td align="center">
-  <table role="presentation" width="650" cellpadding="0" cellspacing="0" style="width:100%;max-width:650px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.06);border:1px solid #e2e8f0">
+  <table role="presentation" width="620" cellpadding="0" cellspacing="0" style="width:100%;max-width:620px;background:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 3px 12px rgba(0,0,0,0.06);border:1px solid #cbd5e1">
     
-    <!-- Top Branding Header -->
-    <tr><td style="background:linear-gradient(135deg, #091e3a 0%, #0f2b48 100%);padding:26px 32px;color:#ffffff">
+    <!-- Compact Slim Header (Height ~44px) -->
+    <tr><td style="background:#0f2b48;padding:10px 18px;border-bottom:3px solid #0284c7">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
         <tr>
-          <td valign="middle" width="115">${brand}</td>
-          <td valign="middle" style="padding-left:14px;border-left:1px solid rgba(255,255,255,0.18)">
-            <div style="font-size:20px;font-weight:800;letter-spacing:0.5px;color:#ffffff;line-height:1.2">AMIGO ENTERPRISES</div>
-            <div style="font-size:11px;color:#93c5fd;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-top:3px">Pune, Maharashtra &bull; Committed To Serve Better Services</div>
-            <div style="font-size:11px;color:#cbd5e1;margin-top:2px">Electrostatic Precipitator (ESP) Spares &bull; Maintenance &bull; Retrofitting</div>
+          <td valign="middle" width="95">${brand}</td>
+          <td valign="middle" style="padding-left:12px;border-left:1px solid rgba(255,255,255,0.2)">
+            <div style="font-size:15px;font-weight:800;color:#ffffff;letter-spacing:0.4px;line-height:1.1">AMIGO ENTERPRISES</div>
+            <div style="font-size:10.5px;color:#93c5fd;font-weight:600;margin-top:2px">Electrostatic Precipitator (ESP) Spares &bull; Maintenance &bull; Retrofitting &bull; Pune</div>
+          </td>
+          <td valign="middle" align="right">
+            <span style="font-size:9.5px;font-weight:700;color:#ffffff;background:rgba(2,132,199,0.35);padding:3px 7px;border-radius:4px;border:1px solid rgba(2,132,199,0.5)">ISO 9001:2015</span>
           </td>
         </tr>
       </table>
     </td></tr>
-    
-    <!-- Accent Color Stripe -->
-    <tr><td style="height:4px;background:#0284c7;border-bottom:2px solid #e11d48">&nbsp;</td></tr>
 
-    <!-- Main Message / Custom Pitch -->
-    <tr><td style="padding:28px 32px 18px">
-      ${clientName ? `<div style="display:inline-block;background:#f0fdf4;color:#166534;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;border:1px solid #bbf7d0;margin-bottom:14px;letter-spacing:0.5px">EXCLUSIVELY FOR: ${hx(clientName).toUpperCase()}</div>` : ''}
-      <div style="font-size:14px;line-height:1.75;color:#1e293b">
-        ${formattedBody || `<p style="margin:0 0 14px;font-size:15px;line-height:1.7;color:#1e293b"><b>Dear Sir/Madam, Greetings from Amigo Enterprises, Pune!</b></p><p style="margin:0 0 14px;font-size:14px;line-height:1.75;color:#334155">We are pleased to introduce <b>Amigo Enterprises</b>, a reliable supplier of mechanical and electrical spare parts and a trusted service provider specializing in <b>Electrostatic Precipitator (ESP) spares, maintenance, inspection, and retrofitting services</b>.</p><p style="margin:0 0 14px;font-size:14px;line-height:1.75;color:#334155">We aim to help our customers improve ESP performance, minimize downtime, and resolve operational issues during preventive maintenance and plant shutdowns. Our team provides both mechanical and electrical support, focusing on quality, dependable service, and competitive pricing.</p>`}
+    <!-- Main Message Body -->
+    <tr><td style="padding:16px 20px 12px">
+      ${clientName ? `<div style="display:inline-block;background:#f0fdf4;color:#166534;font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;border:1px solid #bbf7d0;margin-bottom:10px">EXCLUSIVELY FOR: ${hx(clientName).toUpperCase()}</div>` : ''}
+      <div style="font-size:13px;line-height:1.58;color:#1e293b">
+        ${formattedBody || `<p style="margin:0 0 10px;font-size:13.5px;line-height:1.55;color:#1e293b"><b>Dear Sir/Madam, Greetings from Amigo Enterprises, Pune!</b></p><p style="margin:0 0 10px;font-size:13px;line-height:1.58;color:#334155">We are pleased to introduce <b>Amigo Enterprises</b>, a trusted supplier of mechanical and electrical spare parts specializing in <b>Electrostatic Precipitator (ESP) spares, maintenance, inspection, and retrofitting services</b>.</p><p style="margin:0 0 10px;font-size:13px;line-height:1.58;color:#334155">Our goal is to help our plant customers improve ESP collection efficiency, minimize downtime, and resolve operational issues during preventive maintenance and plant shutdowns.</p>`}
       </div>
     </td></tr>
 
-    <!-- Product Range Card Section -->
-    <tr><td style="padding:4px 32px 20px">
-      <div style="background:#f8fafc;border-radius:12px;padding:20px;border:1px solid #e2e8f0">
-        <div style="font-size:13px;font-weight:800;color:#0f2b48;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:12px">
-          ⚙️ Our Product Range &ndash; ESP Spares
-        </div>
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-          ${productPills.reduce((acc, curr, idx) => {
-            if (idx % 2 === 0) acc.push([curr]);
-            else acc[acc.length - 1].push(curr);
-            return acc;
-          }, []).map(pair => `
-            <tr>
-              <td width="50%" valign="top" style="padding:4px 8px 4px 0">
-                <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:6px;padding:8px 12px;font-size:12px;font-weight:600;color:#1e293b;display:block">
-                  <span style="color:#0284c7;font-weight:800;margin-right:6px">&bull;</span>${hx(pair[0])}
-                </div>
-              </td>
-              ${pair[1] ? `
-              <td width="50%" valign="top" style="padding:4px 0 4px 8px">
-                <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:6px;padding:8px 12px;font-size:12px;font-weight:600;color:#1e293b;display:block">
-                  <span style="color:#0284c7;font-weight:800;margin-right:6px">&bull;</span>${hx(pair[1])}
-                </div>
-              </td>` : `<td width="50%"></td>`}
-            </tr>
-          `).join('')}
-        </table>
-      </div>
-    </td></tr>
-
-    <!-- Services Section -->
-    <tr><td style="padding:4px 32px 20px">
-      <div style="background:#f0f9ff;border-radius:12px;padding:20px;border:1px solid #bae6fd">
-        <div style="font-size:13px;font-weight:800;color:#0369a1;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:12px">
-          🛠️ Specialized Technical Services
-        </div>
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-          ${servicesList.map(s => `
-            <tr><td style="padding:5px 0">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td width="20" valign="top" style="color:#0284c7;font-size:16px;line-height:1.2">✔</td>
-                  <td valign="top" style="padding-left:8px">
-                    <span style="font-size:13px;font-weight:700;color:#0f2b48">${hx(s.title)}:</span>
-                    <span style="font-size:12px;color:#334155;margin-left:4px">${hx(s.desc)}</span>
-                  </td>
-                </tr>
-              </table>
-            </td></tr>
-          `).join('')}
-        </table>
-      </div>
-    </td></tr>
-
-    <!-- Esteemed Customers Section -->
-    <tr><td style="padding:4px 32px 22px">
-      <div style="background:#fafafa;border-radius:12px;padding:20px;border:1px solid #e5e7eb">
-        <div style="font-size:13px;font-weight:800;color:#374151;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:12px">
-          🏆 Our Esteemed Customers Across Industries
-        </div>
-        <div style="font-size:12px;line-height:2;color:#475569">
-          ${customersList.map(c => `<span style="display:inline-block;background:#ffffff;border:1px solid #d1d5db;border-radius:4px;padding:3px 10px;margin:2px 4px 2px 0;font-size:11px;font-weight:600;color:#1e293b">${hx(c)}</span>`).join('')}
-        </div>
-      </div>
-    </td></tr>
-
-    <!-- PDF Attachment Badge Callout -->
-    <tr><td style="padding:0 32px 24px">
-      <div style="background:#ecfdf5;border:1px dashed #059669;border-radius:10px;padding:14px 18px">
+    <!-- Attached Catalogue PDF Strip -->
+    <tr><td style="padding:0 20px 12px">
+      <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:6px;padding:7px 12px">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
           <tr>
-            <td width="36" valign="middle" style="font-size:26px">📎</td>
-            <td valign="middle" style="padding-left:10px">
-              <div style="font-size:13px;font-weight:800;color:#065f46">Attached: Official 7-Page Company &amp; Product Catalogue (PDF)</div>
-              <div style="font-size:11px;color:#047857;margin-top:2px">Complete technical drawings, specifications, spares catalog &amp; company credentials.</div>
+            <td width="20" valign="middle" style="font-size:15px;line-height:1">📎</td>
+            <td valign="middle" style="padding-left:6px">
+              <span style="font-size:11.5px;font-weight:700;color:#065f46">Attached: Official 7-Page Product Catalogue &amp; Specifications (PDF)</span>
+              <span style="font-size:10.5px;color:#047857;margin-left:6px">&mdash; Complete technical drawings, spares portfolio &amp; credentials</span>
             </td>
           </tr>
         </table>
       </div>
     </td></tr>
 
-    <!-- Sender Signature Card -->
-    <tr><td style="padding:0 32px 30px">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0f2b48;border-radius:12px;padding:20px 24px;color:#ffffff">
+    <!-- Compact Executive Signature & Contact -->
+    <tr><td style="background:#f8fafc;padding:12px 20px;border-top:1px solid #e2e8f0">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
         <tr>
-          <td valign="top">
-            <div style="font-size:16px;font-weight:800;color:#ffffff;line-height:1.2">${hx(sName)}</div>
-            <div style="font-size:12px;color:#93c5fd;font-weight:600;margin-top:2px">${hx(sDesig)}</div>
-            <div style="font-size:13px;font-weight:700;color:#f8fafc;margin-top:10px;letter-spacing:0.3px">AMIGO ENTERPRISES PUNE</div>
-            <div style="font-size:11px;color:#cbd5e1;line-height:1.5;margin-top:3px">
-              Office No:- 401, Baban Villa, Sno-6/17, Chovisawadi,<br>
-              Haveli Pune, Pimpri Chinchwad. (M Corp.) 412105
+          <td valign="middle">
+            <div style="font-size:13.5px;font-weight:800;color:#0f2b48;line-height:1.2">
+              ${hx(sName)} <span style="font-size:11px;font-weight:600;color:#0284c7;margin-left:4px">| ${hx(sDesig)}</span>
             </div>
-            <div style="font-size:12px;color:#ffffff;margin-top:12px;font-weight:600">
-              📞 <a href="tel:${hx(sPhone)}" style="color:#ffffff;text-decoration:none;margin-right:14px">${hx(sPhone)}</a>
-              ✉️ <a href="mailto:${hx(sEmail)}" style="color:#93c5fd;text-decoration:none">${hx(sEmail)}</a>
+            <div style="font-size:11.5px;color:#334155;margin-top:3px;font-weight:600">
+              📞 <a href="tel:${hx(sPhone)}" style="color:#0f2b48;text-decoration:none;margin-right:12px">${hx(sPhone)}</a>
+              ✉️ <a href="mailto:${hx(sEmail)}" style="color:#0284c7;text-decoration:none">${hx(sEmail)}</a>
             </div>
+          </td>
+          <td valign="middle" align="right" style="padding-left:10px">
+            <div style="font-size:11px;font-weight:700;color:#0f2b48">AMIGO ENTERPRISES PUNE</div>
+            <div style="font-size:10px;color:#64748b;margin-top:1px">Office 401, Baban Villa, Chovisawadi, Haveli Pune 412105</div>
           </td>
         </tr>
       </table>
-    </td></tr>
-
-    <!-- Footer -->
-    <tr><td style="background:#f8fafc;padding:16px 28px;text-align:center;color:#64748b;font-size:11px;line-height:1.5;border-top:1px solid #e2e8f0">
-      <b>AMIGO ENTERPRISES</b> &bull; Quality Products, Dependable Service &amp; Competitive Pricing.<br>
-      Electrostatic Precipitator (ESP) Spares, Maintenance, Inspection &amp; Retrofitting Services.
     </td></tr>
 
   </table>
