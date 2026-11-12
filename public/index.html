@@ -16050,6 +16050,16 @@ function buildClientCompanyProfileHtml({ clientName, subject, bodyText, senderNa
 
 async function generateCataloguePdfBlob() {
   await ensurePdfLibs();
+  if (!window.catData || !Array.isArray(window.catData.products) || !window.catData.products.length) {
+    try {
+      window.catData = await api('GET', 'catalogue', null, true);
+    } catch (catLoadErr) {
+      console.warn('Could not load catalogue from server for PDF generation:', catLoadErr);
+    }
+  }
+  if (!window.catData || !Array.isArray(window.catData.products)) {
+    throw new Error('Catalogue data is not loaded. Please wait a moment and try again.');
+  }
   const pagesHtml = renderCatalogueAllPagesHTML(true);
   const css = `
     .cat-page {
@@ -16197,12 +16207,16 @@ async function sendProfileView(activeTab = 'compose', prefillClient = null) {
   let clients = [];
   let history = [];
   try {
-    const [cL, hL] = await Promise.all([
+    const [cL, hL, cD] = await Promise.all([
       load('clients').catch(() => []),
-      api('GET', 'catalogue/mail-history').catch(() => [])
+      api('GET', 'catalogue/mail-history').catch(() => []),
+      (!window.catData || !window.catData.products) ? api('GET', 'catalogue').catch(() => null) : Promise.resolve(window.catData)
     ]);
     clients = Array.isArray(cL) ? cL : [];
     history = Array.isArray(hL) ? hL : [];
+    if (cD && (!window.catData || !window.catData.products)) {
+      window.catData = cD;
+    }
     clients.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
   } catch (err) {}
 
@@ -16612,12 +16626,15 @@ async function sendProfileView(activeTab = 'compose', prefillClient = null) {
     let attachments = [];
     if (attachPdf) {
       try {
-        statusBanner.innerHTML = `<div class="msg" style="background:#e0f2fe;color:#0369a1;display:flex;align-items:center;gap:10px;"><span>⏳</span><span>Generating lightweight 7-page catalogue PDF...</span></div>`;
+        statusBanner.innerHTML = `<div class="msg" style="background:#e0f2fe;color:#0369a1;display:flex;align-items:center;gap:10px;"><span>⏳</span><span>Generating official 7-page catalogue PDF...</span></div>`;
         const pdfAtt = await generateCataloguePdfBlob();
         if (pdfAtt) attachments.push(pdfAtt);
       } catch (pdfErr) {
-        console.warn('PDF generation notice:', pdfErr);
-        statusBanner.innerHTML = `<div class="msg" style="background:#fef3c7;color:#92400e;display:flex;align-items:center;gap:10px;"><span>⚠️</span><span>PDF generator warning (${pdfErr.message}). Continuing to send email...</span></div>`;
+        console.error('PDF generation error:', pdfErr);
+        btnSend.disabled = false;
+        btnSend.innerHTML = '🚀 Send Profile &amp; Catalogue';
+        statusBanner.innerHTML = `<div class="msg" style="background:#fee2e2;color:#991b1b;display:flex;align-items:center;gap:10px;"><span>❌</span><span>PDF attachment failed: ${h(pdfErr.message)}. Email was NOT sent to protect catalogue delivery. Please retry.</span></div>`;
+        return say('PDF attachment failed: ' + pdfErr.message);
       }
     }
 
@@ -16992,8 +17009,11 @@ async function openSendCatalogueProfileModal(defaultClient = null) {
         const pdfAtt = await generateCataloguePdfBlob();
         if (pdfAtt) attachments.push(pdfAtt);
       } catch (pdfErr) {
-        console.warn('PDF generation failed:', pdfErr);
-        statusBanner.innerHTML = `<div class="msg" style="background:#fef3c7;color:#92400e;display:flex;align-items:center;gap:10px"><span>⚠️</span><span>PDF generator warning (${pdfErr.message}). Continuing to send email...</span></div>`;
+        console.error('PDF generation error:', pdfErr);
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = '🚀 Send Profile &amp; Catalogue';
+        statusBanner.innerHTML = `<div class="msg" style="background:#fee2e2;color:#991b1b;display:flex;align-items:center;gap:10px"><span>❌</span><span>PDF attachment failed: ${h(pdfErr.message)}. Email was NOT sent.</span></div>`;
+        return say('PDF attachment failed: ' + pdfErr.message);
       }
     }
 

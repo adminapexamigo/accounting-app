@@ -2091,7 +2091,24 @@ async function api(req, res, parts) {
   }
   if (a === 'catalogue') {
     const catFile = path.join(DATA, 'catalogue.json');
-    if (m === 'GET') {
+    const catMailFile = path.join(DATA, 'cataloguemails.json');
+
+    // Return sent mail history
+    if (m === 'GET' && id === 'mail-history') {
+      let history = [];
+      if (db.isDbActive()) {
+        try { history = (await db.getSetting('cataloguemails', [])) || []; } catch {}
+      }
+      if (!Array.isArray(history) || !history.length) {
+        try {
+          if (fs.existsSync(catMailFile)) history = JSON.parse(fs.readFileSync(catMailFile, 'utf8'));
+        } catch {}
+      }
+      if (!Array.isArray(history)) history = [];
+      return send(res, 200, history);
+    }
+
+    if (m === 'GET' && (!id || id === '')) {
       let data = null;
       if (db.isDbActive()) {
         try { data = await db.getSetting('catalogue', null); } catch {}
@@ -2133,14 +2150,6 @@ async function api(req, res, parts) {
         fs.writeFileSync(catFile, JSON.stringify(DEFAULT_CATALOGUE, null, 2));
       } catch {}
       return send(res, 200, DEFAULT_CATALOGUE);
-    }
-    if (m === 'GET' && id === 'mail-history') {
-      let history = [];
-      if (db.isDbActive()) {
-        try { history = (await db.getSetting('cataloguemails', [])) || []; } catch {}
-      }
-      if (!Array.isArray(history)) history = [];
-      return send(res, 200, history);
     }
     if (m === 'POST' && id === 'send-mail') {
       const normDes = normalizeDesignation(user.designation);
@@ -2238,11 +2247,22 @@ async function api(req, res, parts) {
       let history = [];
       if (db.isDbActive()) {
         try { history = (await db.getSetting('cataloguemails', [])) || []; } catch {}
-        if (!Array.isArray(history)) history = [];
-        history.unshift(mailRecord);
-        if (history.length > 500) history = history.slice(0, 500);
+      }
+      if (!Array.isArray(history) || !history.length) {
+        try {
+          if (fs.existsSync(catMailFile)) history = JSON.parse(fs.readFileSync(catMailFile, 'utf8'));
+        } catch {}
+      }
+      if (!Array.isArray(history)) history = [];
+      history.unshift(mailRecord);
+      if (history.length > 500) history = history.slice(0, 500);
+      if (db.isDbActive()) {
         await db.saveSetting('cataloguemails', history).catch(() => {});
       }
+      try {
+        fs.mkdirSync(DATA, { recursive: true });
+        fs.writeFileSync(catMailFile, JSON.stringify(history, null, 2));
+      } catch {}
 
       try {
         logActivityAction(user, 'Catalogue', 'Sent Company Profile & Product Catalogue to ' + to + (clientName ? ' (' + clientName + ')' : ''));
