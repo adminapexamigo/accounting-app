@@ -1508,7 +1508,8 @@ const DEFAULT_EMPLOYEE_PERMISSIONS = {
   dash:        { view: false },
   hr:          { view: false, manage: false },
   salaryslips: { view: true, create: false, edit: false, delete: false },
-  workupdates: { view: true, create: true, edit: true, delete: false }
+  workupdates: { view: true, create: true, edit: true, delete: false },
+  sendprofile: { view: false, send: false }
 };
 
 const ROLE_PERMISSIONS_MAP = {
@@ -1530,6 +1531,7 @@ const ROLE_PERMISSIONS_MAP = {
     ledgers:     { view: true, create: true, edit: true, delete: false },
     vouchers:    { view: true, create: true, edit: true, delete: false },
     catalogue:   { view: true, edit: true },
+    sendprofile: { view: true, send: true },
     dash:        { view: true },
     hr:          { view: true, manage: true },
     workupdates: { view: true, create: true }
@@ -1588,7 +1590,7 @@ function getEffectivePermissions(user) {
   if (!user) return {};
   if (user.role === 'admin') {
     const full = {};
-    for (const k of ['invoices','quotation','pi','po','sheets','clients','products','purchases','ledgers','vouchers','catalogue','dash','hr','workupdates','tally']) {
+    for (const k of ['invoices','quotation','pi','po','sheets','clients','products','purchases','ledgers','vouchers','catalogue','sendprofile','dash','hr','workupdates','tally']) {
       full[k] = { view: true, create: true, edit: true, delete: true, mail: true, scope: 'all' };
     }
     return full;
@@ -1638,7 +1640,12 @@ function getEffectivePermissions(user) {
     effective.catalogue = { view: true, edit: false };
   }
 
+  if (normDes === 'operations executive') {
+    if (!effective.sendprofile) effective.sendprofile = { view: true, send: true };
+  }
+
   if (normDes === 'sales executive' || user.username === 'Ashwini') {
+    effective.sendprofile = { view: true, send: true };
     if (!effective.quotation) effective.quotation = { view: true, create: true, edit: true, delete: false, mail: true };
     effective.quotation.scope = 'own';
     if (!effective.po) effective.po = { view: true, create: true, edit: true, delete: false, mail: true };
@@ -1689,6 +1696,10 @@ function hasPermission(user, mod, action) {
     return action === 'view' || action === 'create';
   }
   if (mod === 'workupdates') return true;
+  if (mod === 'sendprofile') {
+    const normDes = normalizeDesignation(user.designation);
+    return user.role === 'admin' || normDes === 'operations executive' || normDes === 'sales executive' || user.username === 'Ashwini';
+  }
 
   const eff = getEffectivePermissions(user);
   const modPerms = eff[mod] || {};
@@ -2052,6 +2063,9 @@ async function api(req, res, parts) {
       return send(res, 200, history);
     }
     if (m === 'POST' && id === 'send-mail') {
+      const normDes = normalizeDesignation(user.designation);
+      const isAllowed = user.role === 'admin' || normDes === 'operations executive' || normDes === 'sales executive' || user.username === 'Ashwini' || hasPermission(user, 'sendprofile', 'send');
+      if (!isAllowed) throw fail(403, 'Permission denied: Not authorized to send company profile');
       const c = mailCfg();
       if (!c.smtpUser || !c.smtpPass) {
         throw fail(400, 'Company SMTP email is not configured. Please set the sender Gmail & App Password in Email & Alerts first.');
