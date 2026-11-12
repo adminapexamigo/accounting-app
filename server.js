@@ -325,7 +325,9 @@ function buildCompanyProfileEmailHtml({ clientName, subject, bodyText, senderNam
                   <td>
                     <div style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.3);border-radius:7px;padding:5px 14px;text-align:right">
                       <div style="font-size:8.5px;color:#cbd5e1;font-weight:700;letter-spacing:0.8px;text-transform:uppercase">DIRECT SALES DESK</div>
-                      <div style="font-size:11.5px;font-weight:800;color:#ffffff;letter-spacing:0.2px">📞 +91 ${sPhone}</div>
+                      <div style="font-size:12px;font-weight:900;margin-top:2px">
+                        <a href="tel:${hx(sPhone)}" style="color:#ffffff !important;text-decoration:none !important;font-weight:900"><span style="color:#ffffff !important;text-decoration:none !important">📞 +91 ${hx(sPhone)}</span></a>
+                      </div>
                     </div>
                   </td>
                 </tr>
@@ -448,7 +450,7 @@ function buildCompanyProfileEmailHtml({ clientName, subject, bodyText, senderNam
             <td valign="middle" style="padding-left:14px">
               <div style="display:flex;align-items:center;gap:8px">
                 <span style="font-size:14px;font-weight:900;color:#065f46;letter-spacing:0.3px">
-                  OFFICIAL 7-PAGE TECHNICAL CATALOGUE &amp; CREDENTIALS (PDF)
+                  OFFICIAL PRODUCT CATALOGUE &amp; TECHNICAL SPECIFICATIONS (PDF)
                 </span>
                 <span style="background:#059669;color:#ffffff;font-size:9.5px;font-weight:800;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:0.5px">ATTACHED</span>
               </div>

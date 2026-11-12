@@ -14360,7 +14360,7 @@ async function catalogueView() {
     <div style="padding:40px; text-align:center; color:#94a3b8;">
       <div class="view-spinner-ring" style="margin:0 auto 16px;"></div>
       <div style="font-size:16px; font-weight:600; color:#cbd5e1;">Loading Company Catalogue…</div>
-      <div style="font-size:12px; margin-top:4px;">Retrieving official 7-page catalogue specification</div>
+      <div style="font-size:12px; margin-top:4px;">Retrieving official product catalogue specification</div>
     </div>
   `;
 
@@ -14741,7 +14741,7 @@ async function catalogueView() {
           <span style="font-size:22px;">📖</span>
           <div>
             <div style="font-size:15px; font-weight:800; color:#f8fafc; letter-spacing:0.3px;">Company Catalogue</div>
-            <div style="font-size:11px; color:#94a3b8;">AMIGO ENTERPRISES &bull; 7-Page Reference</div>
+            <div style="font-size:11px; color:#94a3b8;">AMIGO ENTERPRISES &bull; Product Reference</div>
           </div>
           <span class="cat-badge">Official</span>
         </div>
@@ -15755,7 +15755,7 @@ Our Specialized Technical Services:
 Esteemed Customers Across Industries:
 Emami Papers, Shree Cement, Chakra Cement, Reliance Cement, Garden Silk Mill, BRFL Textile, Shri Ambalika Sugar, EID Parry, Thanush Ispat, Shree Mega Power, Suvan Steel, Shree Kanak Durga Steel, Durva Infratech.
 
-We would be pleased to share our company credentials and complete 7-page technical catalogue (attached) for your kind reference. If you have any ongoing or upcoming requirements related to ESP spares, maintenance, or shutdown activities, please feel free to contact us.
+We would be pleased to share our company credentials and complete technical product catalogue (attached) for your kind reference. If you have any ongoing or upcoming requirements related to ESP spares, maintenance, or shutdown activities, please feel free to contact us.
 
 We look forward to establishing a long-term business relationship with your esteemed organization.
 
@@ -15841,7 +15841,9 @@ function buildClientCompanyProfileHtml({ clientName, subject, bodyText, senderNa
                   <td>
                     <div style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.3);border-radius:7px;padding:5px 14px;text-align:right">
                       <div style="font-size:8.5px;color:#cbd5e1;font-weight:700;letter-spacing:0.8px;text-transform:uppercase">DIRECT SALES DESK</div>
-                      <div style="font-size:11.5px;font-weight:800;color:#ffffff;letter-spacing:0.2px">📞 +91 ${sPhone}</div>
+                      <div style="font-size:12px;font-weight:900;margin-top:2px">
+                        <a href="tel:${h(sPhone)}" style="color:#ffffff !important;text-decoration:none !important;font-weight:900"><span style="color:#ffffff !important;text-decoration:none !important">📞 +91 ${h(sPhone)}</span></a>
+                      </div>
                     </div>
                   </td>
                 </tr>
@@ -15964,7 +15966,7 @@ function buildClientCompanyProfileHtml({ clientName, subject, bodyText, senderNa
             <td valign="middle" style="padding-left:14px">
               <div style="display:flex;align-items:center;gap:8px">
                 <span style="font-size:14px;font-weight:900;color:#065f46;letter-spacing:0.3px">
-                  OFFICIAL 7-PAGE TECHNICAL CATALOGUE &amp; CREDENTIALS (PDF)
+                  OFFICIAL PRODUCT CATALOGUE &amp; TECHNICAL SPECIFICATIONS (PDF)
                 </span>
                 <span style="background:#059669;color:#ffffff;font-size:9.5px;font-weight:800;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:0.5px">ATTACHED</span>
               </div>
@@ -16247,7 +16249,7 @@ async function sendProfileView(activeTab = 'compose', prefillClient = null) {
         </div>
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
           <button type="button" class="btn ghost sm" onclick="go('catalogue')" style="font-weight:600;font-size:12.5px;padding:7px 14px;border-color:#cbd5e1;color:#334155;">
-            📖 View 7-Page Catalogue
+            📖 View Company Catalogue
           </button>
         </div>
       </div>
@@ -16378,7 +16380,7 @@ async function sendProfileView(activeTab = 'compose', prefillClient = null) {
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px;">
             <label style="display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:700;color:#0369a1;cursor:pointer;margin:0;">
               <input type="checkbox" id="spvAttachPdf" checked style="width:18px;height:18px;cursor:pointer;accent-color:#0284c7;">
-              <span>📎 Attach Official 7-Page Product Catalogue PDF (Amigo_Enterprises_Company_Catalogue.pdf)</span>
+              <span>📎 Attach Official Product Catalogue PDF (Amigo_Enterprises_Company_Catalogue.pdf)</span>
             </label>
             <span style="font-size:11.5px;font-weight:700;color:#0369a1;background:#e0f2fe;padding:4px 10px;border-radius:6px;border:1px solid #bae6fd;">
               ⚡ High-Speed A4 PDF (&lt;1MB)
@@ -16441,7 +16443,7 @@ async function sendProfileView(activeTab = 'compose', prefillClient = null) {
                         <td style="padding:10px 12px;">
                           ${item.pdfAttached ? `
                             <span style="display:inline-flex;align-items:center;gap:4px;background:#ecfdf5;color:#059669;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:700;border:1px solid #a7f3d0;">
-                              <span>📎</span><span>7-Page PDF</span>
+                              <span>📎</span><span>Catalogue PDF</span>
                             </span>
                           ` : `
                             <span style="color:#94a3b8;font-size:11px;">No PDF</span>
@@ -16626,7 +16628,7 @@ async function sendProfileView(activeTab = 'compose', prefillClient = null) {
     let attachments = [];
     if (attachPdf) {
       try {
-        statusBanner.innerHTML = `<div class="msg" style="background:#e0f2fe;color:#0369a1;display:flex;align-items:center;gap:10px;"><span>⏳</span><span>Generating official 7-page catalogue PDF...</span></div>`;
+        statusBanner.innerHTML = `<div class="msg" style="background:#e0f2fe;color:#0369a1;display:flex;align-items:center;gap:10px;"><span>⏳</span><span>Generating official product catalogue PDF...</span></div>`;
         const pdfAtt = await generateCataloguePdfBlob();
         if (pdfAtt) attachments.push(pdfAtt);
       } catch (pdfErr) {
@@ -16830,7 +16832,7 @@ async function openSendCatalogueProfileModal(defaultClient = null) {
           <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">
             <label style="margin:0;display:flex;align-items:center;gap:10px;color:#065f46;font-weight:700;font-size:13px;cursor:pointer">
               <input type="checkbox" id="cpmAttachPdf" checked style="width:18px;height:18px;accent-color:#059669;cursor:pointer">
-              <span>📎 Attach Official 7-Page Product Catalogue PDF (Amigo_Enterprises_Company_Catalogue.pdf)</span>
+              <span>📎 Attach Official Product Catalogue PDF (Amigo_Enterprises_Company_Catalogue.pdf)</span>
             </label>
             <span style="font-size:11px;color:#047857;background:#d1fae5;padding:3px 8px;border-radius:12px;font-weight:600">
               Live Catalogue PDF
@@ -17005,7 +17007,7 @@ async function openSendCatalogueProfileModal(defaultClient = null) {
     let attachments = [];
     if (attachPdf) {
       try {
-        statusBanner.innerHTML = `<div class="msg" style="background:#e0f2fe;color:#0369a1;display:flex;align-items:center;gap:10px"><span>⏳</span><span>Generating official 7-page catalogue PDF...</span></div>`;
+        statusBanner.innerHTML = `<div class="msg" style="background:#e0f2fe;color:#0369a1;display:flex;align-items:center;gap:10px"><span>⏳</span><span>Generating official product catalogue PDF...</span></div>`;
         const pdfAtt = await generateCataloguePdfBlob();
         if (pdfAtt) attachments.push(pdfAtt);
       } catch (pdfErr) {
@@ -17183,7 +17185,7 @@ async function openCatalogueMailHistoryModal() {
                   <div style="font-size:11px;color:#64748b">${h(item.senderDesignation || 'Sales')}</div>
                 </td>
                 <td style="padding:10px">
-                  ${item.pdfAttached ? '<span style="background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600">📎 7-Page PDF</span>' : '<span style="color:#94a3b8;font-size:11px">None</span>'}
+                  ${item.pdfAttached ? '<span style="background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600">📎 Catalogue PDF</span>' : '<span style="color:#94a3b8;font-size:11px">None</span>'}
                 </td>
                 <td style="padding:10px">
                   <span style="background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700">
