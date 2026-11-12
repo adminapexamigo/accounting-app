@@ -834,7 +834,7 @@ async function sendOtp(p, u) { // e-mails a fresh 6-digit code; returns '' on su
   if ((p.sends || 0) >= 4) return 'Too many codes requested. Log in again.';
   const code = String(crypto.randomInt(0, 1000000)).padStart(6, '0'), salt = crypto.randomBytes(8).toString('hex');
   p.otp = { h: otpHash(code, salt), salt, exp: now + 10 * 60e3, tries: 0 }; p.lastSent = now; p.sends = (p.sends || 0) + 1; p.exp = now + 15 * 60e3; p.stage = 'otp';
-  try { await smtpSend(mailCfg(), { to: u.email, subject: 'Your Accounts login code', html: otpHtml(code), images: mailImages(), text: `Your one-time login code is ${code}\n\nIt is valid for 10 minutes. If you did not try to log in, ignore this email and tell the admin.` }); return ''; }
+  try { await smtpSend(mailCfg(), { to: u.email, subject: 'Your Amigo ERP login code', html: otpHtml(code), images: mailImages(), text: `Your one-time login code is ${code}\n\nIt is valid for 10 minutes. If you did not try to log in, ignore this email and tell the admin.` }); return ''; }
   catch (e) { console.error('OTP email failed:', e.message); return 'The code could not be emailed (' + (e.message || 'SMTP authentication failed') + '). Ask the admin to check the mail settings.'; }
 }
 const dist = (a, b) => Math.sqrt(a.reduce((s, x, i) => s + (x - b[i]) ** 2, 0));
@@ -908,7 +908,7 @@ const oneLine = v => String(v ?? '').replace(/[\r\n]+/g, ' ').trim();
 const b64w = x => (Buffer.isBuffer(x) ? x : Buffer.from(String(x))).toString('base64').replace(/.{1,76}/g, '$&\r\n').trimEnd();
 function mimeMessage({ from, fromName, toRecipients, ccRecipients, rcpts, subject, text, html, images = [], attachments = [] }) { // plain text + HTML + attachments
   const toList = toRecipients && toRecipients.length ? toRecipients : (rcpts || []);
-  const senderStr = fromName ? `"${fromName.replace(/"/g, '')}" <${from}>` : `Accounts App <${from}>`;
+  const senderStr = fromName ? `"${fromName.replace(/"/g, '')}" <${from}>` : `Amigo ERP <${from}>`;
   const head = [
     `From: ${senderStr}`,
     `To: ${toList.join(', ')}`,
@@ -3120,7 +3120,7 @@ async function api(req, res, parts) {
       });
 
       const co = company();
-      const fromName = co.name || 'Accounts App';
+      const fromName = co.name || 'Amigo ERP';
 
       try {
         await smtpSend(c, {
@@ -3164,7 +3164,7 @@ async function api(req, res, parts) {
     }
     if (m === 'POST' && id === 'test') {
       if (!c.smtpUser || !c.smtpPass || !c.mailTo) throw fail(400, 'Save sender, app password and recipient first');
-      try { await smtpSend(c, { to: c.mailTo, subject: 'Test email from Accounts app', text: 'Email is working. Daily work updates will be sent to this address.', images: mailImages(), html: emailHtml({ title: 'Email is working', preheader: 'Your mail settings work.', body: `<tr><td style="padding:30px 32px 30px"><h1 style="margin:0 0 10px;font-size:23px;color:#1c2333">Email is working ✔</h1><p style="margin:0;font-size:15px;line-height:1.6;color:#5b6477">Daily work updates and login codes will be sent from this account. You can close this message.</p></td></tr>` }) }); } catch (e) { throw fail(502, 'Could not send: ' + e.message); }
+      try { await smtpSend(c, { to: c.mailTo, subject: 'Test email from Amigo ERP', text: 'Email is working. Daily work updates will be sent to this address.', images: mailImages(), html: emailHtml({ title: 'Email is working', preheader: 'Your mail settings work.', body: `<tr><td style="padding:30px 32px 30px"><h1 style="margin:0 0 10px;font-size:23px;color:#1c2333">Email is working ✔</h1><p style="margin:0;font-size:15px;line-height:1.6;color:#5b6477">Daily work updates and login codes will be sent from this account. You can close this message.</p></td></tr>` }) }); } catch (e) { throw fail(502, 'Could not send: ' + e.message); }
       return send(res, 200, {});
     }
     throw fail(405, 'Method not allowed');
@@ -3238,7 +3238,7 @@ async function api(req, res, parts) {
             subject,
             html,
             images: mailImages(),
-            text: `Reminder: ${lv.userName} has a pending leave application for ${lv.days} day(s) (${lv.fromDate} to ${lv.toDate}). Please log into Accounts portal to approve.`
+            text: `Reminder: ${lv.userName} has a pending leave application for ${lv.days} day(s) (${lv.fromDate} to ${lv.toDate}). Please log into Amigo ERP portal to approve.`
           });
         }
       } catch (e) {
@@ -3801,7 +3801,7 @@ function buildLeave(b, L, user, existing) {
                   <tr><td style="padding:8px 12px;color:#64748b;border-bottom:1px solid #e2e8f0">Reason:</td><td style="padding:8px 12px;color:#1e293b;border-bottom:1px solid #e2e8f0">${h(o.reason || 'None specified')}</td></tr>
                   <tr><td style="padding:8px 12px;color:#64748b">Current Quotas:</td><td style="padding:8px 12px;color:#059669;font-weight:700">PL: ${lp.plBalance ?? 12} | CL: ${lp.clBalance ?? 6} | SL: ${lp.slBalance ?? 6}</td></tr>
                 </table>
-                <p style="font-size:13px;color:#475569;margin:14px 0">Please log in to the Accounts Portal to review and approve or reject this leave request.</p>
+                <p style="font-size:13px;color:#475569;margin:14px 0">Please log in to the Amigo ERP Portal to review and approve or reject this leave request.</p>
                 <div style="margin-top:18px">
                   <a href="${process.env.APP_URL || 'https://accounting-app-rosy-beta.vercel.app'}" style="background:#0f2b48;color:#fff;text-decoration:none;padding:10px 20px;border-radius:6px;font-weight:700;font-size:13px;display:inline-block">Open Portal to Review &rarr;</a>
                 </div>
@@ -3815,7 +3815,7 @@ function buildLeave(b, L, user, existing) {
           subject,
           html,
           images: mailImages(),
-          text: `${o.userName} applied for ${o.days} day(s) ${o.leaveType} from ${o.fromDate} to ${o.toDate}. Reason: ${o.reason}. Please log into Accounts portal to approve.`
+          text: `${o.userName} applied for ${o.days} day(s) ${o.leaveType} from ${o.fromDate} to ${o.toDate}. Reason: ${o.reason}. Please log into Amigo ERP portal to approve.`
         });
       } catch (e) {
         console.warn('Failed to send leave email notification:', e.message);
