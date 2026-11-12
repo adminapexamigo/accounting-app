@@ -2110,6 +2110,46 @@ async function api(req, res, parts) {
       return send(res, 200, history);
     }
 
+    // Delete sent mail history record (Admins only)
+    if (m === 'DELETE' && id === 'mail-history') {
+      if (user.role !== 'admin') {
+        throw fail(403, 'Permission denied: Only administrators can delete sent history records');
+      }
+      const recordId = sub || (await body(req).then(b => b.id).catch(() => ''));
+      let history = [];
+      if (db.isDbActive()) {
+        try { history = (await db.getSetting('cataloguemails', [])) || []; } catch {}
+      }
+      if (!Array.isArray(history) || !history.length) {
+        try {
+          if (fs.existsSync(catMailFile)) history = JSON.parse(fs.readFileSync(catMailFile, 'utf8'));
+        } catch {}
+      }
+      if (!Array.isArray(history)) history = [];
+
+      if (recordId === 'clear-all') {
+        history = [];
+      } else if (recordId) {
+        history = history.filter(h => h.id !== recordId);
+      } else {
+        throw fail(400, 'Record ID is required for deletion');
+      }
+
+      if (db.isDbActive()) {
+        await db.saveSetting('cataloguemails', history).catch(() => {});
+      }
+      try {
+        fs.mkdirSync(DATA, { recursive: true });
+        fs.writeFileSync(catMailFile, JSON.stringify(history, null, 2));
+      } catch {}
+
+      try {
+        logActivityAction(user, 'Catalogue', `Deleted catalogue mail history record (${recordId})`);
+      } catch {}
+
+      return send(res, 200, { ok: true, message: 'Mail history record deleted successfully', total: history.length });
+    }
+
     if (m === 'GET' && (!id || id === '')) {
       let data = null;
       if (db.isDbActive()) {

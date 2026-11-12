@@ -16405,7 +16405,14 @@ async function sendProfileView(activeTab = 'compose', prefillClient = null) {
             <div style="font-size:15px;font-weight:700;color:#0f2b48;">
               Dispatched Profile Emails &amp; Catalogue Transmittals
             </div>
-            <input type="text" id="spvHistSearch" placeholder="🔍 Search by client, recipient or subject..." style="padding:6px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:12.5px;width:280px;max-width:100%;">
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+              <input type="text" id="spvHistSearch" placeholder="🔍 Search by client, recipient or subject..." style="padding:6px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:12.5px;width:260px;max-width:100%;">
+              ${me?.role === 'admin' && history.length ? `
+                <button type="button" class="btn ghost sm" id="spvClearAllHistBtn" style="font-size:11.5px;padding:6px 12px;color:#dc2626;border-color:#fca5a5;background:#fef2f2;font-weight:700;">
+                  🗑️ Clear All
+                </button>
+              ` : ''}
+            </div>
           </div>
 
           <div id="spvHistTableContainer">
@@ -16454,10 +16461,15 @@ async function sendProfileView(activeTab = 'compose', prefillClient = null) {
                             ✓ ${h(item.status || 'Sent')}
                           </span>
                         </td>
-                        <td style="padding:10px 12px;text-align:center;">
+                        <td style="padding:10px 12px;text-align:center;white-space:nowrap;">
                           <button type="button" class="btn ghost sm spv-resend-btn" style="font-size:11.5px;padding:3px 10px;" data-client="${h(item.clientName || '')}" data-email="${h(item.to || '')}">
                             🔄 Resend
                           </button>
+                          ${me?.role === 'admin' ? `
+                            <button type="button" class="btn ghost sm spv-del-btn" style="font-size:11.5px;padding:3px 8px;margin-left:6px;color:#dc2626;border-color:#fca5a5;background:#fef2f2;" data-id="${h(item.id)}" data-client="${h(item.clientName || item.to || '')}" title="Delete Record (Admin Only)">
+                              🗑️ Delete
+                            </button>
+                          ` : ''}
                         </td>
                       </tr>
                     `).join('')}
@@ -16690,6 +16702,49 @@ async function sendProfileView(activeTab = 'compose', prefillClient = null) {
       sendProfileView('compose', { name, email });
     };
   });
+
+  // Admin-only single record deletion
+  view.querySelectorAll('.spv-del-btn').forEach(btn => {
+    btn.onclick = async () => {
+      if (me?.role !== 'admin') {
+        say('Access denied: Only administrators can delete sent history records.');
+        return;
+      }
+      const recordId = btn.getAttribute('data-id');
+      const clientName = btn.getAttribute('data-client') || 'this record';
+      if (!confirm('Are you sure you want to delete the sent history record for "' + clientName + '"? This action cannot be undone.')) {
+        return;
+      }
+      try {
+        await api('DELETE', 'catalogue/mail-history/' + recordId);
+        say('Sent history record deleted successfully.', 1);
+        sendProfileView('history');
+      } catch (err) {
+        say('Failed to delete history: ' + err.message);
+      }
+    };
+  });
+
+  // Admin-only clear all history
+  const clearAllBtn = view.querySelector('#spvClearAllHistBtn');
+  if (clearAllBtn) {
+    clearAllBtn.onclick = async () => {
+      if (me?.role !== 'admin') {
+        say('Access denied: Only administrators can delete sent history records.');
+        return;
+      }
+      if (!confirm('Are you sure you want to delete ALL sent profile email history records? This cannot be undone.')) {
+        return;
+      }
+      try {
+        await api('DELETE', 'catalogue/mail-history/clear-all');
+        say('All sent history cleared successfully.', 1);
+        sendProfileView('history');
+      } catch (err) {
+        say('Failed to clear history: ' + err.message);
+      }
+    };
+  }
 }
 
 async function openSendCatalogueProfileModal(defaultClient = null) {
@@ -17094,6 +17149,23 @@ function previewCatalogueProfileEmail(data) {
   pModal.querySelector('#btnDoneCatPreview').onclick = close;
 }
 
+async function deleteCatalogueMailHistoryItem(id, clientName = '') {
+  if (me?.role !== 'admin') {
+    say('Access denied: Only administrators can delete sent history records.');
+    return;
+  }
+  if (!confirm('Delete this sent history record' + (clientName ? ' for ' + clientName : '') + '? This action cannot be undone.')) {
+    return;
+  }
+  try {
+    await api('DELETE', 'catalogue/mail-history/' + id);
+    say('Sent history record deleted.', 1);
+    openCatalogueMailHistoryModal();
+  } catch (err) {
+    say('Delete failed: ' + err.message);
+  }
+}
+
 async function openCatalogueMailHistoryModal() {
   let existing = document.getElementById('catMailHistoryModal');
   if (existing) existing.remove();
@@ -17192,10 +17264,15 @@ async function openCatalogueMailHistoryModal() {
                     ✔ Sent
                   </span>
                 </td>
-                <td style="padding:10px;text-align:center">
+                <td style="padding:10px;text-align:center;white-space:nowrap">
                   <button class="btn ghost sm" style="font-size:11px;padding:3px 8px" onclick="document.getElementById('catMailHistoryModal').remove();openSendCatalogueProfileModal({ name:${JSON.stringify(item.clientName || '')}, email:${JSON.stringify(item.to || '')} })">
                     🔄 Resend
                   </button>
+                  ${me?.role === 'admin' ? `
+                    <button class="btn ghost sm" style="font-size:11px;padding:3px 8px;margin-left:6px;color:#dc2626;border-color:#fca5a5" onclick="deleteCatalogueMailHistoryItem('${h(item.id)}', '${h(item.clientName || '')}')" title="Delete Record (Admin Only)">
+                      🗑️
+                    </button>
+                  ` : ''}
                 </td>
               </tr>
             `).join('')}
