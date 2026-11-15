@@ -5266,8 +5266,11 @@ const DCSS=`.dd{font-family:'Times New Roman',Times,serif;color:#000;font-size:1
 .dd.single-page .qtm{margin:0 0 1.5px 2px;font-size:11px;line-height:1.22}
 .dd.single-page .qy{margin:6px 0 2px 6px;font-size:12px}
 .dd.single-page .qs{margin-left:6px;font-size:11px;line-height:1.22}
+.dd.single-page .pph td.h{height:120px;padding:4px 6px}
+.dd.single-page .bk{height:140px;padding:6px 6px}
+.dd.single-page .itm td{padding:5px 5px;font-size:11px}
 .dd.single-page .qpage{page-break-after:avoid !important;break-after:avoid !important;page-break-inside:avoid !important;break-inside:avoid !important}
-.dd .qpage{page-break-after:always;break-after:page;mso-break-type:page-break;border-bottom:2px dashed #94a3b8;padding-bottom:16px;margin-bottom:20px;box-sizing:border-box;position:relative}
+.dd .qpage{page-break-after:always;break-after:page;mso-break-type:page-break;border-bottom:none;padding-bottom:12px;margin-bottom:16px;box-sizing:border-box;position:relative}
 .dd .qpage:last-child{page-break-after:auto;break-after:auto;border-bottom:none;margin-bottom:0;padding-bottom:0}
 @media print{
   @page{size:A4 portrait;margin:5mm 8mm}
@@ -5277,24 +5280,48 @@ const DCSS=`.dd{font-family:'Times New Roman',Times,serif;color:#000;font-size:1
 }`;
 const logoSrc=w=>w?'file:///C:/logo.png':'/logo.png',nl=s=>h(s).replace(/\n/g,'<br>');
 const emailize=s=>h(s).replace(/([\w.+-]+@[\w-]+(?:\.[\w-]+)+)/g,'<span style="color:#0563c1;text-decoration:underline">$1</span>');
-function docHTML(doc,w){const d=JSON.parse(doc.data);return doc.type=='quotation'?quoteHTML(doc,d,w):ppHTML(doc,d,w)}
-function ppHTML(doc,d,w){const pi=doc.type=='pi',it=d.items,tax=d.taxType=='NONE'?'':d.taxType=='IGST'?`IGST ${d.taxRate}%`:`CGST ${d.taxRate/2}% + SGST ${d.taxRate/2}%`;
- const left=`<table><tr><td style="width:34%"><img src="${logoSrc(w)}" width="92" style="width:92px;max-width:92px;height:auto;display:block;object-fit:contain"></td><td style="padding-left:10px;font:bold 11px Arial,Helvetica,sans-serif;line-height:1.35">${h(co.name)}<br><span style="font-weight:normal;font-size:10.5px">${nl(co.docAddress||'')}</span></td></tr></table><div class="cbox">${pi?'Contact Person: ':'Buyers contact '}${h(co.contactPhone)}<br>Buyer Email: ${h(co.contactEmail)}</div>`;
- const opt=(a,l,v,g)=>v?`${a}${l}${v}${g}`:'';
- const mid=pi?`<b>To,</b><br><b style="font-size:13px">${h(d.toName)}</b><br><b>${nl(d.toAddress)}</b><br><br>${opt('<b>','GSTIN : ',h(d.toGstin),'</b><br><br>')}${opt('<b>','Contact person : ',h(d.toContact),'</b><br><br>')}${opt('<b>','Phone : ',h(d.toPhone),'</b>')}`
-  :`<div style="font-size:14px">To,<br><b>&nbsp;&nbsp;${h(d.toName)}</b><br>${nl(d.toAddress)}<br><br>${opt('','GST- ',h(d.toGstin),'<br><br>')}${opt('','Contact Person - ',h(d.toContact),'<br><br>')}${opt('','Contact number - ',h(d.toPhone),'')}</div>`;
- const right=pi?`Proforma Invoice No.<br>${h(doc.number)}<br><br>Date : ${sd(doc.date)}<br><br><br>You’re Pur. Order No.<br>${h(d.poNo)}<br>Date:${sd(d.poDate)}`:`<b>Po No. P.O: ${h(doc.number)}</b><br><br><b>Date: ${sd(doc.date)}</b>`;
- const heads=['SR. NO.','Material Description','Quantity','UOM','Unit Price','Disc','P&amp;F','Base Price','Delivery Date'],wd=[7,31,9,7,11,6,6,13,10];
- const th=heads.map((x,i)=>`<th style="width:${wd[i]}%;${pi?'font-weight:bold':''}">${x}</th>`).join('');
- const body=it.map((x,i)=>`<tr><td class="c">${String(i+1).padStart(2,'0')}</td><td class="ds">${nl(x.desc)}</td><td class="c b">${h(x.qty)}</td><td class="c b">${h(x.uom)}</td><td class="c b">${fm(x.rate)}</td><td>${h(x.disc)}</td><td>${h(x.pf)}</td><td class="b bp">${fm(x.amount)}</td><td>${h(x.delivery)}</td></tr>`).join('')+`<tr class="sp" style="height:${Math.max(8,(4-it.length)*30)}px">${'<td></td>'.repeat(9)}</tr>`;
- const nr=tax?3:2,tr=(l,v,first)=>`<tr>${first?`<td colspan="2" rowspan="${nr}" class="tl"></td>`:''}<td colspan="5" class="tl${pi?'':' b'}">${l}</td><td class="tl b bp">${v}</td><td class="tl"></td></tr>`;
- const totals=tr('TOTAL',fm(d.total),1)+(tax?tr(`Tax Rate Input ${tax}`,fm(d.taxAmount)):'')+tr('Payable amount',fm(d.payable));
- const W=rupeeWords(d.payable),Wpo=(t=>t.charAt(0).toUpperCase()+t.slice(1))(W.toLowerCase().replace(/ only$/,' Only'));
- const wr=`<table class="box"><tr><td style="height:36px;vertical-align:middle;padding:0 6px;font-size:${pi?12:14}px">${pi?`Total PI Value INR <b>${W}</b>`:`<b>Total PO Value INR ${Wpo}</b>`}</td></tr></table>`;
- const foot=pi?`<table class="box"><tr><td class="bk"><div class="bt">BANK DETAILS</div><p>Bank :- <b>${h(co.bankName)}</b></p><p>Branch:- <b>${h(co.bankBranch)}</b></p><p>A/c. No:- <b>${h(co.bankAcc)}</b></p><p>IFSC Code:- <b>${h(co.bankIfsc)}</b></p><p>PAN NO:- <b>${h(co.pan)}</b></p><p>GST No:- <b>${h(co.gstin)}</b></p></td></tr></table>`
-  :`<table class="box"><tr><td style="height:56px;vertical-align:middle;padding:0 6px;font:bold 10.5px Arial,Helvetica,sans-serif">PAYMENT TERMS: ${h(d.payment)}</td></tr></table><table class="box"><tr><td style="height:170px;padding:2px 6px;font-size:12px">Our Tax Details: -<br>&nbsp;&nbsp;&nbsp;PAN Number - ${h(co.pan)}<br>GST Number -${h(co.gstin)}</td></tr></table>`;
- return `<div class="dd ${doc.type}"><div class="ttl" style="${pi?'font:bold 26px/1.1 Times New Roman,serif;color:#2e74b5;text-decoration:underline':'font:bold 26px/1.1 Arial,Helvetica,sans-serif;color:#5b9bd5'}">${pi?'PROFORMA INVOICE':'PURCHASE ORDER'}</div><table class="pph"><tr><td class="h f" style="width:40%">${left}</td><td class="h" style="width:32%">${mid}</td><td class="h" style="width:28%">${right}</td></tr></table><div style="height:26px"></div><table class="itm"><thead><tr>${th}</tr></thead><tbody>${body}${totals}</tbody></table>${wr}${foot}</div>`}
-function quoteHTML(doc,d,w){
+function docHTML(doc,w,fit='auto'){const d=JSON.parse(doc.data);return doc.type=='quotation'?quoteHTML(doc,d,w,fit):ppHTML(doc,d,w,fit)}
+function ppHTML(doc,d,w,fit='auto'){
+  const pi=doc.type=='pi',it=d.items,tax=d.taxType=='NONE'?'':d.taxType=='IGST'?`IGST ${d.taxRate}%`:`CGST ${d.taxRate/2}% + SGST ${d.taxRate/2}%`;
+  let effPages = fit;
+  if(effPages === 'auto') effPages = it.length > 5 ? '2' : '1';
+  const is1Page = (effPages === '1');
+  const isDense = (it.length >= 6);
+
+  const left=`<table><tr><td style="width:34%"><img src="${logoSrc(w)}" width="92" style="width:92px;max-width:92px;height:auto;display:block;object-fit:contain"></td><td style="padding-left:10px;font:bold 11px Arial,Helvetica,sans-serif;line-height:1.35">${h(co.name)}<br><span style="font-weight:normal;font-size:10.5px">${nl(co.docAddress||'')}</span></td></tr></table><div class="cbox">${pi?'Contact Person: ':'Buyers contact '}${h(co.contactPhone)}<br>Buyer Email: ${h(co.contactEmail)}</div>`;
+  const opt=(a,l,v,g)=>v?`${a}${l}${v}${g}`:'';
+  const mid=pi?`<b>To,</b><br><b style="font-size:13px">${h(d.toName)}</b><br><b>${nl(d.toAddress)}</b><br><br>${opt('<b>','GSTIN : ',h(d.toGstin),'</b><br><br>')}${opt('<b>','Contact person : ',h(d.toContact),'</b><br><br>')}${opt('<b>','Phone : ',h(d.toPhone),'</b>')}`
+   :`<div style="font-size:14px">To,<br><b>&nbsp;&nbsp;${h(d.toName)}</b><br>${nl(d.toAddress)}<br><br>${opt('','GST- ',h(d.toGstin),'<br><br>')}${opt('','Contact Person - ',h(d.toContact),'<br><br>')}${opt('','Contact number - ',h(d.toPhone),'')}</div>`;
+  const right=pi?`Proforma Invoice No.<br>${h(doc.number)}<br><br>Date : ${sd(doc.date)}<br><br><br>You’re Pur. Order No.<br>${h(d.poNo)}<br>Date:${sd(d.poDate)}`:`<b>Po No. P.O: ${h(doc.number)}</b><br><br><b>Date: ${sd(doc.date)}</b>`;
+  const heads=['SR. NO.','Material Description','Quantity','UOM','Unit Price','Disc','P&amp;F','Base Price','Delivery Date'],wd=[7,31,9,7,11,6,6,13,10];
+  const th=heads.map((x,i)=>`<th style="width:${wd[i]}%;${pi?'font-weight:bold':''}">${x}</th>`).join('');
+
+  const renderRows=slice=>slice.map((x,i)=>`<tr><td class="c">${String(i+1).padStart(2,'0')}</td><td class="ds">${nl(x.desc)}</td><td class="c b">${h(x.qty)}</td><td class="c b">${h(x.uom)}</td><td class="c b">${fm(x.rate)}</td><td>${h(x.disc)}</td><td>${h(x.pf)}</td><td class="b bp">${fm(x.amount)}</td><td>${h(x.delivery)}</td></tr>`).join('');
+  const nr=tax?3:2,tr=(l,v,first)=>`<tr>${first?`<td colspan="2" rowspan="${nr}" class="tl"></td>`:''}<td colspan="5" class="tl${pi?'':' b'}">${l}</td><td class="tl b bp">${v}</td><td class="tl"></td></tr>`;
+  const totals=tr('TOTAL',fm(d.total),1)+(tax?tr(`Tax Rate Input ${tax}`,fm(d.taxAmount)):'')+tr('Payable amount',fm(d.payable));
+  const W=rupeeWords(d.payable),Wpo=(t=>t.charAt(0).toUpperCase()+t.slice(1))(W.toLowerCase().replace(/ only$/,' Only'));
+  const wr=`<table class="box"><tr><td style="height:36px;vertical-align:middle;padding:0 6px;font-size:${pi?12:14}px">${pi?`Total PI Value INR <b>${W}</b>`:`<b>Total PO Value INR ${Wpo}</b>`}</td></tr></table>`;
+  const foot=pi?`<table class="box"><tr><td class="bk"><div class="bt">BANK DETAILS</div><p>Bank :- <b>${h(co.bankName)}</b></p><p>Branch:- <b>${h(co.bankBranch)}</b></p><p>A/c. No:- <b>${h(co.bankAcc)}</b></p><p>IFSC Code:- <b>${h(co.bankIfsc)}</b></p><p>PAN NO:- <b>${h(co.pan)}</b></p><p>GST No:- <b>${h(co.gstin)}</b></p></td></tr></table>`
+   :`<table class="box"><tr><td style="height:56px;vertical-align:middle;padding:0 6px;font:bold 10.5px Arial,Helvetica,sans-serif">PAYMENT TERMS: ${h(d.payment)}</td></tr></table><table class="box"><tr><td style="height:170px;padding:2px 6px;font-size:12px">Our Tax Details: -<br>&nbsp;&nbsp;&nbsp;PAN Number - ${h(co.pan)}<br>GST Number -${h(co.gstin)}</td></tr></table>`;
+
+  if (is1Page) {
+    const spacerH = Math.max(8, (isDense ? 90 : 160) - (it.length * (isDense ? 16 : 28)));
+    const spacer = `<tr class="sp" style="height:${spacerH}px">${'<td></td>'.repeat(9)}</tr>`;
+    return `<div class="dd ${doc.type} single-page"><div class="ttl" style="${pi?'font:bold 26px/1.1 Times New Roman,serif;color:#2e74b5;text-decoration:underline':'font:bold 26px/1.1 Arial,Helvetica,sans-serif;color:#5b9bd5'}">${pi?'PROFORMA INVOICE':'PURCHASE ORDER'}</div><table class="pph"><tr><td class="h f" style="width:40%">${left}</td><td class="h" style="width:32%">${mid}</td><td class="h" style="width:28%">${right}</td></tr></table><div style="height:12px"></div><table class="itm"><thead><tr>${th}</tr></thead><tbody>${renderRows(it)}${spacer}${totals}</tbody></table>${wr}${foot}</div>`;
+  } else {
+    const midIdx = Math.ceil(it.length / 2);
+    const p1 = it.slice(0, midIdx);
+    const p2 = it.slice(midIdx);
+    const p1Rows = p1.map((x,i)=>`<tr><td class="c">${String(i+1).padStart(2,'0')}</td><td class="ds">${nl(x.desc)}</td><td class="c b">${h(x.qty)}</td><td class="c b">${h(x.uom)}</td><td class="c b">${fm(x.rate)}</td><td>${h(x.disc)}</td><td>${h(x.pf)}</td><td class="b bp">${fm(x.amount)}</td><td>${h(x.delivery)}</td></tr>`).join('');
+    const p2Rows = p2.map((x,i)=>`<tr><td class="c">${String(midIdx+i+1).padStart(2,'0')}</td><td class="ds">${nl(x.desc)}</td><td class="c b">${h(x.qty)}</td><td class="c b">${h(x.uom)}</td><td class="c b">${fm(x.rate)}</td><td>${h(x.disc)}</td><td>${h(x.pf)}</td><td class="b bp">${fm(x.amount)}</td><td>${h(x.delivery)}</td></tr>`).join('');
+    const p1Spacer = `<tr class="sp" style="height:120px">${'<td></td>'.repeat(9)}</tr>`;
+    const p2Spacer = `<tr class="sp" style="height:30px">${'<td></td>'.repeat(9)}</tr>`;
+    const p1Html = `<div class="qpage"><div class="ttl" style="${pi?'font:bold 26px/1.1 Times New Roman,serif;color:#2e74b5;text-decoration:underline':'font:bold 26px/1.1 Arial,Helvetica,sans-serif;color:#5b9bd5'}">${pi?'PROFORMA INVOICE':'PURCHASE ORDER'}</div><table class="pph"><tr><td class="h f" style="width:40%">${left}</td><td class="h" style="width:32%">${mid}</td><td class="h" style="width:28%">${right}</td></tr></table><div style="height:16px"></div><table class="itm"><thead><tr>${th}</tr></thead><tbody>${p1Rows}${p1Spacer}</tbody></table></div>`;
+    const p2Html = `<div class="qpage"><table class="itm"><thead><tr>${th}</tr></thead><tbody>${p2Rows}${p2Spacer}${totals}</tbody></table>${wr}${foot}</div>`;
+    return `<div class="dd ${doc.type} multi-page">${p1Html}${p2Html}</div>`;
+  }
+}
+function quoteHTML(doc,d,w,fit='auto'){
  const hdr=`<table style="width:100%;table-layout:fixed;border-collapse:collapse;margin:0 0 4px 0"><tr><td style="width:120px;vertical-align:middle;padding-right:10px"><img src="${logoSrc(w)}" width="110" style="width:110px;max-width:110px;height:auto;display:block;object-fit:contain" alt="AMIGO ENTERPRISES"></td><td style="vertical-align:middle"><div class="qh">${emailize((co&&co.quoteHeader)||'').replace(/\n/g,'<br>')}</div></td></tr></table><div class="rl"></div>`;
  const ln=(a,v)=>v?`<div class="qn">${a} ${h(v)}</div>`:'';
  const items=Array.isArray(d.items)?d.items:[];
@@ -5344,8 +5371,8 @@ function quoteHTML(doc,d,w){
  const allItemsHeight=items.reduce((sum,it)=>sum+getItemHeight(it),0);
 
  // === CASE 1: EVERYTHING FITS ON 1 SINGLE PAGE ===
- const isForceSinglePage = items.length <= 2;
- if(isForceSinglePage || (p1TopHeight+thHeight+allItemsHeight+footerBlockHeight<=PAGE_MAX)){
+ const isForceSinglePage = (fit === '1') || (fit === 'auto' && (items.length <= 2 || (p1TopHeight+thHeight+allItemsHeight+footerBlockHeight<=PAGE_MAX)));
+ if(isForceSinglePage){
    const tableRows=renderTableRows(items,0,true);
    const p1Content=`${hdr}
      <div class="qt">QUOTATION</div>
@@ -5530,11 +5557,8 @@ function quoteHTML(doc,d,w){
            <td style="text-align:left;font-size:13px;font-weight:bold;color:#1a1aff;font-family:'Times New Roman',Times,serif">
              ${continuationTitle}
            </td>
-           <td style="text-align:center;font-size:12px;color:#334155;font-family:'Times New Roman',Times,serif">
+           <td style="text-align:right;font-size:12px;color:#334155;font-family:'Times New Roman',Times,serif">
              ${continuationSub}
-           </td>
-           <td style="text-align:right;font-size:12px;font-weight:bold;color:#475569;font-family:'Times New Roman',Times,serif">
-             Page ${pageNumber} of ${totalPages}
            </td>
          </tr>
        </table>
@@ -5553,11 +5577,23 @@ async function saveWord(body,css,fn,imgs){ // Word-compatible MHTML (images embe
  let m=`MIME-Version: 1.0\r\nContent-Type: multipart/related; boundary="----=_Amigo"; type="text/html"\r\n\r\n------=_Amigo\r\nContent-Type: text/html; charset="utf-8"\r\nContent-Transfer-Encoding: base64\r\nContent-Location: file:///C:/doc.htm\r\n\r\n${wrap(b64(new TextEncoder().encode(html)))}`;
  for(const im of imgs){const bb=await (await fetch(im.url)).arrayBuffer();m+=`------=_Amigo\r\nContent-Type: ${im.type}\r\nContent-Transfer-Encoding: base64\r\nContent-Location: file:///C:/${im.name}\r\n\r\n${wrap(b64(bb))}`}
  m+='------=_Amigo--\r\n';const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([m],{type:'application/msword'}));a.download=fn+'.doc';document.body.append(a);a.click();a.remove()}
-function showDoc(doc){const fn=(DOCT[doc.type].l+'_'+doc.number).replace(/[\/\\:*?"<>|\s]+/g,'-');
- $('#invoiceView').innerHTML=`<style>${DCSS}</style><div class="bar"><button class="btn" id="dp">⬇ Download PDF</button><button class="btn" id="dw">⬇ Download Word</button>${can(doc.type,'mail')?'<button class="btn" id="dm" style="background:#0284c7;border-color:#0369a1">✉️ Send Mail</button>':''}${can(doc.type,'edit')?'<button class="btn ghost" id="ed">✎ Edit</button>':''}<button class="btn ghost" id="cl">Close</button></div><div class="sheet">${docHTML(doc)}</div>`;
+function showDoc(doc,currentFit='auto'){const fn=(DOCT[doc.type].l+'_'+doc.number).replace(/[\/\\:*?"<>|\s]+/g,'-');
+ $('#invoiceView').innerHTML=`<style>${DCSS}</style><div class="bar"><button class="btn" id="dp">⬇ Download PDF</button><button class="btn ghost" id="pr">🖨️ Print</button><button class="btn" id="dw">⬇ Download Word</button><span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:bold;margin-left:4px">Pages: <select id="docFit" class="btn ghost sm" style="padding:4px 8px;font-size:12px;background:#fff;color:#000;border:1px solid #cbd5e1;border-radius:4px;cursor:pointer"><option value="auto"${currentFit==='auto'?' selected':''}>Auto</option><option value="1"${currentFit==='1'?' selected':''}>1 Page</option><option value="2"${currentFit==='2'?' selected':''}>2 Pages</option></select></span>${can(doc.type,'mail')?'<button class="btn" id="dm" style="background:#0284c7;border-color:#0369a1">✉️ Send Mail</button>':''}${can(doc.type,'edit')?'<button class="btn ghost" id="ed">✎ Edit</button>':''}<button class="btn ghost" id="cl">Close</button></div><div class="sheet">${docHTML(doc,0,currentFit)}</div>`;
  $('#invoiceView').style.display='block';$('#cl').onclick=()=>$('#invoiceView').style.display='none';
- $('#dp').onclick=()=>{const t=document.title;document.title=fn;print();document.title=t};
- $('#dw').onclick=()=>saveWord(docHTML(doc,1),DCSS,fn,[{url:'/logo.png',type:'image/png',name:'logo.png'}]).catch(e=>say('Word export failed: '+e.message));
+ if($('#docFit'))$('#docFit').onchange=()=>showDoc(doc,$('#docFit').value);
+ $('#dp').onclick=async()=>{
+   try {
+     say('Generating PDF...',0);
+     const selFit=$('#docFit')?$('#docFit').value:currentFit;
+     await downloadPdfFile(docHTML(doc,0,selFit),DCSS,`${fn}.pdf`);
+     say('PDF downloaded',1);
+   } catch(e) {
+     console.warn('Direct PDF download failed, opening print dialog:',e);
+     const t=document.title;document.title=fn;print();document.title=t;
+   }
+ };
+ $('#pr').onclick=()=>{const t=document.title;document.title=fn;print();document.title=t};
+ $('#dw').onclick=()=>saveWord(docHTML(doc,1,currentFit),DCSS,fn,[{url:'/logo.png',type:'image/png',name:'logo.png'}]).catch(e=>say('Word export failed: '+e.message));
  if($('#dm'))$('#dm').onclick=()=>sendDocMail(doc);
  if($('#ed'))$('#ed').onclick=()=>{$('#invoiceView').style.display='none';docForm(doc.type,doc)}}
 // ---- OTP & Login Loader controller ----
@@ -7156,10 +7192,16 @@ async function builder(ex){const[cl,pr]=await Promise.all([load('clients'),load(
  };
 }
 // ---- invoice document (same markup is used for screen, PDF and Word) ----
-const IVCSS=`.iv{font:12px/1.35 Arial,Helvetica,sans-serif;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact}.iv table{border-collapse:collapse;width:100%}.iv td,.iv th{padding:4px 6px;vertical-align:top;border:0;text-align:left;font-weight:normal;text-transform:none;letter-spacing:0;color:#000;font-size:12px}.iv .out{border:2px solid #000}.iv .p0{padding:0;border-bottom:1px solid #000}.iv .last{border-bottom:0}.iv .bl{background:#cfe2f3}.iv .l{border-left:1px solid #000}.iv .bb{border-bottom:1px solid #000}.iv .bt{border-top:1px solid #000}.iv .c{text-align:center}.iv .r{text-align:right}.iv .b{font-weight:bold}.iv .tp{text-align:center;font-style:italic;font-size:10px;margin:6px 0}.iv .it td,.iv .it th{vertical-align:middle;text-align:center;font-weight:bold;font-size:11.5px}.iv .it td{font-weight:bold}.iv .it td.nm{text-align:left;font-weight:bold}.iv .it .rw td{padding:10px 4px}.iv .sc{border:1px solid #000;padding:1px 5px}.iv .pt td{padding:8px}`;
+const IVCSS=`.iv{font:12px/1.35 Arial,Helvetica,sans-serif;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact}.iv table{border-collapse:collapse;width:100%}.iv td,.iv th{padding:4px 6px;vertical-align:top;border:0;text-align:left;font-weight:normal;text-transform:none;letter-spacing:0;color:#000;font-size:12px}.iv .out{border:2px solid #000}.iv .p0{padding:0;border-bottom:1px solid #000}.iv .last{border-bottom:0}.iv .bl{background:#cfe2f3}.iv .l{border-left:1px solid #000}.iv .bb{border-bottom:1px solid #000}.iv .bt{border-top:1px solid #000}.iv .c{text-align:center}.iv .r{text-align:right}.iv .b{font-weight:bold}.iv .tp{text-align:center;font-style:italic;font-size:10px;margin:6px 0}.iv .it td,.iv .it th{vertical-align:middle;text-align:center;font-weight:bold;font-size:11.5px}.iv .it td{font-weight:bold}.iv .it td.nm{text-align:left;font-weight:bold}.iv .it .rw td{padding:10px 4px}.iv .sc{border:1px solid #000;padding:1px 5px}.iv .pt td{padding:8px}.iv-page{page-break-after:always;break-after:page;box-sizing:border-box;margin-bottom:20px}.iv-page:last-child{page-break-after:auto;break-after:auto;margin-bottom:0}@media print{@page{size:A4 portrait;margin:8mm 8mm}.iv-page{page-break-after:always !important;break-after:page !important;margin:0 !important}.iv-page:last-child{page-break-after:avoid !important;break-after:avoid !important}}`;
 const fm=n=>(+n).toFixed(2);
 const rupeeWords=n=>{const r=Math.round(n);const s=words(r);return (s.charAt(0).toUpperCase()+s.slice(1).toLowerCase()+' rupees only')};
-function invHTML(inv,word){const it=JSON.parse(inv.items),br=s=>h(s).replace(/\n/g,'<br>'),intra=inv.taxType?inv.taxType==='CGST+SGST':(!inv.clientGstin||!co.stateCode||inv.clientGstin.slice(0,2)==co.stateCode);
+function invHTML(inv,word,fit='auto'){
+ const it=JSON.parse(inv.items),br=s=>h(s).replace(/\n/g,'<br>'),intra=inv.taxType?inv.taxType==='CGST+SGST':(!inv.clientGstin||!co.stateCode||inv.clientGstin.slice(0,2)==co.stateCode);
+ let effPages = fit;
+ if(effPages === 'auto') effPages = it.length > 6 ? '2' : '1';
+ const is1Page = (effPages === '1');
+ const isDense = (it.length >= 6);
+
  let taxable=0,tax=0,qty=0;const rates={};it.forEach(x=>{const a=+x.amount,t=Math.round(a*x.gst)/100;x.t=t;taxable+=a;tax+=t;qty+=+x.qty;rates[x.gst]=(rates[x.gst]||0)+t});
  const rawTotal=taxable+tax,finalAmount=Math.round(rawTotal),roundDiff=+(finalAmount-rawTotal).toFixed(2);
  const roundStr=(roundDiff>=0?'+ ':'- ')+Math.abs(roundDiff).toFixed(2);
@@ -7170,30 +7212,60 @@ function invHTML(inv,word){const it=JSON.parse(inv.items),br=s=>h(s).replace(/\n
   ?`<tr><th class="bb" rowspan="2" width="5%">Sr.<br>No.</th>${th('','Name of Product','rowspan="2" width="22%"')}${th('','HSN/SAC','rowspan="2" width="10%"')}${th('','QTY','rowspan="2" width="6%"')}${th('','Unit','rowspan="2" width="5%"')}${th('','Rate','rowspan="2" width="8%"')}${th('bl','Taxable<br>Value','rowspan="2" width="11%"')}${th('bl','CGST','colspan="2"')}${th('bl','SGST','colspan="2"')}${th('','Total','rowspan="2" width="11%"')}</tr><tr>${th('bl','Rate')+th('bl','Amount')+th('bl','Rate')+th('bl','Amount')}</tr>`
   :`<tr><th class="bb" rowspan="2" width="5%">Sr.<br>No.</th>${th('','Name of Product','rowspan="2" width="25%"')}${th('','HSN/SAC','rowspan="2" width="11%"')}${th('','QTY','rowspan="2" width="6%"')}${th('','Unit','rowspan="2" width="5%"')}${th('','Rate','rowspan="2" width="9%"')}${th('bl','Taxable<br>Value','rowspan="2" width="11%"')}${th('bl','IGST','colspan="2"')}${th('','Total','rowspan="2" width="11%"')}</tr><tr>${th('bl','Rate')+th('bl','Amount')}</tr>`;
  const cell=(v,c='')=>`<td class="l ${c}">${v}</td>`;
- const body=it.map((x,i)=>{const srNo=String(i+1).padStart(2,'0');return `<tr class="rw"><td class="c b">${srNo}</td>${cell(h(x.name),'nm')}${cell(h(x.hsn),'c')}${cell(x.qty,'c')}${cell(h(x.unit),'c')}${cell(fm(x.rate),'r')}${cell(fm(x.amount),'r bl')}${intra?cell(x.gst/2+'%','c')+cell(fm(x.t/2),'r')+cell(x.gst/2+'%','c')+cell(fm(x.t/2),'r'):cell(x.gst+'%','c')+cell(fm(x.t),'r')}${cell(fm(+x.amount+x.t),'r')}</tr>`}).join('');
+ const renderRows=(slice,start=0)=>slice.map((x,i)=>{const srNo=String(start+i+1).padStart(2,'0');return `<tr class="rw"><td class="c b">${srNo}</td>${cell(h(x.name),'nm')}${cell(h(x.hsn),'c')}${cell(x.qty,'c')}${cell(h(x.unit),'c')}${cell(fm(x.rate),'r')}${cell(fm(x.amount),'r bl')}${intra?cell(x.gst/2+'%','c')+cell(fm(x.t/2),'r')+cell(x.gst/2+'%','c')+cell(fm(x.t/2),'r'):cell(x.gst+'%','c')+cell(fm(x.t),'r')}${cell(fm(+x.amount+x.t),'r')}</tr>`}).join('');
  const totalCols=intra?12:10;
- const spacer=`<tr style="height:${Math.max(16,(4-it.length)*34)}px"><td></td>${'<td class="l"></td>'.repeat(5)}<td class="l bl"></td>${'<td class="l"></td>'.repeat(totalCols-7)}</tr>`;
  const tot=`<tr><td class="bt b" colspan="2" style="text-align:left;padding-left:14px;font-size:13px">TOTAL</td>${'<td class="bt l"></td>'.repeat(totalCols-3)}<td class="bt l b r" style="font-size:13px;padding:6px">${fm(taxable+tax)}</td></tr>`;
  const taxRows=intra
   ?Object.keys(rates).map(g=>`<tr><td class="l bb b">Add : CGST ${g/2}%</td><td class="l bb b r">${fm(rates[g]/2)}</td></tr><tr><td class="l bb b">Add : SGST ${g/2}%</td><td class="l bb b r">${fm(rates[g]/2)}</td></tr>`).join('')
   :Object.keys(rates).map(g=>`<tr><td class="l bb b">Add : IGST</td><td class="l bb b r">${fm(rates[g])}</td></tr>`).join('');
  const rowCount=(intra?Object.keys(rates).length*2:Object.keys(rates).length)+4;
  const sum=`<table><tr><td class="c" rowspan="${rowCount}" style="width:58%;padding:14px 10px;vertical-align:middle"><div style="font-size:11px;font-weight:bold;margin-bottom:8px">Total Invoice Amount in words</div><b style="font-size:12px">${rupeeWords(finalAmount)}</b></td><td class="l bb b" style="padding:5px 8px">Total Amount Before Tax</td><td class="l bb b r" style="width:20%;padding:5px 8px">${fm(taxable)}</td></tr>${taxRows}<tr><td class="l bb b" style="padding:5px 8px">Round off</td><td class="l bb b r" style="padding:5px 8px">${roundStr}</td></tr><tr class="bl"><td class="l bb b" style="padding:5px 8px">Total Tax Amount</td><td class="l bb b r" style="padding:5px 8px">${fm(totalTaxAmount)}</td></tr><tr class="bl"><td class="l b" style="padding:5px 8px;font-size:12px">Final Invoice Amount</td><td class="l b r" style="padding:5px 8px;font-size:13px">${fm(finalAmount)}</td></tr></table>`;
- const terms=String(co.terms||'').split('\n').filter(Boolean).map(t=>`<div style="margin:8px 0;font-size:10px">${h(t)}</div>`).join('');
- const stamp=!word&&co.stamp?`<img src="${co.stamp}" style="max-height:100px;max-width:200px">`:'';
- return `<div class="tp">Thank-you for doing business with us</div><table class="out">
- <tr><td class="p0 c" style="padding:8px"><b style="font-size:15px">${h(co.name)}</b><br>${h(co.address.replace(/\n/g,', '))}<br>GSTIN : ${h(co.gstin)} &nbsp;&nbsp;<span class="sc">State Code : ${h(co.stateCode)}</span></td></tr>
- <tr><td class="p0 bl"><table><tr><td width="20%"></td><td class="c b" style="font-size:15px">TAX INVOICE</td><td class="r" width="20%"><i style="font-size:9px">Original For Recipient</i></td></tr></table></td></tr>
- <tr><td class="p0"><table><tr><td width="50%" style="padding:6px 8px;vertical-align:top;line-height:1.55">InvoiceNumbr<br>Invoice Date<br>State<br>Purchase order No<br>Purchase order date</td><td class="r b" style="padding:6px 8px;vertical-align:top;line-height:1.55">${h(inv.number)}<br>${dmy(inv.date)}<br>${h(inv.state)}<br>${h(inv.poNumber||'')}<br>${inv.poDate?dmy(inv.poDate):''}</td></tr></table></td></tr>
- <tr><td class="p0"><table><tr><th class="bl c b bt bb" width="50%" style="font-size:13px">Details of Receiver | Billed to</th><th class="bl c b bt bb l" style="font-size:13px">Details of Consignee | Shipped to</th></tr><tr><td class="pt" style="height:110px">${party(inv.clientName,inv.clientAddress,inv.clientGstin,inv.clientContact,inv.clientMobile)}</td><td class="pt l">${party(inv.shipName,inv.shipAddress,inv.shipGstin,inv.shipContact,inv.shipMobile)}</td></tr></table></td></tr>
- <tr><td class="p0"><table class="it">${head}${body}${spacer}${tot}</table></td></tr>
- <tr><td class="p0">${sum}</td></tr>
- <tr><td class="p0 last"><table><tr><td width="50%" style="height:190px;padding:8px"><b style="font-size:10.5px">Terms And Conditions</b>${terms}</td><td class="l" style="height:190px;padding:8px;font-size:11px">Certified that the particular given above are true and correct<br><br><b style="font-size:12.5px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;For, ${h(co.name)}</b><div style="height:90px;padding-top:6px">${stamp}</div><div style="margin-top:8px">Authorised Signatory</div></td></tr></table></td></tr></table><div class="tp">Thankyou for your business</div>`}
-function showInv(inv){const fn=inv.number.replace(/[\/\\:*?"<>|]/g,'-');
- $('#invoiceView').innerHTML=`<style>${IVCSS}</style><div class="bar"><button class="btn" id="dp">⬇ Download PDF</button><button class="btn" id="dw">⬇ Download Word</button>${can('invoices','mail')?'<button class="btn" id="im" style="background:#0284c7;border-color:#0369a1">✉️ Send Mail</button>':''}${can('invoices','edit')?'<button class="btn ghost" id="ed">✎ Edit</button>':''}<button class="btn ghost" id="cl">Close</button></div><div class="sheet"><div class="iv">${invHTML(inv)}</div></div>`;
+ const terms=String(co.terms||'').split('\n').filter(Boolean).map(t=>`<div style="margin:${isDense?'4px 0':'8px 0'};font-size:10px">${h(t)}</div>`).join('');
+ const stamp=!word&&co.stamp?`<img src="${co.stamp}" style="max-height:${isDense?'65px':'100px'};max-width:200px">`:'';
+
+ const headerPart=`
+  <tr><td class="p0 c" style="padding:${isDense?'5px 8px':'8px'}"><b style="font-size:${isDense?'14px':'15px'}">${h(co.name)}</b><br>${h(co.address.replace(/\n/g,', '))}<br>GSTIN : ${h(co.gstin)} &nbsp;&nbsp;<span class="sc">State Code : ${h(co.stateCode)}</span></td></tr>
+  <tr><td class="p0 bl"><table><tr><td width="20%"></td><td class="c b" style="font-size:${isDense?'14px':'15px'};padding:${isDense?'2px 4px':'4px'}">TAX INVOICE</td><td class="r" width="20%"><i style="font-size:9px">Original For Recipient</i></td></tr></table></td></tr>
+  <tr><td class="p0"><table><tr><td width="50%" style="padding:${isDense?'4px 8px':'6px 8px'};vertical-align:top;line-height:${isDense?'1.4':'1.55'}">InvoiceNumbr<br>Invoice Date<br>State<br>Purchase order No<br>Purchase order date</td><td class="r b" style="padding:${isDense?'4px 8px':'6px 8px'};vertical-align:top;line-height:${isDense?'1.4':'1.55'}">${h(inv.number)}<br>${dmy(inv.date)}<br>${h(inv.state)}<br>${h(inv.poNumber||'')}<br>${inv.poDate?dmy(inv.poDate):''}</td></tr></table></td></tr>
+  <tr><td class="p0"><table><tr><th class="bl c b bt bb" width="50%" style="font-size:${isDense?'12px':'13px'};padding:${isDense?'2px 4px':'4px'}">Details of Receiver | Billed to</th><th class="bl c b bt bb l" style="font-size:${isDense?'12px':'13px'};padding:${isDense?'2px 4px':'4px'}">Details of Consignee | Shipped to</th></tr><tr><td class="pt" style="height:${isDense?'80px':'110px'};padding:${isDense?'4px 8px':'8px'}">${party(inv.clientName,inv.clientAddress,inv.clientGstin,inv.clientContact,inv.clientMobile)}</td><td class="pt l" style="height:${isDense?'80px':'110px'};padding:${isDense?'4px 8px':'8px'}">${party(inv.shipName,inv.shipAddress,inv.shipGstin,inv.shipContact,inv.shipMobile)}</td></tr></table></td></tr>
+ `;
+
+ if(is1Page){
+  const baseH = isDense ? 22 : 32;
+  const targetH = isDense ? 250 : 280;
+  const spacerH = Math.max(16, targetH - (it.length * baseH));
+  const spacer=`<tr style="height:${spacerH}px"><td></td>${'<td class="l"></td>'.repeat(5)}<td class="l bl"></td>${'<td class="l"></td>'.repeat(totalCols-7)}</tr>`;
+  return `<div class="tp">Thank-you for doing business with us</div><table class="out">${headerPart}<tr><td class="p0"><table class="it">${head}${renderRows(it)}${spacer}${tot}</table></td></tr><tr><td class="p0">${sum}</td></tr><tr><td class="p0 last"><table><tr><td width="50%" style="height:${isDense?'120px':'190px'};padding:8px"><b style="font-size:10.5px">Terms And Conditions</b>${terms}</td><td class="l" style="height:${isDense?'120px':'190px'};padding:8px;font-size:11px">Certified that the particular given above are true and correct<br><br><b style="font-size:12.5px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;For, ${h(co.name)}</b><div style="height:${isDense?'60px':'90px'};padding-top:4px">${stamp}</div><div style="margin-top:6px">Authorised Signatory</div></td></tr></table></td></tr></table><div class="tp">Thankyou for your business</div>`;
+ } else {
+  const mid=Math.ceil(it.length/2);
+  const p1=it.slice(0,mid);
+  const p2=it.slice(mid);
+  const p1SpacerH=Math.max(20,240-(p1.length*30));
+  const p1Spacer=`<tr style="height:${p1SpacerH}px"><td></td>${'<td class="l"></td>'.repeat(5)}<td class="l bl"></td>${'<td class="l"></td>'.repeat(totalCols-7)}</tr>`;
+  const p2SpacerH=Math.max(16,140-(p2.length*30));
+  const p2Spacer=`<tr style="height:${p2SpacerH}px"><td></td>${'<td class="l"></td>'.repeat(5)}<td class="l bl"></td>${'<td class="l"></td>'.repeat(totalCols-7)}</tr>`;
+  const p1Html=`<div class="iv-page"><div class="tp">Thank-you for doing business with us</div><table class="out">${headerPart}<tr><td class="p0 last"><table class="it">${head}${renderRows(p1,0)}${p1Spacer}</table></td></tr></table><div class="tp">Thankyou for your business</div></div>`;
+  const p2Html=`<div class="iv-page"><table class="out"><tr><td class="p0"><table class="it">${head}${renderRows(p2,mid)}${p2Spacer}${tot}</table></td></tr><tr><td class="p0">${sum}</td></tr><tr><td class="p0 last"><table><tr><td width="50%" style="height:190px;padding:8px"><b style="font-size:10.5px">Terms And Conditions</b>${terms}</td><td class="l" style="height:190px;padding:8px;font-size:11px">Certified that the particular given above are true and correct<br><br><b style="font-size:12.5px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;For, ${h(co.name)}</b><div style="height:90px;padding-top:6px">${stamp}</div><div style="margin-top:8px">Authorised Signatory</div></td></tr></table></td></tr></table><div class="tp">Thankyou for your business</div></div>`;
+  return `${p1Html}${p2Html}`;
+ }
+}
+function showInv(inv,currentFit='auto'){const fn=inv.number.replace(/[\/\\:*?"<>|]/g,'-');
+ $('#invoiceView').innerHTML=`<style>${IVCSS}</style><div class="bar"><button class="btn" id="dp">⬇ Download PDF</button><button class="btn ghost" id="pr">🖨️ Print</button><button class="btn" id="dw">⬇ Download Word</button><span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:bold;margin-left:4px">Pages: <select id="invFit" class="btn ghost sm" style="padding:4px 8px;font-size:12px;background:#fff;color:#000;border:1px solid #cbd5e1;border-radius:4px;cursor:pointer"><option value="auto"${currentFit==='auto'?' selected':''}>Auto</option><option value="1"${currentFit==='1'?' selected':''}>1 Page</option><option value="2"${currentFit==='2'?' selected':''}>2 Pages</option></select></span>${can('invoices','mail')?'<button class="btn" id="im" style="background:#0284c7;border-color:#0369a1">✉️ Send Mail</button>':''}${can('invoices','edit')?'<button class="btn ghost" id="ed">✎ Edit</button>':''}<button class="btn ghost" id="cl">Close</button></div><div class="sheet"><div class="iv">${invHTML(inv,0,currentFit)}</div></div>`;
  $('#invoiceView').style.display='block';$('#cl').onclick=()=>$('#invoiceView').style.display='none';
- $('#dp').onclick=()=>{const t=document.title;document.title=fn;print();document.title=t}; // in the print dialog choose "Save as PDF"
- $('#dw').onclick=()=>{const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>${h(inv.number)}</title><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]--><style>@page{size:A4;margin:10mm}${IVCSS}</style></head><body><div class="iv">${invHTML(inv,1)}</div></body></html>`;
+ if($('#invFit'))$('#invFit').onchange=()=>showInv(inv,$('#invFit').value);
+ $('#dp').onclick=async()=>{
+   try {
+     say('Generating PDF...',0);
+     const selFit=$('#invFit')?$('#invFit').value:currentFit;
+     await downloadPdfFile(`<div class="iv">${invHTML(inv,0,selFit)}</div>`,IVCSS,`Invoice-${fn}.pdf`);
+     say('PDF downloaded',1);
+   } catch(e) {
+     console.warn('Direct PDF download failed, opening print dialog:',e);
+     const t=document.title;document.title=fn;print();document.title=t;
+   }
+ };
+ $('#pr').onclick=()=>{const t=document.title;document.title=fn;print();document.title=t};
+ $('#dw').onclick=()=>{const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>${h(inv.number)}</title><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]--><style>@page{size:A4;margin:10mm}${IVCSS}</style></head><body><div class="iv">${invHTML(inv,1,currentFit)}</div></body></html>`;
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff',html],{type:'application/msword'}));a.download=fn+'.doc';document.body.append(a);a.click();a.remove()};
  if($('#im'))$('#im').onclick=()=>sendInvoiceMail(inv);
  if($('#ed'))$('#ed').onclick=()=>{$('#invoiceView').style.display='none';builder(inv)}}
@@ -7586,20 +7658,6 @@ async function generatePdfFromHtml(html, css, filename) {
     }
     await new Promise(r => setTimeout(r, 150));
 
-    const canvas = await window.html2canvas(captureBox, {
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#ffffff',
-      scrollX: 0,
-      scrollY: 0,
-      x: 0,
-      y: 0,
-      width: 700,
-      windowWidth: 700,
-      logging: false
-    });
-
     const jsPDFClass = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
     if (!jsPDFClass) {
       throw new Error('PDF generator library (jsPDF) is not loaded.');
@@ -7619,42 +7677,83 @@ async function generatePdfFromHtml(html, css, filename) {
     const maxW = pageWidth - (marginX * 2); // 190 mm
     const maxH = pageHeight - (marginY * 2); // 277 mm
 
-    let imgW = maxW;
-    let imgH = (canvas.height * imgW) / canvas.width;
-
-    // Proportional fit: If single-page document is slightly taller than maxH (up to 15%), fit neatly on 1 page
-    if (imgH > maxH && imgH <= maxH * 1.15) {
-      const scale = maxH / imgH;
-      imgH = maxH;
-      imgW = imgW * scale;
-    }
-
-    const posX = (pageWidth - imgW) / 2; // Perfectly centered horizontally
-
-    if (imgH <= maxH) {
-      const imgData = canvas.toDataURL('image/jpeg', 0.98);
-      pdf.addImage(imgData, 'JPEG', posX, marginY, imgW, imgH, undefined, 'FAST');
-    } else {
-      // Multi-page document: slice into A4 page sections cleanly
-      const pageCanvasH = Math.floor(canvas.width * (maxH / maxW));
-      const totalPages = Math.ceil(canvas.height / pageCanvasH);
-
-      for (let p = 0; p < totalPages; p++) {
+    const pageEls = Array.from(captureBox.querySelectorAll('.iv-page, .qpage'));
+    if (pageEls.length > 1) {
+      for (let p = 0; p < pageEls.length; p++) {
         if (p > 0) pdf.addPage();
-        const sourceY = p * pageCanvasH;
-        const sourceH = Math.min(pageCanvasH, canvas.height - sourceY);
+        const pEl = pageEls[p];
+        const pCanvas = await window.html2canvas(pEl, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+          width: 700,
+          windowWidth: 700,
+          logging: false
+        });
+        let imgW = maxW;
+        let imgH = (pCanvas.height * imgW) / pCanvas.width;
+        if (imgH > maxH) {
+          const scale = maxH / imgH;
+          imgH = maxH;
+          imgW = imgW * scale;
+        }
+        const posX = (pageWidth - imgW) / 2;
+        const pageImgData = pCanvas.toDataURL('image/jpeg', 0.98);
+        pdf.addImage(pageImgData, 'JPEG', posX, marginY, imgW, imgH, undefined, 'FAST');
+      }
+    } else {
+      const canvas = await window.html2canvas(captureBox, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        scrollX: 0,
+        scrollY: 0,
+        x: 0,
+        y: 0,
+        width: 700,
+        windowWidth: 700,
+        logging: false
+      });
 
-        const pageCanvas = document.createElement('canvas');
-        pageCanvas.width = canvas.width;
-        pageCanvas.height = sourceH;
-        const pctx = pageCanvas.getContext('2d');
-        pctx.fillStyle = '#ffffff';
-        pctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
-        pctx.drawImage(canvas, 0, sourceY, canvas.width, sourceH, 0, 0, canvas.width, sourceH);
+      let imgW = maxW;
+      let imgH = (canvas.height * imgW) / canvas.width;
 
-        const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.98);
-        const curImgH = (sourceH * maxW) / canvas.width;
-        pdf.addImage(pageImgData, 'JPEG', posX, marginY, maxW, curImgH, undefined, 'FAST');
+      // Proportional fit: If single-page document is slightly taller than maxH (up to 15%), fit neatly on 1 page
+      if (imgH > maxH && imgH <= maxH * 1.15) {
+        const scale = maxH / imgH;
+        imgH = maxH;
+        imgW = imgW * scale;
+      }
+
+      const posX = (pageWidth - imgW) / 2; // Perfectly centered horizontally
+
+      if (imgH <= maxH) {
+        const imgData = canvas.toDataURL('image/jpeg', 0.98);
+        pdf.addImage(imgData, 'JPEG', posX, marginY, imgW, imgH, undefined, 'FAST');
+      } else {
+        // Multi-page document: slice into A4 page sections cleanly
+        const pageCanvasH = Math.floor(canvas.width * (maxH / maxW));
+        const totalPages = Math.ceil(canvas.height / pageCanvasH);
+
+        for (let p = 0; p < totalPages; p++) {
+          if (p > 0) pdf.addPage();
+          const sourceY = p * pageCanvasH;
+          const sourceH = Math.min(pageCanvasH, canvas.height - sourceY);
+
+          const pageCanvas = document.createElement('canvas');
+          pageCanvas.width = canvas.width;
+          pageCanvas.height = sourceH;
+          const pctx = pageCanvas.getContext('2d');
+          pctx.fillStyle = '#ffffff';
+          pctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+          pctx.drawImage(canvas, 0, sourceY, canvas.width, sourceH, 0, 0, canvas.width, sourceH);
+
+          const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.98);
+          const curImgH = (sourceH * maxW) / canvas.width;
+          pdf.addImage(pageImgData, 'JPEG', posX, marginY, maxW, curImgH, undefined, 'FAST');
+        }
       }
     }
 
@@ -7673,6 +7772,24 @@ async function generatePdfFromHtml(html, css, filename) {
     overlay.remove();
     captureBox.remove();
   }
+}
+
+async function downloadPdfFile(html, css, filename) {
+  const result = await generatePdfFromHtml(html, css, filename);
+  if (!result || !result.base64) throw new Error('PDF output could not be generated');
+  const byteCharacters = atob(result.base64);
+  const byteNumbers = new Array(byteCharacters.length);
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i);
+  }
+  const byteArray = new Uint8Array(byteNumbers);
+  const blob = new Blob([byteArray], { type: 'application/pdf' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = result.name;
+  document.body.append(a);
+  a.click();
+  a.remove();
 }
 
 async function sendInvoiceMail(inv) {
