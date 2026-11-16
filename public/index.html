@@ -1095,19 +1095,23 @@ label{display:block;font-size:12.5px;color:var(--mute);margin:0 0 5px;font-weigh
   border-color:rgba(239,68,68,0.35);
 }
 
-/* === Main Container === */
-.main{
-  margin-left:250px;
-  padding:30px 36px;
-  max-width:1200px;
-  min-height:100vh;
-  transition:margin-left 0.3s cubic-bezier(0.16,1,0.3,1);
+/* === Main Container (Full Screen Responsive) === */
+.main {
+  margin-left: 250px !important;
+  padding: 24px 32px !important;
+  max-width: none !important;
+  width: auto !important;
+  min-height: 100vh !important;
+  box-sizing: border-box !important;
+  transition: margin-left 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
-.side.is-mini ~ .main{
-  margin-left:76px;
+.side.is-mini ~ .main {
+  margin-left: 76px !important;
+  max-width: none !important;
+  width: auto !important;
 }
-.main:has(.split-builder-layout){
-  max-width:1650px;
+.main:has(.split-builder-layout) {
+  max-width: none !important;
 }
 
 /* === Split Builder Workspace (Option 3) === */
@@ -2944,6 +2948,230 @@ body.mobile-sidebar-open {
   padding: 16px;
 }
 
+
+/* ========================================================
+   ANIMATION-PREVIEW: BIOMETRIC RADAR & SEAL STAMP
+   ======================================================== */
+@keyframes scanSweep {
+  0% { top: 10%; opacity: 0.35; }
+  50% { opacity: 1; }
+  100% { top: 88%; opacity: 0.35; }
+}
+
+@keyframes radarExpand {
+  0% { transform: scale(0.5); opacity: 0.85; border-color: rgba(6, 182, 212, 0.7); }
+  100% { transform: scale(1.35); opacity: 0; border-color: rgba(6, 182, 212, 0.05); }
+}
+
+@keyframes stampImpact {
+  0% { transform: scale(3); opacity: 0; }
+  60% { transform: scale(0.92); opacity: 1; }
+  80% { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes stampRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Biometric Scanner Viewport (Camera Modal) */
+.bio-scanner-viewport {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #060911;
+  border: 1px solid rgba(6, 182, 212, 0.45);
+  box-shadow: 0 0 30px rgba(6, 182, 212, 0.25);
+  margin-bottom: 12px;
+}
+
+.bio-radar-beam {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent 0%, #06b6d4 40%, #38bdf8 60%, transparent 100%);
+  box-shadow: 0 0 16px #06b6d4, 0 0 26px #06b6d4;
+  animation: scanSweep 2.8s ease-in-out infinite alternate;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.bio-radar-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 1px solid rgba(6, 182, 212, 0.4);
+  animation: radarExpand 3s infinite cubic-bezier(0.1, 0.8, 0.3, 1);
+  pointer-events: none;
+}
+
+.bio-ring-1 { width: 90px; height: 90px; animation-delay: 0s; }
+.bio-ring-2 { width: 170px; height: 170px; animation-delay: 0.9s; }
+.bio-ring-3 { width: 250px; height: 250px; animation-delay: 1.8s; }
+
+.bio-radar-corner {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-color: #38bdf8;
+  border-style: solid;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.tc-tl { top: 6px; left: 6px; border-width: 3px 0 0 3px; }
+.tc-tr { top: 6px; right: 6px; border-width: 3px 3px 0 0; }
+.tc-bl { bottom: 6px; left: 6px; border-width: 0 0 3px 3px; }
+.tc-br { bottom: 6px; right: 6px; border-width: 0 3px 3px 0; }
+
+.bio-hud-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px;
+  color: #38bdf8;
+  background: rgba(6, 182, 212, 0.12);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  padding: 4px 10px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.bio-hud-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #06b6d4;
+  animation: pulse 1.5s infinite;
+}
+
+/* Document Stamp Celebration Overlay */
+.stamp-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(9, 13, 22, 0.78);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.stamp-modal-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.stamp-modal-card {
+  background: #111827;
+  border: 2px solid #10b981;
+  border-radius: 24px;
+  padding: 34px 44px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(16, 185, 129, 0.35);
+  transform: scale(0.85);
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  max-width: 90vw;
+}
+
+.stamp-modal-overlay.active .stamp-modal-card {
+  transform: scale(1);
+}
+
+.stamp-modal-graphic {
+  width: 96px;
+  height: 96px;
+  margin: 0 auto 18px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stamp-modal-dashed {
+  position: absolute;
+  inset: 0;
+  border: 3px dashed #10b981;
+  border-radius: 50%;
+  animation: stampRotate 16s linear infinite;
+}
+
+.stamp-modal-inner {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.3), rgba(16, 185, 129, 0.08));
+  border: 2px solid #10b981;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  color: #10b981;
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.5);
+  animation: stampImpact 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* ========================================================
+   TAX INVOICES: SECTION-ONLY KPI HERO FLOATING MESH
+   (Vibrant, Crisp & Highly Visible)
+   ======================================================== */
+.inv-hero-section {
+  position: relative;
+  border-radius: 20px;
+  padding: 18px 22px 16px;
+  margin-bottom: 18px;
+  overflow: hidden;
+  background: radial-gradient(circle at 12% 20%, rgba(99, 102, 241, 0.10) 0%, transparent 45%),
+              radial-gradient(circle at 88% 80%, rgba(6, 182, 212, 0.12) 0%, transparent 45%),
+              #f8fafc;
+  border: 1.5px solid rgba(99, 102, 241, 0.28);
+  box-shadow: 0 4px 24px -2px rgba(79, 70, 229, 0.08), 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.inv-section-mesh-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.inv-hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+.inv-hero-section .inv-kpi-row {
+  margin-bottom: 0 !important;
+  gap: 14px !important;
+}
+
+.inv-hero-section .inv-kpi-card {
+  background: rgba(255, 255, 255, 0.82) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  border: 1px solid rgba(203, 213, 225, 0.85) !important;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.inv-hero-section .inv-kpi-card:hover {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-color: #818cf8 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -2px rgba(99, 102, 241, 0.16) !important;
+}
+
 </style></head><body>
 
 <!-- Top Animated Progress Bar -->
@@ -3792,7 +4020,22 @@ function loadFace(){return faceReady||(faceReady=(async()=>{if(!window.faceapi)a
 async function faceOf(el){const r=await faceapi.detectAllFaces(el,FOPT()).withFaceLandmarks().withFaceDescriptors();return r.length==1?Array.from(r[0].descriptor):r.length}
 function camera({title,auto,verify}){return new Promise(async(resolve,reject)=>{
  const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;background:rgba(15,20,35,.8);z-index:20;display:flex;align-items:center;justify-content:center';
- o.innerHTML=`<div class="card" style="width:380px;max-width:94vw;text-align:center;margin:0"><h3>${h(title)}</h3><video playsinline muted style="width:100%;border-radius:10px;background:#000;transform:scaleX(-1)"></video><div class="cs" style="margin:10px 0;color:var(--mute)">Starting camera…</div><div class="row" style="justify-content:center">${auto?'':'<button class="btn cc">Capture</button>'}<button class="btn ghost cx">Cancel</button></div></div>`;
+ o.innerHTML=`<div class="card" style="width:380px;max-width:94vw;text-align:center;margin:0"><h3>${h(title)}</h3>
+<div class="bio-hud-badge">
+  <span class="bio-hud-dot"></span>
+  <span>BIOMETRIC SCANNER // 60 FPS DESCRIPTOR HUD</span>
+</div>
+<div class="bio-scanner-viewport">
+  <video playsinline muted style="width:100%;display:block;background:#000;transform:scaleX(-1)"></video>
+  <div class="bio-radar-beam"></div>
+  <div class="bio-radar-ring bio-ring-1"></div>
+  <div class="bio-radar-ring bio-ring-2"></div>
+  <div class="bio-radar-ring bio-ring-3"></div>
+  <div class="bio-radar-corner tc-tl"></div>
+  <div class="bio-radar-corner tc-tr"></div>
+  <div class="bio-radar-corner tc-bl"></div>
+  <div class="bio-radar-corner tc-br"></div>
+</div><div class="cs" style="margin:10px 0;color:var(--mute)">Starting camera…</div><div class="row" style="justify-content:center">${auto?'':'<button class="btn cc">Capture</button>'}<button class="btn ghost cx">Cancel</button></div></div>`;
  document.body.append(o);const v=o.querySelector('video'),st=t=>o.querySelector('.cs').textContent=t;let stream,stop=false;
  const done=(fn,val)=>{stop=true;stream&&stream.getTracks().forEach(t=>t.stop());o.remove();fn(val)};
  o.querySelector('.cx').onclick=()=>done(reject,new Error('Cancelled'));
@@ -4735,7 +4978,11 @@ async function docs(type){
     `).join('') : `<tr><td colspan="6" style="text-align:center;padding:36px;color:var(--mute)">No ${T.p.toLowerCase()} matching search or filter</td></tr>`;
 
     $('#view').innerHTML = `
-      <!-- Top Title & Global Actions -->
+      <!-- Top Title & KPI Metrics Hero Area with Contained Floating Mesh -->
+      <div class="inv-hero-section" id="invHeroSection">
+        <canvas id="invSectionMeshCanvas" class="inv-section-mesh-canvas"></canvas>
+        <div class="inv-hero-content">
+<!-- Top Title & Global Actions -->
       <div class="row" style="margin-bottom:14px;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
         <h1 class="sp" style="display:flex;align-items:center;margin:0;gap:8px">
           <span>${T.p}</span>
@@ -4778,6 +5025,8 @@ async function docs(type){
             <div class="inv-kpi-lbl">Active ${partyLbl}s</div>
           </div>
           <div class="inv-kpi-icon" style="background:#fffbeb;color:#b45309">👥</div>
+        </div>
+      </div>
         </div>
       </div>
 
@@ -4849,6 +5098,7 @@ async function docs(type){
       sInp.oninput = () => {
         curSearch = sInp.value;
         render();
+    setTimeout(initInvSectionMesh, 40);
         const nextInp = $('#docSearchInput');
         if (nextInp) {
           nextInp.focus();
@@ -6770,7 +7020,11 @@ async function invoices(){
     `).join('') : `<tr><td colspan="7" style="text-align:center;padding:36px;color:var(--mute)">No invoices matching search or filter</td></tr>`;
 
     $('#view').innerHTML = `
-      <!-- Top Title & Global Actions -->
+      <!-- Top Title & KPI Metrics Hero Area with Contained Floating Mesh -->
+      <div class="inv-hero-section" id="invHeroSection">
+        <canvas id="invSectionMeshCanvas" class="inv-section-mesh-canvas"></canvas>
+        <div class="inv-hero-content">
+<!-- Top Title & Global Actions -->
       <div class="row" style="margin-bottom:14px;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
         <h1 class="sp" style="display:flex;align-items:center;margin:0">
           <span>Tax Invoices</span>
@@ -6812,6 +7066,8 @@ async function invoices(){
             <div class="inv-kpi-lbl">Interstate Invoices</div>
           </div>
           <div class="inv-kpi-icon" style="background:#fffbeb;color:#b45309">🚚</div>
+        </div>
+      </div>
         </div>
       </div>
 
@@ -17398,5 +17654,219 @@ async function openCatalogueMailHistoryModal() {
     `;
   }
 }
+
+
+
+/* ========================================================
+   ANIMATION-PREVIEW: SEAL STAMP & TAX INVOICES MESH JS
+   ======================================================== */
+function showDocumentSealStamp(docNum, client, msg) {
+  let overlay = document.getElementById('amigoStampModal');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'amigoStampModal';
+    overlay.className = 'stamp-modal-overlay';
+    overlay.onclick = () => overlay.classList.remove('active');
+    overlay.innerHTML = `
+      <div class="stamp-modal-card" onclick="event.stopPropagation()">
+        <div class="stamp-modal-graphic">
+          <div class="stamp-modal-dashed"></div>
+          <div class="stamp-modal-inner">✓</div>
+        </div>
+        <h3 style="font-size:20px;font-weight:900;color:#fff;margin-bottom:6px;" id="stampDocNum">AE/26-27/011</h3>
+        <p style="color:#34d399;font-weight:700;font-size:13.5px;margin-bottom:10px;" id="stampDocClient">Amigo Official Document</p>
+        <p style="color:#94a3b8;font-size:12.5px;max-width:320px;margin:0 auto 20px;" id="stampDocMsg">Official Commercial Seal Applied & Dispatched</p>
+        <button class="btn" style="background:#10b981;margin:0 auto;display:block;" onclick="document.getElementById('amigoStampModal').classList.remove('active')">
+          Done
+        </button>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+  }
+
+  document.getElementById('stampDocNum').textContent = docNum || 'Amigo Commercial Document';
+  document.getElementById('stampDocClient').textContent = client || 'Official Stamp Verified';
+  document.getElementById('stampDocMsg').textContent = msg || 'Document Digitally Signed & Processed Successfully';
+  
+  overlay.classList.add('active');
+  setTimeout(() => {
+    overlay.classList.remove('active');
+  }, 3200);
+}
+
+// Section-contained Tax Invoices mesh loop
+let invSectionMeshLoop = null;
+let invSectionNodes = [];
+let invSectionMouse = { x: null, y: null };
+
+function startTaxInvoicesMesh() {
+  setTimeout(initInvSectionMesh, 60);
+}
+
+function stopTaxInvoicesMesh() {
+  if (invSectionMeshLoop) {
+    cancelAnimationFrame(invSectionMeshLoop);
+    invSectionMeshLoop = null;
+  }
+}
+
+function initInvSectionMesh() {
+  const canvas = document.getElementById('invSectionMeshCanvas');
+  const section = document.getElementById('invHeroSection');
+  if (!canvas || !section) {
+    stopTaxInvoicesMesh();
+    return;
+  }
+
+  const ctx = canvas.getContext('2d');
+
+  function resize() {
+    if (!section || !canvas) return;
+    canvas.width = section.clientWidth || section.offsetWidth || 1000;
+    canvas.height = section.clientHeight || section.offsetHeight || 190;
+  }
+  resize();
+
+  section.onmousemove = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    invSectionMouse.x = e.clientX - rect.left;
+    invSectionMouse.y = e.clientY - rect.top;
+  };
+  section.onmouseleave = () => {
+    invSectionMouse.x = null;
+    invSectionMouse.y = null;
+  };
+
+  const items = [
+    { type: 'text', val: '₹', size: 18, color: '#4338ca', glow: '#6366f1' },
+    { type: 'text', val: '₹', size: 16, color: '#4f46e5', glow: '#818cf8' },
+    { type: 'text', val: 'GST', size: 14, color: '#0284c7', glow: '#38bdf8' },
+    { type: 'text', val: '%', size: 16, color: '#059669', glow: '#34d399' },
+    { type: 'text', val: '🧾', size: 17, color: '#4f46e5', glow: '#818cf8' },
+    { type: 'text', val: '📈', size: 16, color: '#d97706', glow: '#fbbf24' },
+    { type: 'dot', radius: 4.0, color: '#4f46e5', glow: '#818cf8' },
+    { type: 'dot', radius: 4.5, color: '#0284c7', glow: '#38bdf8' },
+    { type: 'dot', radius: 3.5, color: '#10b981', glow: '#6ee7b7' },
+    { type: 'text', val: '✦', size: 14, color: '#7c3aed', glow: '#a78bfa' }
+  ];
+
+  const count = Math.min(34, Math.max(20, Math.floor((canvas.width || 1000) / 36)));
+  invSectionNodes = [];
+  for (let i = 0; i < count; i++) {
+    const item = items[i % items.length];
+    invSectionNodes.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      vx: (Math.random() - 0.5) * 1.80,
+      vy: (Math.random() - 0.5) * 1.80,
+      item: item
+    });
+  }
+
+  if (invSectionMeshLoop) cancelAnimationFrame(invSectionMeshLoop);
+
+  function render() {
+    const currentSection = document.getElementById('invHeroSection');
+    if (!currentSection || !document.getElementById('invSectionMeshCanvas')) {
+      stopTaxInvoicesMesh();
+      return;
+    }
+
+    if (section.clientWidth && canvas.width !== section.clientWidth) canvas.width = section.clientWidth;
+    if (section.clientHeight && canvas.height !== section.clientHeight) canvas.height = section.clientHeight;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const w = canvas.width;
+    const h = canvas.height;
+
+    // 1. Draw bold, crisp connecting lines
+    for (let i = 0; i < invSectionNodes.length; i++) {
+      for (let j = i + 1; j < invSectionNodes.length; j++) {
+        const dx = invSectionNodes[i].x - invSectionNodes[j].x;
+        const dy = invSectionNodes[i].y - invSectionNodes[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 105) {
+          ctx.strokeStyle = "rgba(79, 70, 229, " + (0.42 * (1 - dist / 105)) + ")";
+          ctx.lineWidth = 1.4;
+          ctx.beginPath();
+          ctx.moveTo(invSectionNodes[i].x, invSectionNodes[i].y);
+          ctx.lineTo(invSectionNodes[j].x, invSectionNodes[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+
+    // 2. High-contrast connection to mouse cursor
+    if (invSectionMouse.x !== null) {
+      for (let i = 0; i < invSectionNodes.length; i++) {
+        const dx = invSectionNodes[i].x - invSectionMouse.x;
+        const dy = invSectionNodes[i].y - invSectionMouse.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 90) {
+          ctx.strokeStyle = "rgba(2, 132, 199, " + (0.60 * (1 - dist / 90)) + ")";
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.moveTo(invSectionNodes[i].x, invSectionNodes[i].y);
+          ctx.lineTo(invSectionNodes[j].x, invSectionNodes[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+
+    // 3. Move & draw nodes with sharp, vibrant rendering
+    invSectionNodes.forEach(n => {
+      n.x += n.vx;
+      n.y += n.vy;
+
+      if (n.x < 0 || n.x > w) n.vx *= -1;
+      if (n.y < 0 || n.y > h) n.vy *= -1;
+
+      if (invSectionMouse.x !== null) {
+        const dx = n.x - invSectionMouse.x;
+        const dy = n.y - invSectionMouse.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 65) {
+          const ang = Math.atan2(dy, dx);
+          n.x += Math.cos(ang) * 3.6;
+          n.y += Math.sin(ang) * 3.6;
+        }
+      }
+
+      ctx.save();
+      ctx.shadowColor = n.item.glow;
+      ctx.shadowBlur = 6;
+
+      if (n.item.type === 'dot') {
+        ctx.fillStyle = n.item.color;
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.item.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(n.x - 1, n.y - 1, n.item.radius * 0.35, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.fillStyle = n.item.color;
+        ctx.font = "800 " + n.item.size + "px 'Plus Jakarta Sans', system-ui, sans-serif";
+        ctx.fillText(n.item.val, n.x, n.y);
+      }
+      ctx.restore();
+    });
+
+    invSectionMeshLoop = requestAnimationFrame(render);
+  }
+
+  render();
+}
+
+// Auto-activate when invoices section is present
+setInterval(() => {
+  const hero = document.getElementById('invHeroSection');
+  if (hero && !invSectionMeshLoop) {
+    initInvSectionMesh();
+  } else if (!hero && invSectionMeshLoop) {
+    stopTaxInvoicesMesh();
+  }
+}, 300);
 
 </script></body></html>
