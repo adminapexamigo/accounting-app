@@ -5070,6 +5070,7 @@ async function docs(type){
         SessionCache.remove('docs');
         await load('docs', true);
         go(type);
+        if (window.startTaxInvoicesMesh) setTimeout(window.startTaxInvoicesMesh, 50);
         say('Refreshed latest ' + type + '.', 1);
       };
     }
@@ -5098,6 +5099,7 @@ async function docs(type){
       sInp.oninput = () => {
         curSearch = sInp.value;
         render();
+        if (window.startTaxInvoicesMesh) setTimeout(window.startTaxInvoicesMesh, 40);
     setTimeout(initInvSectionMesh, 40);
         const nextInp = $('#docSearchInput');
         if (nextInp) {
@@ -6177,6 +6179,7 @@ function toggleSidebar(forceMini) {
   const isMini = forceMini !== undefined ? forceMini : !side.classList.contains('is-mini');
   side.classList.toggle('is-mini', isMini);
   try { localStorage.setItem('sidebar_is_mini', isMini ? '1' : '0'); } catch(e) {}
+  if (window.syncInvMeshSize) setTimeout(window.syncInvMeshSize, 50);
 }
 window.toggleSidebar = toggleSidebar;
 
@@ -6194,6 +6197,7 @@ function closeMobileSidebar() {
   if (side) side.classList.remove('mobile-open');
   if (backdrop) backdrop.classList.remove('active');
   document.body.classList.remove('mobile-sidebar-open');
+  if (window.syncInvMeshSize) setTimeout(window.syncInvMeshSize, 50);
 }
 window.toggleMobileSidebar = toggleMobileSidebar;
 window.closeMobileSidebar = closeMobileSidebar;
@@ -7113,6 +7117,7 @@ async function invoices(){
         SessionCache.remove('invoices');
         await load('invoices', true);
         go('invoices');
+        if (window.startTaxInvoicesMesh) setTimeout(window.startTaxInvoicesMesh, 50);
         say('Refreshed latest invoices.', 1);
       };
     }
@@ -17694,39 +17699,45 @@ function showDocumentSealStamp(docNum, client, msg) {
   }, 3200);
 }
 
-// Section-contained Tax Invoices mesh loop
+// Section-contained Tax Invoices & Documents mesh loop
 let invSectionMeshLoop = null;
+let invActiveCanvas = null;
+let invActiveSection = null;
 let invSectionNodes = [];
 let invSectionMouse = { x: null, y: null };
 
-function startTaxInvoicesMesh() {
-  setTimeout(initInvSectionMesh, 60);
-}
+const invMeshItems = [
+  { type: 'text', val: '₹', size: 18, color: '#4338ca', glow: '#6366f1' },
+  { type: 'text', val: '₹', size: 16, color: '#4f46e5', glow: '#818cf8' },
+  { type: 'text', val: 'GST', size: 14, color: '#0284c7', glow: '#38bdf8' },
+  { type: 'text', val: '%', size: 16, color: '#059669', glow: '#34d399' },
+  { type: 'text', val: '🧾', size: 17, color: '#4f46e5', glow: '#818cf8' },
+  { type: 'text', val: '📈', size: 16, color: '#d97706', glow: '#fbbf24' },
+  { type: 'dot', radius: 4.0, color: '#4f46e5', glow: '#818cf8' },
+  { type: 'dot', radius: 4.5, color: '#0284c7', glow: '#38bdf8' },
+  { type: 'dot', radius: 3.5, color: '#10b981', glow: '#6ee7b7' },
+  { type: 'text', val: '✦', size: 14, color: '#7c3aed', glow: '#a78bfa' }
+];
 
-function stopTaxInvoicesMesh() {
-  if (invSectionMeshLoop) {
-    cancelAnimationFrame(invSectionMeshLoop);
-    invSectionMeshLoop = null;
+function spawnInvMeshNodes(width, height) {
+  const w = width > 50 ? width : 1000;
+  const h = height > 50 ? height : 190;
+  const count = Math.min(36, Math.max(22, Math.floor(w / 36)));
+  invSectionNodes = [];
+  for (let i = 0; i < count; i++) {
+    const item = invMeshItems[i % invMeshItems.length];
+    invSectionNodes.push({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      vx: (Math.random() - 0.5) * 1.80,
+      vy: (Math.random() - 0.5) * 1.80,
+      item: item
+    });
   }
 }
 
-function initInvSectionMesh() {
-  const canvas = document.getElementById('invSectionMeshCanvas');
-  const section = document.getElementById('invHeroSection');
-  if (!canvas || !section) {
-    stopTaxInvoicesMesh();
-    return;
-  }
-
-  const ctx = canvas.getContext('2d');
-
-  function resize() {
-    if (!section || !canvas) return;
-    canvas.width = section.clientWidth || section.offsetWidth || 1000;
-    canvas.height = section.clientHeight || section.offsetHeight || 190;
-  }
-  resize();
-
+function bindInvHeroEvents(section, canvas) {
+  if (!section || !canvas) return;
   section.onmousemove = (e) => {
     const rect = canvas.getBoundingClientRect();
     invSectionMouse.x = e.clientX - rect.left;
@@ -17736,48 +17747,101 @@ function initInvSectionMesh() {
     invSectionMouse.x = null;
     invSectionMouse.y = null;
   };
+}
 
-  const items = [
-    { type: 'text', val: '₹', size: 18, color: '#4338ca', glow: '#6366f1' },
-    { type: 'text', val: '₹', size: 16, color: '#4f46e5', glow: '#818cf8' },
-    { type: 'text', val: 'GST', size: 14, color: '#0284c7', glow: '#38bdf8' },
-    { type: 'text', val: '%', size: 16, color: '#059669', glow: '#34d399' },
-    { type: 'text', val: '🧾', size: 17, color: '#4f46e5', glow: '#818cf8' },
-    { type: 'text', val: '📈', size: 16, color: '#d97706', glow: '#fbbf24' },
-    { type: 'dot', radius: 4.0, color: '#4f46e5', glow: '#818cf8' },
-    { type: 'dot', radius: 4.5, color: '#0284c7', glow: '#38bdf8' },
-    { type: 'dot', radius: 3.5, color: '#10b981', glow: '#6ee7b7' },
-    { type: 'text', val: '✦', size: 14, color: '#7c3aed', glow: '#a78bfa' }
-  ];
+function syncInvMeshSize() {
+  const canvas = document.getElementById('invSectionMeshCanvas');
+  const section = document.getElementById('invHeroSection');
+  if (canvas && section) {
+    const sw = section.clientWidth || section.offsetWidth || 1000;
+    const sh = section.clientHeight || section.offsetHeight || 190;
+    if (sw > 0 && canvas.width !== sw) canvas.width = sw;
+    if (sh > 0 && canvas.height !== sh) canvas.height = sh;
+  }
+}
+window.syncInvMeshSize = syncInvMeshSize;
 
-  const count = Math.min(34, Math.max(20, Math.floor((canvas.width || 1000) / 36)));
-  invSectionNodes = [];
-  for (let i = 0; i < count; i++) {
-    const item = items[i % items.length];
-    invSectionNodes.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      vx: (Math.random() - 0.5) * 1.80,
-      vy: (Math.random() - 0.5) * 1.80,
-      item: item
-    });
+function stopTaxInvoicesMesh() {
+  if (invSectionMeshLoop) {
+    cancelAnimationFrame(invSectionMeshLoop);
+    invSectionMeshLoop = null;
+  }
+  invActiveCanvas = null;
+  invActiveSection = null;
+}
+window.stopTaxInvoicesMesh = stopTaxInvoicesMesh;
+
+function startTaxInvoicesMesh() {
+  initInvSectionMesh();
+}
+window.startTaxInvoicesMesh = startTaxInvoicesMesh;
+
+function initInvSectionMesh() {
+  const canvas = document.getElementById('invSectionMeshCanvas');
+  const section = document.getElementById('invHeroSection');
+  if (!canvas || !section || !canvas.isConnected) {
+    stopTaxInvoicesMesh();
+    return;
   }
 
-  if (invSectionMeshLoop) cancelAnimationFrame(invSectionMeshLoop);
+  // Bind live DOM references and mouse events
+  invActiveCanvas = canvas;
+  invActiveSection = section;
+  bindInvHeroEvents(section, canvas);
+  syncInvMeshSize();
+
+  if (!invSectionNodes || invSectionNodes.length === 0) {
+    spawnInvMeshNodes(canvas.width, canvas.height);
+  }
+
+  if (invSectionMeshLoop) {
+    cancelAnimationFrame(invSectionMeshLoop);
+    invSectionMeshLoop = null;
+  }
 
   function render() {
-    const currentSection = document.getElementById('invHeroSection');
-    if (!currentSection || !document.getElementById('invSectionMeshCanvas')) {
+    const liveCanvas = document.getElementById('invSectionMeshCanvas');
+    const liveSection = document.getElementById('invHeroSection');
+
+    // If section or canvas is no longer attached to DOM, cancel loop
+    if (!liveCanvas || !liveSection || !liveCanvas.isConnected) {
       stopTaxInvoicesMesh();
       return;
     }
 
-    if (section.clientWidth && canvas.width !== section.clientWidth) canvas.width = section.clientWidth;
-    if (section.clientHeight && canvas.height !== section.clientHeight) canvas.height = section.clientHeight;
+    // Auto-detect DOM element replacements (e.g. Refresh button, filter change, table search, router navigation):
+    // Re-bind to the new live canvas in the DOM immediately without dropping the continuous animation
+    if (liveCanvas !== invActiveCanvas || liveSection !== invActiveSection) {
+      invActiveCanvas = liveCanvas;
+      invActiveSection = liveSection;
+      bindInvHeroEvents(liveSection, liveCanvas);
+      syncInvMeshSize();
+    }
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const w = canvas.width;
-    const h = canvas.height;
+    // Adapt to full container width on sidebar expand/collapse and window resize
+    const sw = liveSection.clientWidth || liveSection.offsetWidth || 1000;
+    const sh = liveSection.clientHeight || liveSection.offsetHeight || 190;
+    if (sw > 20 && liveCanvas.width !== sw) liveCanvas.width = sw;
+    if (sh > 20 && liveCanvas.height !== sh) liveCanvas.height = sh;
+
+    const w = liveCanvas.width;
+    const h = liveCanvas.height;
+    if (w <= 20 || h <= 20) {
+      invSectionMeshLoop = requestAnimationFrame(render);
+      return;
+    }
+
+    const ctx = liveCanvas.getContext('2d');
+    if (!ctx) {
+      invSectionMeshLoop = requestAnimationFrame(render);
+      return;
+    }
+
+    if (!invSectionNodes || invSectionNodes.length === 0) {
+      spawnInvMeshNodes(w, h);
+    }
+
+    ctx.clearRect(0, 0, w, h);
 
     // 1. Draw bold, crisp connecting lines
     for (let i = 0; i < invSectionNodes.length; i++) {
@@ -17797,7 +17861,7 @@ function initInvSectionMesh() {
     }
 
     // 2. High-contrast connection to mouse cursor
-    if (invSectionMouse.x !== null) {
+    if (invSectionMouse.x !== null && !isNaN(invSectionMouse.x)) {
       for (let i = 0; i < invSectionNodes.length; i++) {
         const dx = invSectionNodes[i].x - invSectionMouse.x;
         const dy = invSectionNodes[i].y - invSectionMouse.y;
@@ -17813,15 +17877,21 @@ function initInvSectionMesh() {
       }
     }
 
-    // 3. Move & draw nodes with sharp, vibrant rendering
+    // 3. Move & draw nodes with boundary bounce and NaN protection
     invSectionNodes.forEach(n => {
+      if (isNaN(n.x) || n.x < -20 || n.x > w + 20) n.x = Math.random() * w;
+      if (isNaN(n.y) || n.y < -20 || n.y > h + 20) n.y = Math.random() * h;
+
       n.x += n.vx;
       n.y += n.vy;
 
-      if (n.x < 0 || n.x > w) n.vx *= -1;
-      if (n.y < 0 || n.y > h) n.vy *= -1;
+      if (n.x < 0) { n.x = 0; n.vx = Math.abs(n.vx); }
+      else if (n.x > w) { n.x = w; n.vx = -Math.abs(n.vx); }
 
-      if (invSectionMouse.x !== null) {
+      if (n.y < 0) { n.y = 0; n.vy = Math.abs(n.vy); }
+      else if (n.y > h) { n.y = h; n.vy = -Math.abs(n.vy); }
+
+      if (invSectionMouse.x !== null && !isNaN(invSectionMouse.x)) {
         const dx = n.x - invSectionMouse.x;
         const dy = n.y - invSectionMouse.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -17856,17 +17926,40 @@ function initInvSectionMesh() {
     invSectionMeshLoop = requestAnimationFrame(render);
   }
 
-  render();
+  invSectionMeshLoop = requestAnimationFrame(render);
 }
+window.initInvSectionMesh = initInvSectionMesh;
 
-// Auto-activate when invoices section is present
+// Self-healing heartbeat: guarantees mesh is ALWAYS running whenever invSectionMeshCanvas is in DOM
 setInterval(() => {
-  const hero = document.getElementById('invHeroSection');
-  if (hero && !invSectionMeshLoop) {
-    initInvSectionMesh();
-  } else if (!hero && invSectionMeshLoop) {
+  const canvas = document.getElementById('invSectionMeshCanvas');
+  if (canvas && canvas.isConnected) {
+    if (!invSectionMeshLoop || canvas !== invActiveCanvas) {
+      initInvSectionMesh();
+    }
+  } else if (!canvas && invSectionMeshLoop) {
     stopTaxInvoicesMesh();
   }
-}, 300);
+}, 250);
+
+// Auto-resume whenever tab is re-focused or becomes visible
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    const canvas = document.getElementById('invSectionMeshCanvas');
+    if (canvas && canvas.isConnected) {
+      initInvSectionMesh();
+    }
+  }
+});
+
+window.addEventListener('focus', () => {
+  const canvas = document.getElementById('invSectionMeshCanvas');
+  if (canvas && canvas.isConnected) {
+    initInvSectionMesh();
+  }
+});
+
+window.addEventListener('resize', syncInvMeshSize);
+
 
 </script></body></html>
