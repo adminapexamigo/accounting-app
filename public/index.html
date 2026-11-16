@@ -938,39 +938,48 @@ label{display:block;font-size:12.5px;color:var(--mute);margin:0 0 5px;font-weigh
   gap:9px;
 }
 
-/* Dedicated Support Banner */
+/* Dedicated Support Banner with Micro-Constellation Mesh */
 .side-support-banner{
+  position:relative;
   display:flex;
   align-items:center;
   gap:10px;
   padding:9px 11px;
-  background:linear-gradient(135deg,rgba(14,165,233,0.15) 0%,rgba(99,102,241,0.12) 100%);
-  border:1px solid rgba(56,189,248,0.28);
+  background:radial-gradient(circle at 10% 50%, rgba(56, 189, 248, 0.18) 0%, transparent 60%), #0c1424;
+  border:1px solid rgba(56, 189, 248, 0.35);
   border-radius:9px;
   cursor:pointer;
-  transition:all 0.2s cubic-bezier(0.16,1,0.3,1);
+  overflow:hidden;
+  transition:all 0.25s cubic-bezier(0.16,1,0.3,1);
   text-decoration:none;
 }
 .side-support-banner:hover{
-  background:linear-gradient(135deg,rgba(14,165,233,0.26) 0%,rgba(99,102,241,0.22) 100%);
-  border-color:rgba(56,189,248,0.55);
-  box-shadow:0 4px 14px rgba(2,132,199,0.25);
+  background:radial-gradient(circle at 20% 50%, rgba(56, 189, 248, 0.28) 0%, transparent 60%), #0f1a30;
+  border-color:#38bdf8;
+  box-shadow:0 0 20px rgba(56, 189, 248, 0.25);
   transform:translateY(-1px);
 }
 .side-support-icon{
   width:30px;
   height:30px;
-  background:rgba(14,165,233,0.24);
+  background:rgba(14,165,233,0.25);
+  border:1px solid rgba(56, 189, 248, 0.4);
   border-radius:7px;
   display:flex;
   align-items:center;
   justify-content:center;
   font-size:16px;
   flex-shrink:0;
+  box-shadow:0 0 12px rgba(56, 189, 248, 0.3);
+  animation:pulseSubtle 3s infinite alternate;
+  position:relative;
+  z-index:1;
 }
 .side-support-body{
   flex:1;
   min-width:0;
+  position:relative;
+  z-index:1;
 }
 .side-support-title{
   font-size:12px;
@@ -991,15 +1000,62 @@ label{display:block;font-size:12.5px;color:var(--mute);margin:0 0 5px;font-weigh
   text-overflow:ellipsis;
 }
 
-/* User Card in Footer */
+/* User Card in Footer with Micro-Constellation Mesh */
 .side-user-card{
+  position:relative;
   display:flex;
   flex-direction:column;
   gap:8px;
-  background:rgba(255,255,255,0.035);
-  border:1px solid rgba(255,255,255,0.07);
+  background:radial-gradient(circle at 90% 10%, rgba(99, 102, 241, 0.16) 0%, transparent 60%), #0c1424;
+  border:1px solid rgba(99, 102, 241, 0.30);
   border-radius:9px;
   padding:9px 10px;
+  overflow:hidden;
+  transition:all 0.25s cubic-bezier(0.16,1,0.3,1);
+}
+.side-user-card:hover{
+  border-color:rgba(99, 102, 241, 0.6);
+  box-shadow:0 0 22px rgba(99, 102, 241, 0.25);
+}
+.side-user-card #who,
+.side-user-card #whoActiveRow,
+.side-user-card .who-actions{
+  position:relative;
+  z-index:1;
+}
+
+.side-mesh-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+.side.is-mini .side-mesh-canvas {
+  display: none !important;
+}
+
+.side-user-avatar-wrap {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+}
+.side-user-avatar-orbit {
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(56, 189, 248, 0.6);
+  animation: spinSlow 12s linear infinite;
+  pointer-events: none;
+}
+@keyframes spinSlow {
+  100% { transform: rotate(360deg); }
+}
+@keyframes pulseSubtle {
+  0% { transform: scale(1); filter: drop-shadow(0 0 4px rgba(56, 189, 248, 0.4)); }
+  100% { transform: scale(1.06); filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.8)); }
 }
 .side-user-card #who{
   font-weight:600;
@@ -3361,13 +3417,15 @@ body.mobile-sidebar-open {
     <div id="nav"></div>
     <div class="side-footer">
       <div class="side-support-banner" id="supportBtn" title="Report an issue or bug with screenshot &amp; server.log">
+        <canvas id="sideSupportMeshCanvas" class="side-mesh-canvas"></canvas>
         <div class="side-support-icon">🛟</div>
         <div class="side-support-body">
           <div class="side-support-title">Support &amp; Bug Report</div>
           <div class="side-support-subtitle">Email admin with server.log</div>
         </div>
       </div>
-      <div class="side-user-card">
+      <div class="side-user-card" id="sideUserCard">
+        <canvas id="sideUserMeshCanvas" class="side-mesh-canvas"></canvas>
         <div id="who"></div>
         <div id="whoActiveRow"></div>
         <div class="who-actions">
@@ -6379,8 +6437,8 @@ function start() {
   } catch(e) {}
 
   const userAvatar = me.photo
-    ? `<img src="/api/photo/${me.id}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid #818cf8;display:block;flex-shrink:0">`
-    : `<div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;box-shadow:0 2px 8px rgba(79,70,229,0.35)">${h((me.fullName||me.username)[0].toUpperCase())}</div>`;
+    ? `<div class="side-user-avatar-wrap"><img src="/api/photo/${me.id}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid #818cf8;display:block;flex-shrink:0"><div class="side-user-avatar-orbit"></div></div>`
+    : `<div class="side-user-avatar-wrap"><div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#6366f1 0%,#38bdf8 100%);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;flex-shrink:0;box-shadow:0 0 16px rgba(99,102,241,0.6)">${h((me.fullName||me.username)[0].toUpperCase())}</div><div class="side-user-avatar-orbit"></div></div>`;
 
   $('#who').innerHTML = `
     ${userAvatar}
@@ -18015,5 +18073,267 @@ window.addEventListener('focus', () => {
 
 window.addEventListener('resize', syncInvMeshSize);
 
+
+
+// ==========================================
+// SIDEBAR BOTTOM: MICRO-CONSTELLATION MESH
+// ==========================================
+let sideMeshLoop = null;
+
+function initSideMicroMesh() {
+  const supportCanvas = document.getElementById('sideSupportMeshCanvas');
+  const supportBox = document.getElementById('supportBtn');
+  const userCanvas = document.getElementById('sideUserMeshCanvas');
+  const userBox = document.getElementById('sideUserCard');
+
+  if (!supportCanvas || !supportBox || !userCanvas || !userBox) return;
+
+  const suppCtx = supportCanvas.getContext('2d');
+  const userCtx = userCanvas.getContext('2d');
+  if (!suppCtx || !userCtx) return;
+
+  function syncSizes() {
+    if (supportBox.clientWidth > 10 && supportCanvas.width !== supportBox.clientWidth) supportCanvas.width = supportBox.clientWidth;
+    if (supportBox.clientHeight > 10 && supportCanvas.height !== supportBox.clientHeight) supportCanvas.height = supportBox.clientHeight;
+    if (userBox.clientWidth > 10 && userCanvas.width !== userBox.clientWidth) userCanvas.width = userBox.clientWidth;
+    if (userBox.clientHeight > 10 && userCanvas.height !== userBox.clientHeight) userCanvas.height = userBox.clientHeight;
+  }
+  syncSizes();
+
+  let suppMouse = { x: null, y: null };
+  let userMouse = { x: null, y: null };
+
+  supportBox.onmousemove = (e) => {
+    const r = supportCanvas.getBoundingClientRect();
+    suppMouse.x = e.clientX - r.left;
+    suppMouse.y = e.clientY - r.top;
+  };
+  supportBox.onmouseleave = () => { suppMouse.x = null; suppMouse.y = null; };
+
+  userBox.onmousemove = (e) => {
+    const r = userCanvas.getBoundingClientRect();
+    userMouse.x = e.clientX - r.left;
+    userMouse.y = e.clientY - r.top;
+  };
+  userBox.onmouseleave = () => { userMouse.x = null; userMouse.y = null; };
+
+  const suppItems = [
+    { type: 'text', val: 'LOG', size: 10, color: '#38bdf8', glow: '#0ea5e9' },
+    { type: 'text', val: '⚡', size: 11, color: '#22d3ee', glow: '#06b6d4' },
+    { type: 'text', val: '✓', size: 11, color: '#34d399', glow: '#10b981' },
+    { type: 'dot', radius: 2.8, color: '#38bdf8', glow: '#0ea5e9' },
+    { type: 'dot', radius: 2.2, color: '#22d3ee', glow: '#06b6d4' }
+  ];
+
+  const userItems = [
+    { type: 'text', val: '₹', size: 12, color: '#818cf8', glow: '#6366f1' },
+    { type: 'text', val: '🛡️', size: 11, color: '#a78bfa', glow: '#8b5cf6' },
+    { type: 'text', val: '✦', size: 10, color: '#fbbf24', glow: '#f59e0b' },
+    { type: 'dot', radius: 2.6, color: '#818cf8', glow: '#6366f1' },
+    { type: 'dot', radius: 2.4, color: '#34d399', glow: '#10b981' }
+  ];
+
+  const suppNodes = [];
+  for (let i = 0; i < 12; i++) {
+    suppNodes.push({
+      x: Math.random() * (supportCanvas.width || 240),
+      y: Math.random() * (supportCanvas.height || 50),
+      vx: (Math.random() - 0.5) * 1.2,
+      vy: (Math.random() - 0.5) * 1.2,
+      item: suppItems[i % suppItems.length]
+    });
+  }
+
+  const userNodes = [];
+  for (let i = 0; i < 14; i++) {
+    userNodes.push({
+      x: Math.random() * (userCanvas.width || 240),
+      y: Math.random() * (userCanvas.height || 85),
+      vx: (Math.random() - 0.5) * 1.2,
+      vy: (Math.random() - 0.5) * 1.2,
+      item: userItems[i % userItems.length]
+    });
+  }
+
+  if (sideMeshLoop) cancelAnimationFrame(sideMeshLoop);
+
+  function renderSide() {
+    try {
+      syncSizes();
+
+      // 1. Draw Support Banner Mesh
+      const sw = supportCanvas.width;
+      const sh = supportCanvas.height;
+      if (sw > 20 && sh > 20) {
+        suppCtx.clearRect(0, 0, sw, sh);
+
+        for (let i = 0; i < suppNodes.length; i++) {
+          for (let j = i + 1; j < suppNodes.length; j++) {
+            const dx = suppNodes[i].x - suppNodes[j].x;
+            const dy = suppNodes[i].y - suppNodes[j].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 48) {
+              suppCtx.strokeStyle = "rgba(56, 189, 248, " + (0.55 * (1 - dist / 48)) + ")";
+              suppCtx.lineWidth = 1.0;
+              suppCtx.beginPath();
+              suppCtx.moveTo(suppNodes[i].x, suppNodes[i].y);
+              suppCtx.lineTo(suppNodes[j].x, suppNodes[j].y);
+              suppCtx.stroke();
+            }
+          }
+        }
+
+        if (suppMouse.x !== null && !isNaN(suppMouse.x)) {
+          for (let i = 0; i < suppNodes.length; i++) {
+            const dx = suppNodes[i].x - suppMouse.x;
+            const dy = suppNodes[i].y - suppMouse.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 55) {
+              suppCtx.strokeStyle = "rgba(34, 211, 238, 0.85)";
+              suppCtx.lineWidth = 1.4;
+              suppCtx.beginPath();
+              suppCtx.moveTo(suppNodes[i].x, suppNodes[i].y);
+              suppCtx.lineTo(suppMouse.x, suppMouse.y);
+              suppCtx.stroke();
+            }
+          }
+        }
+
+        suppNodes.forEach(n => {
+          n.x += n.vx; n.y += n.vy;
+          if (n.x < 0) { n.x = 0; n.vx = Math.abs(n.vx); }
+          else if (n.x > sw) { n.x = sw; n.vx = -Math.abs(n.vx); }
+          if (n.y < 0) { n.y = 0; n.vy = Math.abs(n.vy); }
+          else if (n.y > sh) { n.y = sh; n.vy = -Math.abs(n.vy); }
+
+          if (suppMouse.x !== null && !isNaN(suppMouse.x)) {
+            const dx = n.x - suppMouse.x; const dy = n.y - suppMouse.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 35 && dist > 1) {
+              const ang = Math.atan2(dy, dx);
+              n.x += Math.cos(ang) * 2; n.y += Math.sin(ang) * 2;
+            }
+          }
+
+          suppCtx.save();
+          suppCtx.shadowColor = n.item.glow;
+          suppCtx.shadowBlur = 6;
+          if (n.item.type === 'dot') {
+            suppCtx.fillStyle = n.item.color;
+            suppCtx.beginPath();
+            suppCtx.arc(n.x, n.y, n.item.radius, 0, Math.PI * 2);
+            suppCtx.fill();
+          } else {
+            suppCtx.fillStyle = n.item.color;
+            suppCtx.font = "800 " + n.item.size + "px 'JetBrains Mono', monospace";
+            suppCtx.fillText(n.item.val, n.x, n.y);
+          }
+          suppCtx.restore();
+        });
+      }
+
+      // 2. Draw User Card Mesh
+      const uw = userCanvas.width;
+      const uh = userCanvas.height;
+      if (uw > 20 && uh > 20) {
+        userCtx.clearRect(0, 0, uw, uh);
+
+        for (let i = 0; i < userNodes.length; i++) {
+          for (let j = i + 1; j < userNodes.length; j++) {
+            const dx = userNodes[i].x - userNodes[j].x;
+            const dy = userNodes[i].y - userNodes[j].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 52) {
+              userCtx.strokeStyle = "rgba(129, 140, 248, " + (0.55 * (1 - dist / 52)) + ")";
+              userCtx.lineWidth = 1.0;
+              userCtx.beginPath();
+              userCtx.moveTo(userNodes[i].x, userNodes[i].y);
+              userCtx.lineTo(userNodes[j].x, userNodes[j].y);
+              userCtx.stroke();
+            }
+          }
+        }
+
+        if (userMouse.x !== null && !isNaN(userMouse.x)) {
+          for (let i = 0; i < userNodes.length; i++) {
+            const dx = userNodes[i].x - userMouse.x;
+            const dy = userNodes[i].y - userMouse.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 55) {
+              userCtx.strokeStyle = "rgba(168, 85, 247, 0.85)";
+              userCtx.lineWidth = 1.4;
+              userCtx.beginPath();
+              userCtx.moveTo(userNodes[i].x, userNodes[i].y);
+              userCtx.lineTo(userMouse.x, userMouse.y);
+              userCtx.stroke();
+            }
+          }
+        }
+
+        userNodes.forEach(n => {
+          n.x += n.vx; n.y += n.vy;
+          if (n.x < 0) { n.x = 0; n.vx = Math.abs(n.vx); }
+          else if (n.x > uw) { n.x = uw; n.vx = -Math.abs(n.vx); }
+          if (n.y < 0) { n.y = 0; n.vy = Math.abs(n.vy); }
+          else if (n.y > uh) { n.y = uh; n.vy = -Math.abs(n.vy); }
+
+          if (userMouse.x !== null && !isNaN(userMouse.x)) {
+            const dx = n.x - userMouse.x; const dy = n.y - userMouse.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 35 && dist > 1) {
+              const ang = Math.atan2(dy, dx);
+              n.x += Math.cos(ang) * 2; n.y += Math.sin(ang) * 2;
+            }
+          }
+
+          userCtx.save();
+          userCtx.shadowColor = n.item.glow;
+          userCtx.shadowBlur = 6;
+          if (n.item.type === 'dot') {
+            userCtx.fillStyle = n.item.color;
+            userCtx.beginPath();
+            userCtx.arc(n.x, n.y, n.item.radius, 0, Math.PI * 2);
+            userCtx.fill();
+          } else {
+            userCtx.fillStyle = n.item.color;
+            userCtx.font = "800 " + n.item.size + "px 'JetBrains Mono', monospace";
+            userCtx.fillText(n.item.val, n.x, n.y);
+          }
+          userCtx.restore();
+        });
+      }
+    } catch (e) {
+      console.warn('Sidebar mesh warn:', e);
+    } finally {
+      sideMeshLoop = requestAnimationFrame(renderSide);
+    }
+  }
+
+  sideMeshLoop = requestAnimationFrame(renderSide);
+}
+window.initSideMicroMesh = initSideMicroMesh;
+
+// Heartbeat & lifecycle for sidebar micro mesh
+setInterval(() => {
+  const sc = document.getElementById('sideSupportMeshCanvas');
+  const uc = document.getElementById('sideUserMeshCanvas');
+  if (sc && uc && sc.isConnected && uc.isConnected && !sideMeshLoop) {
+    initSideMicroMesh();
+  }
+}, 300);
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') initSideMicroMesh();
+});
+window.addEventListener('focus', initSideMicroMesh);
+window.addEventListener('resize', () => {
+  const sc = document.getElementById('sideSupportMeshCanvas');
+  const uc = document.getElementById('sideUserMeshCanvas');
+  const sb = document.getElementById('supportBtn');
+  const ub = document.getElementById('sideUserCard');
+  if (sc && sb && sb.clientWidth > 10) sc.width = sb.clientWidth;
+  if (uc && ub && ub.clientWidth > 10) uc.width = ub.clientWidth;
+});
+setTimeout(initSideMicroMesh, 100);
 
 </script></body></html>
