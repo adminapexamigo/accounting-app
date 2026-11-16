@@ -938,102 +938,100 @@ label{display:block;font-size:12.5px;color:var(--mute);margin:0 0 5px;font-weigh
   gap:9px;
 }
 
-/* Dedicated Support Banner with Micro-Constellation Mesh */
-.side-support-banner{
-  position:relative;
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding:9px 11px;
-  background:radial-gradient(circle at 10% 50%, rgba(56, 189, 248, 0.18) 0%, transparent 60%), #0c1424;
-  border:1px solid rgba(56, 189, 248, 0.35);
-  border-radius:9px;
-  cursor:pointer;
-  overflow:hidden;
-  transition:all 0.25s cubic-bezier(0.16,1,0.3,1);
-  text-decoration:none;
+/* ========================================================
+   CONCEPT 5: AURORA BOREALIS & COSMIC EMBERS (SIDEBAR FOOTER)
+   ======================================================== */
+.side-support-banner.c5-support {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 1px solid rgba(14, 165, 233, 0.35);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
 }
-.side-support-banner:hover{
-  background:radial-gradient(circle at 20% 50%, rgba(56, 189, 248, 0.28) 0%, transparent 60%), #0f1a30;
-  border-color:#38bdf8;
-  box-shadow:0 0 20px rgba(56, 189, 248, 0.25);
-  transform:translateY(-1px);
-}
-.side-support-icon{
-  width:30px;
-  height:30px;
-  background:rgba(14,165,233,0.25);
-  border:1px solid rgba(56, 189, 248, 0.4);
-  border-radius:7px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:16px;
-  flex-shrink:0;
-  box-shadow:0 0 12px rgba(56, 189, 248, 0.3);
-  animation:pulseSubtle 3s infinite alternate;
-  position:relative;
-  z-index:1;
-}
-.side-support-body{
-  flex:1;
-  min-width:0;
-  position:relative;
-  z-index:1;
-}
-.side-support-title{
-  font-size:12px;
-  font-weight:700;
-  color:#38bdf8;
-  line-height:1.25;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-.side-support-subtitle{
-  font-size:10px;
-  color:#94a3b8;
-  line-height:1.2;
-  margin-top:2px;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
+.side-support-banner.c5-support:hover {
+  border-color: #38bdf8;
+  box-shadow: 0 0 24px rgba(56, 189, 248, 0.35);
+  transform: translateY(-1px);
 }
 
-/* User Card in Footer with Micro-Constellation Mesh */
-.side-user-card{
-  position:relative;
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-  background:radial-gradient(circle at 90% 10%, rgba(99, 102, 241, 0.16) 0%, transparent 60%), #0c1424;
-  border:1px solid rgba(99, 102, 241, 0.30);
-  border-radius:9px;
-  padding:9px 10px;
-  overflow:hidden;
-  transition:all 0.25s cubic-bezier(0.16,1,0.3,1);
+.side-user-card.c5-user {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(168, 85, 247, 0.32);
+  padding: 10px 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.side-user-card:hover{
-  border-color:rgba(99, 102, 241, 0.6);
-  box-shadow:0 0 22px rgba(99, 102, 241, 0.25);
-}
-.side-user-card #who,
-.side-user-card #whoActiveRow,
-.side-user-card .who-actions{
-  position:relative;
-  z-index:1;
+.side-user-card.c5-user:hover {
+  border-color: rgba(168, 85, 247, 0.6);
+  box-shadow: 0 0 24px rgba(168, 85, 247, 0.30);
 }
 
-.side-mesh-canvas {
+.c5-aurora-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(125deg, #090e1a 0%, #06182c 40%, #171038 75%, #051a24 100%);
+  background-size: 300% 300%;
+  animation: auroraFlow 8s ease infinite alternate;
+  z-index: 0;
+}
+.c5-aurora-glow {
+  position: absolute;
+  width: 140px;
+  height: 70px;
+  background: radial-gradient(ellipse, rgba(56, 189, 248, 0.35) 0%, rgba(168, 85, 247, 0.25) 50%, transparent 80%);
+  filter: blur(14px);
+  animation: floatAura 6s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: 1;
+}
+.c5-canvas {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index: 0;
+  z-index: 1;
 }
-.side.is-mini .side-mesh-canvas {
-  display: none !important;
+.c5-lifebuoy {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(14, 165, 233, 0.25);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  animation: floatingFloat 3.5s ease-in-out infinite;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.4);
+  flex-shrink: 0;
+}
+.side-support-body {
+  flex: 1;
+  min-width: 0;
+}
+.side-support-title {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #7dd3fc;
+  line-height: 1.25;
+}
+.side-support-subtitle {
+  font-size: 10.5px;
+  color: #94a3b8;
+  margin-top: 1px;
 }
 
 .side-user-avatar-wrap {
@@ -1050,12 +1048,26 @@ label{display:block;font-size:12.5px;color:var(--mute);margin:0 0 5px;font-weigh
   animation: spinSlow 12s linear infinite;
   pointer-events: none;
 }
+
+.side.is-mini .c5-canvas,
+.side.is-mini .c5-aurora-glow {
+  display: none !important;
+}
+
+@keyframes auroraFlow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+@keyframes floatAura {
+  0% { transform: translate(-20px, -10px) scale(0.9); }
+  100% { transform: translate(60px, 15px) scale(1.2); }
+}
+@keyframes floatingFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
 @keyframes spinSlow {
   100% { transform: rotate(360deg); }
-}
-@keyframes pulseSubtle {
-  0% { transform: scale(1); filter: drop-shadow(0 0 4px rgba(56, 189, 248, 0.4)); }
-  100% { transform: scale(1.06); filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.8)); }
 }
 .side-user-card #who{
   font-weight:600;
@@ -3416,21 +3428,29 @@ body.mobile-sidebar-open {
     </div>
     <div id="nav"></div>
     <div class="side-footer">
-      <div class="side-support-banner" id="supportBtn" title="Report an issue or bug with screenshot &amp; server.log">
-        <canvas id="sideSupportMeshCanvas" class="side-mesh-canvas"></canvas>
-        <div class="side-support-icon">🛟</div>
-        <div class="side-support-body">
-          <div class="side-support-title">Support &amp; Bug Report</div>
-          <div class="side-support-subtitle">Email admin with server.log</div>
+      <div class="side-support-banner c5-support" id="supportBtn" title="Report an issue or bug with screenshot &amp; server.log">
+        <div class="c5-aurora-bg"></div>
+        <div class="c5-aurora-glow"></div>
+        <canvas id="sideSupportMeshCanvas" class="c5-canvas"></canvas>
+        <div class="side-support-content" style="position:relative;z-index:2;display:flex;align-items:center;gap:11px;width:100%">
+          <div class="side-support-icon c5-lifebuoy">🛟</div>
+          <div class="side-support-body">
+            <div class="side-support-title">Support &amp; Bug Report</div>
+            <div class="side-support-subtitle">Email admin with server.log</div>
+          </div>
         </div>
       </div>
-      <div class="side-user-card" id="sideUserCard">
-        <canvas id="sideUserMeshCanvas" class="side-mesh-canvas"></canvas>
-        <div id="who"></div>
-        <div id="whoActiveRow"></div>
-        <div class="who-actions">
-          <a id="pw" title="Change your password">🔑 Password</a>
-          <a id="out" title="Sign out of your session">🚪 Logout</a>
+      <div class="side-user-card c5-user" id="sideUserCard">
+        <div class="c5-aurora-bg" style="animation-duration:10s"></div>
+        <div class="c5-aurora-glow" style="right:0;left:auto;background:radial-gradient(ellipse, rgba(168,85,247,0.35) 0%, rgba(236,72,153,0.2) 60%, transparent 80%)"></div>
+        <canvas id="sideUserMeshCanvas" class="c5-canvas"></canvas>
+        <div class="c5-content" style="position:relative;z-index:2;display:flex;flex-direction:column;gap:8px;width:100%">
+          <div id="who"></div>
+          <div id="whoActiveRow"></div>
+          <div class="who-actions">
+            <a id="pw" title="Change your password">🔑 Password</a>
+            <a id="out" title="Sign out of your session">🚪 Logout</a>
+          </div>
         </div>
         <div class="mini-flyout-card" style="bottom:0;top:auto">
           <div class="flyout-header">
@@ -18076,256 +18096,172 @@ window.addEventListener('resize', syncInvMeshSize);
 
 
 // ==========================================
-// SIDEBAR BOTTOM: MICRO-CONSTELLATION MESH
+// SIDEBAR BOTTOM: CONCEPT 5 - AURORA BOREALIS & COSMIC EMBERS
 // ==========================================
-let sideMeshLoop = null;
+let auroraEmbersLoop = null;
 
-function initSideMicroMesh() {
-  const supportCanvas = document.getElementById('sideSupportMeshCanvas');
-  const supportBox = document.getElementById('supportBtn');
-  const userCanvas = document.getElementById('sideUserMeshCanvas');
-  const userBox = document.getElementById('sideUserCard');
+function initSideAuroraEmbers() {
+  const sc = document.getElementById('sideSupportMeshCanvas');
+  const sb = document.getElementById('supportBtn');
+  const uc = document.getElementById('sideUserMeshCanvas');
+  const ub = document.getElementById('sideUserCard');
 
-  if (!supportCanvas || !supportBox || !userCanvas || !userBox) return;
+  if (!sc || !sb || !uc || !ub) return;
 
-  const suppCtx = supportCanvas.getContext('2d');
-  const userCtx = userCanvas.getContext('2d');
-  if (!suppCtx || !userCtx) return;
+  const sCtx = sc.getContext('2d');
+  const uCtx = uc.getContext('2d');
+  if (!sCtx || !uCtx) return;
 
   function syncSizes() {
-    if (supportBox.clientWidth > 10 && supportCanvas.width !== supportBox.clientWidth) supportCanvas.width = supportBox.clientWidth;
-    if (supportBox.clientHeight > 10 && supportCanvas.height !== supportBox.clientHeight) supportCanvas.height = supportBox.clientHeight;
-    if (userBox.clientWidth > 10 && userCanvas.width !== userBox.clientWidth) userCanvas.width = userBox.clientWidth;
-    if (userBox.clientHeight > 10 && userCanvas.height !== userBox.clientHeight) userCanvas.height = userBox.clientHeight;
+    if (sb.clientWidth > 10 && sc.width !== sb.clientWidth) sc.width = sb.clientWidth;
+    if (sb.clientHeight > 10 && sc.height !== sb.clientHeight) sc.height = sb.clientHeight;
+    if (ub.clientWidth > 10 && uc.width !== ub.clientWidth) uc.width = ub.clientWidth;
+    if (ub.clientHeight > 10 && uc.height !== ub.clientHeight) uc.height = ub.clientHeight;
   }
   syncSizes();
 
-  let suppMouse = { x: null, y: null };
-  let userMouse = { x: null, y: null };
+  let sMouse = { x: null, y: null };
+  let uMouse = { x: null, y: null };
 
-  supportBox.onmousemove = (e) => {
-    const r = supportCanvas.getBoundingClientRect();
-    suppMouse.x = e.clientX - r.left;
-    suppMouse.y = e.clientY - r.top;
+  sb.onmousemove = (e) => {
+    const r = sc.getBoundingClientRect();
+    sMouse.x = e.clientX - r.left;
+    sMouse.y = e.clientY - r.top;
   };
-  supportBox.onmouseleave = () => { suppMouse.x = null; suppMouse.y = null; };
+  sb.onmouseleave = () => { sMouse.x = null; sMouse.y = null; };
 
-  userBox.onmousemove = (e) => {
-    const r = userCanvas.getBoundingClientRect();
-    userMouse.x = e.clientX - r.left;
-    userMouse.y = e.clientY - r.top;
+  ub.onmousemove = (e) => {
+    const r = uc.getBoundingClientRect();
+    uMouse.x = e.clientX - r.left;
+    uMouse.y = e.clientY - r.top;
   };
-  userBox.onmouseleave = () => { userMouse.x = null; userMouse.y = null; };
+  ub.onmouseleave = () => { uMouse.x = null; uMouse.y = null; };
 
-  const suppItems = [
-    { type: 'text', val: 'LOG', size: 10, color: '#38bdf8', glow: '#0ea5e9' },
-    { type: 'text', val: '⚡', size: 11, color: '#22d3ee', glow: '#06b6d4' },
-    { type: 'text', val: '✓', size: 11, color: '#34d399', glow: '#10b981' },
-    { type: 'dot', radius: 2.8, color: '#38bdf8', glow: '#0ea5e9' },
-    { type: 'dot', radius: 2.2, color: '#22d3ee', glow: '#06b6d4' }
-  ];
-
-  const userItems = [
-    { type: 'text', val: '₹', size: 12, color: '#818cf8', glow: '#6366f1' },
-    { type: 'text', val: '🛡️', size: 11, color: '#a78bfa', glow: '#8b5cf6' },
-    { type: 'text', val: '✦', size: 10, color: '#fbbf24', glow: '#f59e0b' },
-    { type: 'dot', radius: 2.6, color: '#818cf8', glow: '#6366f1' },
-    { type: 'dot', radius: 2.4, color: '#34d399', glow: '#10b981' }
-  ];
-
-  const suppNodes = [];
-  for (let i = 0; i < 12; i++) {
-    suppNodes.push({
-      x: Math.random() * (supportCanvas.width || 240),
-      y: Math.random() * (supportCanvas.height || 50),
-      vx: (Math.random() - 0.5) * 1.2,
-      vy: (Math.random() - 0.5) * 1.2,
-      item: suppItems[i % suppItems.length]
+  const supportEmbers = [];
+  for (let i = 0; i < 18; i++) {
+    supportEmbers.push({
+      x: Math.random() * (sc.width || 240),
+      y: Math.random() * (sc.height || 55),
+      r: 1.0 + Math.random() * 2.2,
+      vy: -0.35 - Math.random() * 0.45,
+      vx: (Math.random() - 0.5) * 0.35,
+      alpha: 0.25 + Math.random() * 0.65,
+      color: Math.random() > 0.4 ? '#38bdf8' : '#22d3ee'
     });
   }
 
-  const userNodes = [];
-  for (let i = 0; i < 14; i++) {
-    userNodes.push({
-      x: Math.random() * (userCanvas.width || 240),
-      y: Math.random() * (userCanvas.height || 85),
-      vx: (Math.random() - 0.5) * 1.2,
-      vy: (Math.random() - 0.5) * 1.2,
-      item: userItems[i % userItems.length]
+  const userEmbers = [];
+  for (let i = 0; i < 20; i++) {
+    userEmbers.push({
+      x: Math.random() * (uc.width || 240),
+      y: Math.random() * (uc.height || 95),
+      r: 1.0 + Math.random() * 2.4,
+      vy: -0.35 - Math.random() * 0.45,
+      vx: (Math.random() - 0.5) * 0.35,
+      alpha: 0.25 + Math.random() * 0.65,
+      color: Math.random() > 0.5 ? '#a855f7' : '#ec4899'
     });
   }
 
-  if (sideMeshLoop) cancelAnimationFrame(sideMeshLoop);
+  if (auroraEmbersLoop) cancelAnimationFrame(auroraEmbersLoop);
 
-  function renderSide() {
+  function renderAurora() {
     try {
       syncSizes();
 
-      // 1. Draw Support Banner Mesh
-      const sw = supportCanvas.width;
-      const sh = supportCanvas.height;
+      // 1. Support Banner Cosmic Embers
+      const sw = sc.width;
+      const sh = sc.height;
       if (sw > 20 && sh > 20) {
-        suppCtx.clearRect(0, 0, sw, sh);
+        sCtx.clearRect(0, 0, sw, sh);
+        supportEmbers.forEach(p => {
+          p.y += p.vy;
+          p.x += p.vx;
+          if (p.y < 0) { p.y = sh; p.x = Math.random() * sw; }
+          if (p.x < 0) p.x = sw;
+          if (p.x > sw) p.x = 0;
 
-        for (let i = 0; i < suppNodes.length; i++) {
-          for (let j = i + 1; j < suppNodes.length; j++) {
-            const dx = suppNodes[i].x - suppNodes[j].x;
-            const dy = suppNodes[i].y - suppNodes[j].y;
+          if (sMouse.x !== null && !isNaN(sMouse.x)) {
+            const dx = p.x - sMouse.x;
+            const dy = p.y - sMouse.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < 48) {
-              suppCtx.strokeStyle = "rgba(56, 189, 248, " + (0.55 * (1 - dist / 48)) + ")";
-              suppCtx.lineWidth = 1.0;
-              suppCtx.beginPath();
-              suppCtx.moveTo(suppNodes[i].x, suppNodes[i].y);
-              suppCtx.lineTo(suppNodes[j].x, suppNodes[j].y);
-              suppCtx.stroke();
-            }
-          }
-        }
-
-        if (suppMouse.x !== null && !isNaN(suppMouse.x)) {
-          for (let i = 0; i < suppNodes.length; i++) {
-            const dx = suppNodes[i].x - suppMouse.x;
-            const dy = suppNodes[i].y - suppMouse.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < 55) {
-              suppCtx.strokeStyle = "rgba(34, 211, 238, 0.85)";
-              suppCtx.lineWidth = 1.4;
-              suppCtx.beginPath();
-              suppCtx.moveTo(suppNodes[i].x, suppNodes[i].y);
-              suppCtx.lineTo(suppMouse.x, suppMouse.y);
-              suppCtx.stroke();
-            }
-          }
-        }
-
-        suppNodes.forEach(n => {
-          n.x += n.vx; n.y += n.vy;
-          if (n.x < 0) { n.x = 0; n.vx = Math.abs(n.vx); }
-          else if (n.x > sw) { n.x = sw; n.vx = -Math.abs(n.vx); }
-          if (n.y < 0) { n.y = 0; n.vy = Math.abs(n.vy); }
-          else if (n.y > sh) { n.y = sh; n.vy = -Math.abs(n.vy); }
-
-          if (suppMouse.x !== null && !isNaN(suppMouse.x)) {
-            const dx = n.x - suppMouse.x; const dy = n.y - suppMouse.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < 35 && dist > 1) {
+            if (dist < 45 && dist > 1) {
               const ang = Math.atan2(dy, dx);
-              n.x += Math.cos(ang) * 2; n.y += Math.sin(ang) * 2;
+              p.x += Math.cos(ang) * 1.5;
+              p.y += Math.sin(ang) * 1.5;
             }
           }
 
-          suppCtx.save();
-          suppCtx.shadowColor = n.item.glow;
-          suppCtx.shadowBlur = 6;
-          if (n.item.type === 'dot') {
-            suppCtx.fillStyle = n.item.color;
-            suppCtx.beginPath();
-            suppCtx.arc(n.x, n.y, n.item.radius, 0, Math.PI * 2);
-            suppCtx.fill();
-          } else {
-            suppCtx.fillStyle = n.item.color;
-            suppCtx.font = "800 " + n.item.size + "px 'JetBrains Mono', monospace";
-            suppCtx.fillText(n.item.val, n.x, n.y);
-          }
-          suppCtx.restore();
+          sCtx.save();
+          sCtx.globalAlpha = p.alpha;
+          sCtx.fillStyle = p.color;
+          sCtx.shadowColor = p.color;
+          sCtx.shadowBlur = 6;
+          sCtx.beginPath();
+          sCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          sCtx.fill();
+          sCtx.restore();
         });
       }
 
-      // 2. Draw User Card Mesh
-      const uw = userCanvas.width;
-      const uh = userCanvas.height;
+      // 2. User Card Cosmic Embers
+      const uw = uc.width;
+      const uh = uc.height;
       if (uw > 20 && uh > 20) {
-        userCtx.clearRect(0, 0, uw, uh);
+        uCtx.clearRect(0, 0, uw, uh);
+        userEmbers.forEach(p => {
+          p.y += p.vy;
+          p.x += p.vx;
+          if (p.y < 0) { p.y = uh; p.x = Math.random() * uw; }
+          if (p.x < 0) p.x = uw;
+          if (p.x > uw) p.x = 0;
 
-        for (let i = 0; i < userNodes.length; i++) {
-          for (let j = i + 1; j < userNodes.length; j++) {
-            const dx = userNodes[i].x - userNodes[j].x;
-            const dy = userNodes[i].y - userNodes[j].y;
+          if (uMouse.x !== null && !isNaN(uMouse.x)) {
+            const dx = p.x - uMouse.x;
+            const dy = p.y - uMouse.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < 52) {
-              userCtx.strokeStyle = "rgba(129, 140, 248, " + (0.55 * (1 - dist / 52)) + ")";
-              userCtx.lineWidth = 1.0;
-              userCtx.beginPath();
-              userCtx.moveTo(userNodes[i].x, userNodes[i].y);
-              userCtx.lineTo(userNodes[j].x, userNodes[j].y);
-              userCtx.stroke();
-            }
-          }
-        }
-
-        if (userMouse.x !== null && !isNaN(userMouse.x)) {
-          for (let i = 0; i < userNodes.length; i++) {
-            const dx = userNodes[i].x - userMouse.x;
-            const dy = userNodes[i].y - userMouse.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < 55) {
-              userCtx.strokeStyle = "rgba(168, 85, 247, 0.85)";
-              userCtx.lineWidth = 1.4;
-              userCtx.beginPath();
-              userCtx.moveTo(userNodes[i].x, userNodes[i].y);
-              userCtx.lineTo(userMouse.x, userMouse.y);
-              userCtx.stroke();
-            }
-          }
-        }
-
-        userNodes.forEach(n => {
-          n.x += n.vx; n.y += n.vy;
-          if (n.x < 0) { n.x = 0; n.vx = Math.abs(n.vx); }
-          else if (n.x > uw) { n.x = uw; n.vx = -Math.abs(n.vx); }
-          if (n.y < 0) { n.y = 0; n.vy = Math.abs(n.vy); }
-          else if (n.y > uh) { n.y = uh; n.vy = -Math.abs(n.vy); }
-
-          if (userMouse.x !== null && !isNaN(userMouse.x)) {
-            const dx = n.x - userMouse.x; const dy = n.y - userMouse.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < 35 && dist > 1) {
+            if (dist < 45 && dist > 1) {
               const ang = Math.atan2(dy, dx);
-              n.x += Math.cos(ang) * 2; n.y += Math.sin(ang) * 2;
+              p.x += Math.cos(ang) * 1.5;
+              p.y += Math.sin(ang) * 1.5;
             }
           }
 
-          userCtx.save();
-          userCtx.shadowColor = n.item.glow;
-          userCtx.shadowBlur = 6;
-          if (n.item.type === 'dot') {
-            userCtx.fillStyle = n.item.color;
-            userCtx.beginPath();
-            userCtx.arc(n.x, n.y, n.item.radius, 0, Math.PI * 2);
-            userCtx.fill();
-          } else {
-            userCtx.fillStyle = n.item.color;
-            userCtx.font = "800 " + n.item.size + "px 'JetBrains Mono', monospace";
-            userCtx.fillText(n.item.val, n.x, n.y);
-          }
-          userCtx.restore();
+          uCtx.save();
+          uCtx.globalAlpha = p.alpha;
+          uCtx.fillStyle = p.color;
+          uCtx.shadowColor = p.color;
+          uCtx.shadowBlur = 7;
+          uCtx.beginPath();
+          uCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          uCtx.fill();
+          uCtx.restore();
         });
       }
-    } catch (e) {
-      console.warn('Sidebar mesh warn:', e);
+    } catch (err) {
+      console.warn('Aurora render warn:', err);
     } finally {
-      sideMeshLoop = requestAnimationFrame(renderSide);
+      auroraEmbersLoop = requestAnimationFrame(renderAurora);
     }
   }
 
-  sideMeshLoop = requestAnimationFrame(renderSide);
+  auroraEmbersLoop = requestAnimationFrame(renderAurora);
 }
-window.initSideMicroMesh = initSideMicroMesh;
+window.initSideAuroraEmbers = initSideAuroraEmbers;
 
-// Heartbeat & lifecycle for sidebar micro mesh
+// Heartbeat & lifecycle for Aurora Embers
 setInterval(() => {
   const sc = document.getElementById('sideSupportMeshCanvas');
   const uc = document.getElementById('sideUserMeshCanvas');
-  if (sc && uc && sc.isConnected && uc.isConnected && !sideMeshLoop) {
-    initSideMicroMesh();
+  if (sc && uc && sc.isConnected && uc.isConnected && !auroraEmbersLoop) {
+    initSideAuroraEmbers();
   }
 }, 300);
 
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') initSideMicroMesh();
+  if (document.visibilityState === 'visible') initSideAuroraEmbers();
 });
-window.addEventListener('focus', initSideMicroMesh);
+window.addEventListener('focus', initSideAuroraEmbers);
 window.addEventListener('resize', () => {
   const sc = document.getElementById('sideSupportMeshCanvas');
   const uc = document.getElementById('sideUserMeshCanvas');
@@ -18334,6 +18270,6 @@ window.addEventListener('resize', () => {
   if (sc && sb && sb.clientWidth > 10) sc.width = sb.clientWidth;
   if (uc && ub && ub.clientWidth > 10) uc.width = ub.clientWidth;
 });
-setTimeout(initSideMicroMesh, 100);
+setTimeout(initSideAuroraEmbers, 100);
 
 </script></body></html>
