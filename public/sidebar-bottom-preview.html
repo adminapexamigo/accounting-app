@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sidebar Bottom Animation Concepts — Preview & Playground</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #030712;
+      --card-bg: rgba(15, 23, 42, 0.75);
+      --border: rgba(255, 255, 255, 0.08);
+      --primary: #4f46e5;
+      --primary-glow: #6366f1;
+      --cyan: #38bdf8;
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+      --text: #f8fafc;
+      --mute: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: radial-gradient(circle at 10% 20%, #0d1527 0%, #030712 100%);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      min-height: 100vh;
+      padding: 30px 24px 60px;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* Header Bar */
+    .top-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 30px;
+    }
+
+    .brand-title {
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-title span.badge {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 99px;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--cyan);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+
+    .sub-desc {
+      color: var(--mute);
+      font-size: 14px;
+      margin-top: 4px;
+    }
+
+    /* Controls Bar */
+    .controls-panel {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 18px;
+      margin-bottom: 32px;
+      backdrop-filter: blur(12px);
+    }
+
+    .ctrl-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--mute);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-group {
+      display: flex;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 3px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .filter-btn {
+      background: transparent;
+      border: none;
+      color: var(--mute);
+      padding: 6px 14px;
+      border-radius: 7px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .filter-btn.active, .filter-btn:hover {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(79, 70, 229, 0.4);
+    }
+
+    /* Grid of Concepts */
+    .concepts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+
+    .concept-card {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 22px 20px;
+      backdrop-filter: blur(14px);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .concept-card:hover {
+      border-color: rgba(99, 102, 241, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .concept-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .concept-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .concept-tag {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #cbd5e1;
+    }
+
+    .concept-desc {
+      font-size: 13px;
+      color: var(--mute);
+      line-height: 1.4;
+    }
+
+    /* Real Sidebar Preview Box */
+    .sidebar-mock-container {
+      width: 100%;
+      background: #090e1a;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .sidebar-mock-header {
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* ========================================================
+       SHARED BASE STRUCTURE FOR SIDEBAR BOTTOM CARDS
+       ======================================================== */
+    .side-footer-box {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+    }
+
+    /* ========================================================
+       CONCEPT 1: HARMONIC MICRO-CONSTELLATION MESH
+       ======================================================== */
+    .c1-support {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: radial-gradient(circle at 10% 50%, rgba(56, 189, 248, 0.18) 0%, transparent 60%), #0c1424;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      cursor: pointer;
+      overflow: hidden;
+      transition: all 0.25s ease;
+    }
+    .c1-support:hover {
+      border-color: #38bdf8;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.25);
+      transform: translateY(-1px);
+    }
+    .c1-support canvas, .c1-user canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .c1-content {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+    }
+    .c1-support-icon {
+      width: 32px;
+      height: 32px;
+      background: rgba(14, 165, 233, 0.25);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      flex-shrink: 0;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+      animation: pulseSubtle 3s infinite alternate;
+    }
+    .c1-support-title {
+      font-size: 12.5px;
+      font-weight: 800;
+      color: #38bdf8;
+      letter-spacing: -0.2px;
+    }
+    .c1-support-sub {
+      font-size: 10.5px;
+      color: #94a3b8;
+      margin-top: 1px;
+    }
+
+    .c1-user {
+      position: relative;
+      background: radial-gradient(circle at 90% 10%, rgba(99, 102, 241, 0.16) 0%, transparent 60%), #0c1424;
+      border: 1px solid rgba(99, 102, 241, 0.30);
+      border-radius: 10px;
+      padding: 10px 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      overflow: hidden;
+      transition: all 0.25s ease;
+    }
+    .c1-user:hover {
+      border-color: rgba(99, 102, 241, 0.6);
+      box-shadow: 0 0 22px rgba(99, 102, 241, 0.25);
+    }
+    .c1-user-info-row {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .c1-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #38bdf8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 16px;
+      color: #fff;
+      box-shadow: 0 0 16px rgba(99, 102, 241, 0.6);
+      flex-shrink: 0;
+      position: relative;
+    }
+    .c1-avatar::after {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: 50%;
+      border: 1.5px dashed rgba(56, 189, 248, 0.6);
+      animation: spinSlow 12s linear infinite;
+    }
+    .c1-user-name {
+      font-size: 14px;
+      font-weight: 800;
+      color: #f8fafc;
+    }
+    .c1-role-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 10px;
+      font-weight: 700;
+      background: rgba(99, 102, 241, 0.22);
+      border: 1px solid rgba(99, 102, 241, 0.45);
+      color: #c7d2fe;
+      margin-top: 2px;
+    }
+    .c1-actions {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      gap: 8px;
+    }
+    .c1-btn {
+      flex: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #cbd5e1;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      backdrop-filter: blur(6px);
+    }
+    .c1-btn:hover {
+      background: rgba(255, 255, 255, 0.16);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+    .c1-btn.logout:hover {
+      background: rgba(239, 68, 68, 0.25);
+      border-color: rgba(239, 68, 68, 0.5);
+      color: #fca5a5;
+    }
+
+    /* ========================================================
+       CONCEPT 2: CYBER RADAR & BIOMETRIC ORBIT
+       ======================================================== */
+    .c2-support {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(15, 23, 42, 0.9) 100%);
+      border: 1px solid rgba(6, 182, 212, 0.35);
+      cursor: pointer;
+      overflow: hidden;
+      transition: all 0.25s ease;
+    }
+    .c2-support::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: conic-gradient(from 0deg, transparent 0deg, rgba(56, 189, 248, 0.18) 60deg, transparent 120deg);
+      animation: rotateSonar 5s linear infinite;
+      pointer-events: none;
+    }
+    .c2-support:hover {
+      box-shadow: 0 0 20px rgba(6, 182, 212, 0.35);
+      border-color: #22d3ee;
+    }
+    .c2-radar-icon-wrap {
+      position: relative;
+      width: 32px;
+      height: 32px;
+      background: rgba(6, 182, 212, 0.25);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      flex-shrink: 0;
+      z-index: 1;
+    }
+    .c2-radar-ring {
+      position: absolute;
+      inset: -5px;
+      border-radius: 10px;
+      border: 1px solid rgba(34, 211, 238, 0.6);
+      animation: pingRadar 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+    }
+    .c2-user {
+      position: relative;
+      background: #0d1527;
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      border-radius: 10px;
+      padding: 10px 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      overflow: hidden;
+    }
+    .c2-orbit-wrap {
+      position: relative;
+      width: 38px;
+      height: 38px;
+      flex-shrink: 0;
+    }
+    .c2-orbit-dot {
+      position: absolute;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #34d399;
+      top: -3px;
+      left: 15px;
+      transform-origin: 4px 22px;
+      animation: orbitSpin 3.5s linear infinite;
+    }
+    .c2-status-led {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      font-weight: 700;
+      color: #34d399;
+      margin-left: 6px;
+    }
+    .c2-status-led::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #34d399;
+      animation: pulseBlink 1.4s infinite;
+    }
+
+    /* ========================================================
+       CONCEPT 3: 3D HOLOGRAPHIC CURSOR SPOTLIGHT
+       ======================================================== */
+    .c3-support, .c3-user {
+      position: relative;
+      background: #0b1120;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      cursor: pointer;
+      overflow: hidden;
+      transition: border-color 0.25s, transform 0.15s ease-out;
+      transform-style: preserve-3d;
+    }
+    .c3-support {
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+    .c3-user {
+      padding: 10px 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+    .c3-spotlight {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle 120px at var(--mx, 50%) var(--my, 50%), rgba(56, 189, 248, 0.22), transparent 70%);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+    .c3-support:hover .c3-spotlight, .c3-user:hover .c3-spotlight {
+      opacity: 1;
+    }
+    .c3-support:hover {
+      border-color: rgba(56, 189, 248, 0.5);
+      box-shadow: 0 8px 24px rgba(2, 132, 199, 0.2);
+    }
+    .c3-user:hover {
+      border-color: rgba(168, 85, 247, 0.5);
+      box-shadow: 0 8px 24px rgba(168, 85, 247, 0.2);
+    }
+
+    /* ========================================================
+       CONCEPT 4: CONTINUOUS RUNNING NEON LASER MARQUEE
+       ======================================================== */
+    .c4-wrap {
+      position: relative;
+      border-radius: 11px;
+      padding: 1.5px;
+      background: linear-gradient(90deg, #6366f1, #38bdf8, #ec4899, #6366f1);
+      background-size: 300% 300%;
+      animation: gradientFlow 4s ease infinite;
+      box-shadow: 0 0 16px rgba(99, 102, 241, 0.35);
+    }
+    .c4-inner {
+      background: #090e1a;
+      border-radius: 9.5px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      position: relative;
+      z-index: 1;
+    }
+    .c4-user-wrap {
+      position: relative;
+      border-radius: 11px;
+      padding: 1.5px;
+      background: linear-gradient(90deg, #3b82f6, #10b981, #8b5cf6, #3b82f6);
+      background-size: 300% 300%;
+      animation: gradientFlow 5s ease infinite reverse;
+      box-shadow: 0 0 16px rgba(59, 130, 246, 0.3);
+    }
+    .c4-user-inner {
+      background: #090e1a;
+      border-radius: 9.5px;
+      padding: 10px 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    /* Keyframe Animations */
+    @keyframes pulseSubtle {
+      0% { transform: scale(1); filter: drop-shadow(0 0 4px rgba(56, 189, 248, 0.4)); }
+      100% { transform: scale(1.06); filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.8)); }
+    }
+    @keyframes spinSlow {
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes rotateSonar {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes pingRadar {
+      0% { transform: scale(0.9); opacity: 0.9; }
+      100% { transform: scale(1.6); opacity: 0; }
+    }
+    @keyframes orbitSpin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes pulseBlink {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.3; transform: scale(0.85); }
+    }
+    @keyframes gradientFlow {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* Live Interaction Toast */
+    .interaction-toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--primary);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 15px rgba(99, 102, 241, 0.4);
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 9999;
+    }
+    .interaction-toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Top Title -->
+  <div class="top-header">
+    <div>
+      <div class="brand-title">
+        <span>⚡ Sidebar Bottom Animation Concepts</span>
+        <span class="badge">Interactive Lab &amp; Preview</span>
+      </div>
+      <div class="sub-desc">
+        Explore 4 creative, enterprise-grade animation styles for the <b>Support &amp; Bug Report</b> banner and <b>User Profile</b> card.
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <span style="font-size:12px;color:var(--mute)">Choose your preferred concept to apply to the main app:</span>
+    </div>
+  </div>
+
+  <!-- Interactive Controls Bar -->
+  <div class="controls-panel">
+    <div class="ctrl-label">View Mode:</div>
+    <div class="btn-group">
+      <button class="filter-btn active" onclick="switchView('all')">Show All 4 Styles</button>
+      <button class="filter-btn" onclick="switchView('c1')">Concept 1: Micro-Mesh</button>
+      <button class="filter-btn" onclick="switchView('c2')">Concept 2: Cyber Radar</button>
+      <button class="filter-btn" onclick="switchView('c3')">Concept 3: 3D Holographic</button>
+      <button class="filter-btn" onclick="switchView('c4')">Concept 4: Neon Marquee</button>
+    </div>
+
+    <div style="margin-left:auto;display:flex;align-items:center;gap:12px">
+      <span class="ctrl-label">Simulate Hover &amp; Click:</span>
+      <span style="font-size:12px;color:#38bdf8">💡 Hover over cards &amp; move cursor inside to view interactive physics!</span>
+    </div>
+  </div>
+
+  <!-- Grid of 4 Distinct Concepts -->
+  <div class="concepts-grid" id="conceptsGrid">
+
+    <!-- CONCEPT 1 -->
+    <div class="concept-card" id="card-c1">
+      <div class="concept-card-header">
+        <div class="concept-title">
+          <span>🌌</span> Concept 1: Micro-Constellation Mesh
+        </div>
+        <span class="concept-tag" style="background:rgba(56,189,248,0.18);color:#38bdf8">Consistent with Headers</span>
+      </div>
+      <div class="concept-desc">
+        Miniature floating financial &amp; tech nodes directly inside both cards with live connecting laser lines and cursor deflection. Creates 100% visual harmony with Tax Invoices and Financial Dashboard.
+      </div>
+
+      <div class="sidebar-mock-container">
+        <div class="sidebar-mock-header">
+          <span>Sidebar Footer Section</span>
+          <span style="color:#38bdf8">● Active Canvas</span>
+        </div>
+        <div class="side-footer-box">
+          <!-- Support Card with Micro Mesh -->
+          <div class="c1-support" id="c1SupportBox" onclick="showToast('Support & Bug Report clicked (Concept 1)')">
+            <canvas id="c1SupportCanvas"></canvas>
+            <div class="c1-content">
+              <div class="c1-support-icon">🛟</div>
+              <div style="flex:1;min-width:0">
+                <div class="c1-support-title">Support &amp; Bug Report</div>
+                <div class="c1-support-sub">Email admin with server.log</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- User Card with Micro Mesh -->
+          <div class="c1-user" id="c1UserBox">
+            <canvas id="c1UserCanvas"></canvas>
+            <div class="c1-user-info-row">
+              <div class="c1-avatar">S</div>
+              <div style="flex:1;min-width:0">
+                <div class="c1-user-name">Sangram</div>
+                <div class="c1-role-badge">Operations Admin</div>
+              </div>
+            </div>
+            <div class="c1-actions">
+              <button type="button" class="c1-btn" onclick="showToast('Password modal triggered')">🔑 Password</button>
+              <button type="button" class="c1-btn logout" onclick="showToast('Logout triggered')">🚪 Logout</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONCEPT 2 -->
+    <div class="concept-card" id="card-c2">
+      <div class="concept-card-header">
+        <div class="concept-title">
+          <span>📡</span> Concept 2: Cyber Radar &amp; Biometric Orbit
+        </div>
+        <span class="concept-tag" style="background:rgba(16,185,129,0.18);color:#34d399">Live System Security</span>
+      </div>
+      <div class="concept-desc">
+        Continuous rotating radar sonar beam sweeping across the Support card with pulsing ping waves. The user avatar features an orbiting green biometric security electron with a blinking live status LED.
+      </div>
+
+      <div class="sidebar-mock-container">
+        <div class="sidebar-mock-header">
+          <span>Sidebar Footer Section</span>
+          <span style="color:#34d399">● Radar Active</span>
+        </div>
+        <div class="side-footer-box">
+          <!-- Support Card with Sonar Radar -->
+          <div class="c2-support" onclick="showToast('Support & Bug Report clicked (Concept 2)')">
+            <div class="c2-radar-icon-wrap">
+              <div class="c2-radar-ring"></div>
+              🛟
+            </div>
+            <div style="flex:1;min-width:0;position:relative;z-index:1">
+              <div style="font-size:12.5px;font-weight:800;color:#22d3ee;display:flex;align-items:center;justify-content:space-between">
+                <span>Support &amp; Bug Report</span>
+                <span style="font-size:9.5px;font-weight:800;color:#67e8f9;background:rgba(6,182,212,0.25);padding:1px 5px;border-radius:4px">PING READY</span>
+              </div>
+              <div style="font-size:10.5px;color:#94a3b8;margin-top:2px">Email admin with server.log</div>
+            </div>
+          </div>
+
+          <!-- User Card with Orbiting Biometric Dot -->
+          <div class="c2-user">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div class="c2-orbit-wrap">
+                <div class="c1-avatar" style="width:38px;height:38px">S</div>
+                <div class="c2-orbit-dot"></div>
+              </div>
+              <div style="flex:1;min-width:0">
+                <div style="display:flex;align-items:center">
+                  <span class="c1-user-name">Sangram</span>
+                  <span class="c2-status-led">ONLINE</span>
+                </div>
+                <div class="c1-role-badge" style="background:rgba(16,185,129,0.18);border-color:rgba(16,185,129,0.35);color:#6ee7b7">Operations Admin</div>
+              </div>
+            </div>
+            <div class="c1-actions">
+              <button type="button" class="c1-btn" onclick="showToast('Password modal triggered')">🔑 Password</button>
+              <button type="button" class="c1-btn logout" onclick="showToast('Logout triggered')">🚪 Logout</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONCEPT 3 -->
+    <div class="concept-card" id="card-c3">
+      <div class="concept-card-header">
+        <div class="concept-title">
+          <span>🔮</span> Concept 3: 3D Holographic Cursor Spotlight
+        </div>
+        <span class="concept-tag" style="background:rgba(168,85,247,0.18);color:#d8b4fe">Apple / Linear Tier</span>
+      </div>
+      <div class="concept-desc">
+        Dynamic spotlight aura that follows your mouse cursor across the card surface in real-time, accompanied by subtle 3D parallax card tilt and levitating floating icon physics.
+      </div>
+
+      <div class="sidebar-mock-container">
+        <div class="sidebar-mock-header">
+          <span>Sidebar Footer Section</span>
+          <span style="color:#d8b4fe">● Tilt &amp; Spotlight</span>
+        </div>
+        <div class="side-footer-box">
+          <!-- Support Card with 3D Tilt & Spotlight -->
+          <div class="c3-support" id="c3SupportBox" onclick="showToast('Support & Bug Report clicked (Concept 3)')">
+            <div class="c3-spotlight"></div>
+            <div class="c1-support-icon" style="background:rgba(168,85,247,0.22);border-color:rgba(168,85,247,0.4);box-shadow:0 0 14px rgba(168,85,247,0.3)">🛟</div>
+            <div style="flex:1;min-width:0;position:relative;z-index:1">
+              <div style="font-size:12.5px;font-weight:800;color:#c084fc">Support &amp; Bug Report</div>
+              <div style="font-size:10.5px;color:#94a3b8;margin-top:1px">Email admin with server.log</div>
+            </div>
+          </div>
+
+          <!-- User Card with 3D Tilt & Spotlight -->
+          <div class="c3-user" id="c3UserBox">
+            <div class="c3-spotlight"></div>
+            <div style="display:flex;align-items:center;gap:10px;position:relative;z-index:1">
+              <div class="c1-avatar" style="background:linear-gradient(135deg, #a855f7, #6366f1);box-shadow:0 0 16px rgba(168,85,247,0.5)">S</div>
+              <div style="flex:1;min-width:0">
+                <div class="c1-user-name">Sangram</div>
+                <div class="c1-role-badge" style="background:rgba(168,85,247,0.18);border-color:rgba(168,85,247,0.4);color:#e9d5ff">Operations Admin</div>
+              </div>
+            </div>
+            <div class="c1-actions">
+              <button type="button" class="c1-btn" onclick="showToast('Password modal triggered')">🔑 Password</button>
+              <button type="button" class="c1-btn logout" onclick="showToast('Logout triggered')">🚪 Logout</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONCEPT 4 -->
+    <div class="concept-card" id="card-c4">
+      <div class="concept-card-header">
+        <div class="concept-title">
+          <span>⚡</span> Concept 4: Neon Laser Marquee
+        </div>
+        <span class="concept-tag" style="background:rgba(236,72,153,0.18);color:#f472b6">Cyberpunk Edge</span>
+      </div>
+      <div class="concept-desc">
+        Vibrant animated neon border gradient constantly rotating around the card perimeter, giving a live electric frame with pulsing button glows and high-contrast digital badges.
+      </div>
+
+      <div class="sidebar-mock-container">
+        <div class="sidebar-mock-header">
+          <span>Sidebar Footer Section</span>
+          <span style="color:#f472b6">● Laser Border</span>
+        </div>
+        <div class="side-footer-box">
+          <!-- Support Card with Neon Border -->
+          <div class="c4-wrap" onclick="showToast('Support & Bug Report clicked (Concept 4)')" style="cursor:pointer">
+            <div class="c4-inner">
+              <div class="c1-support-icon" style="background:rgba(236,72,153,0.22);border-color:rgba(236,72,153,0.4);box-shadow:0 0 14px rgba(236,72,153,0.4)">🛟</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:12.5px;font-weight:800;color:#f472b6">Support &amp; Bug Report</div>
+                <div style="font-size:10.5px;color:#cbd5e1;margin-top:1px">Email admin with server.log</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- User Card with Neon Border -->
+          <div class="c4-user-wrap">
+            <div class="c4-user-inner">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div class="c1-avatar" style="background:linear-gradient(135deg, #ec4899, #8b5cf6)">S</div>
+                <div style="flex:1;min-width:0">
+                  <div class="c1-user-name">Sangram</div>
+                  <div class="c1-role-badge" style="background:rgba(236,72,153,0.2);border-color:rgba(236,72,153,0.5);color:#fbcfe8">Operations Admin</div>
+                </div>
+              </div>
+              <div class="c1-actions">
+                <button type="button" class="c1-btn" onclick="showToast('Password modal triggered')">🔑 Password</button>
+                <button type="button" class="c1-btn logout" onclick="showToast('Logout triggered')">🚪 Logout</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Interactive Toast -->
+<div id="toast" class="interaction-toast">
+  <span>✨</span>
+  <span id="toastMsg">Action triggered</span>
+</div>
+
+<script>
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    const tm = document.getElementById('toastMsg');
+    tm.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  function switchView(mode) {
+    const buttons = document.querySelectorAll('.filter-btn');
+    buttons.forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+
+    const cards = ['card-c1', 'card-c2', 'card-c3', 'card-c4'];
+    cards.forEach(id => {
+      const el = document.getElementById(id);
+      if (mode === 'all') {
+        el.style.display = 'flex';
+      } else {
+        el.style.display = (id === 'card-' + mode) ? 'flex' : 'none';
+      }
+    });
+  }
+
+  // ==========================================
+  // CONCEPT 1: LIVE CANVAS MICRO-MESH ENGINE
+  // ==========================================
+  function initMicroMesh(canvasId, boxId, colorTheme) {
+    const canvas = document.getElementById(canvasId);
+    const box = document.getElementById(boxId);
+    if (!canvas || !box) return;
+
+    const ctx = canvas.getContext('2d');
+    let w = canvas.width = box.clientWidth || 240;
+    let h = canvas.height = box.clientHeight || 55;
+
+    let mouse = { x: null, y: null };
+    box.addEventListener('mousemove', (e) => {
+      const r = canvas.getBoundingClientRect();
+      mouse.x = e.clientX - r.left;
+      mouse.y = e.clientY - r.top;
+    });
+    box.addEventListener('mouseleave', () => {
+      mouse.x = null;
+      mouse.y = null;
+    });
+
+    const isCyan = colorTheme === 'cyan';
+    const items = isCyan ? [
+      { type: 'text', val: 'LOG', size: 10, color: '#38bdf8', glow: '#0ea5e9' },
+      { type: 'text', val: '⚡', size: 11, color: '#22d3ee', glow: '#06b6d4' },
+      { type: 'text', val: '✓', size: 11, color: '#34d399', glow: '#10b981' },
+      { type: 'dot', radius: 2.8, color: '#38bdf8', glow: '#0ea5e9' },
+      { type: 'dot', radius: 2.2, color: '#22d3ee', glow: '#06b6d4' }
+    ] : [
+      { type: 'text', val: '₹', size: 12, color: '#818cf8', glow: '#6366f1' },
+      { type: 'text', val: '🛡️', size: 11, color: '#a78bfa', glow: '#8b5cf6' },
+      { type: 'text', val: '✦', size: 10, color: '#fbbf24', glow: '#f59e0b' },
+      { type: 'dot', radius: 2.6, color: '#818cf8', glow: '#6366f1' },
+      { type: 'dot', radius: 2.4, color: '#34d399', glow: '#10b981' }
+    ];
+
+    const nodes = [];
+    const count = 14;
+    for (let i = 0; i < count; i++) {
+      nodes.push({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        vx: (Math.random() - 0.5) * 1.2,
+        vy: (Math.random() - 0.5) * 1.2,
+        item: items[i % items.length]
+      });
+    }
+
+    function render() {
+      if (box.clientWidth && canvas.width !== box.clientWidth) canvas.width = box.clientWidth;
+      if (box.clientHeight && canvas.height !== box.clientHeight) canvas.height = box.clientHeight;
+      w = canvas.width;
+      h = canvas.height;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Connecting lines
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const dx = nodes[i].x - nodes[j].x;
+          const dy = nodes[i].y - nodes[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 48) {
+            ctx.strokeStyle = isCyan 
+              ? "rgba(56, 189, 248, " + (0.55 * (1 - dist / 48)) + ")"
+              : "rgba(129, 140, 248, " + (0.55 * (1 - dist / 48)) + ")";
+            ctx.lineWidth = 1.0;
+            ctx.beginPath();
+            ctx.moveTo(nodes[i].x, nodes[i].y);
+            ctx.lineTo(nodes[j].x, nodes[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+
+      // Mouse laser
+      if (mouse.x !== null) {
+        for (let i = 0; i < nodes.length; i++) {
+          const dx = nodes[i].x - mouse.x;
+          const dy = nodes[i].y - mouse.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 55) {
+            ctx.strokeStyle = isCyan ? "rgba(34, 211, 238, 0.85)" : "rgba(168, 85, 247, 0.85)";
+            ctx.lineWidth = 1.4;
+            ctx.beginPath();
+            ctx.moveTo(nodes[i].x, nodes[i].y);
+            ctx.lineTo(mouse.x, mouse.y);
+            ctx.stroke();
+          }
+        }
+      }
+
+      // Draw nodes
+      nodes.forEach(n => {
+        n.x += n.vx;
+        n.y += n.vy;
+        if (n.x < 0 || n.x > w) n.vx *= -1;
+        if (n.y < 0 || n.y > h) n.vy *= -1;
+
+        if (mouse.x !== null) {
+          const dx = n.x - mouse.x;
+          const dy = n.y - mouse.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 35) {
+            const ang = Math.atan2(dy, dx);
+            n.x += Math.cos(ang) * 2;
+            n.y += Math.sin(ang) * 2;
+          }
+        }
+
+        ctx.save();
+        ctx.shadowColor = n.item.glow;
+        ctx.shadowBlur = 6;
+        if (n.item.type === 'dot') {
+          ctx.fillStyle = n.item.color;
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, n.item.radius, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          ctx.fillStyle = n.item.color;
+          ctx.font = "800 " + n.item.size + "px 'JetBrains Mono', monospace";
+          ctx.fillText(n.item.val, n.x, n.y);
+        }
+        ctx.restore();
+      });
+
+      requestAnimationFrame(render);
+    }
+
+    render();
+  }
+
+  // Initialize Micro Meshes
+  initMicroMesh('c1SupportCanvas', 'c1SupportBox', 'cyan');
+  initMicroMesh('c1UserCanvas', 'c1UserBox', 'indigo');
+
+  // ==========================================
+  // CONCEPT 3: 3D SPOTLIGHT & TILT PHYSICS
+  // ==========================================
+  function setupSpotlightTilt(boxId) {
+    const box = document.getElementById(boxId);
+    if (!box) return;
+
+    box.addEventListener('mousemove', (e) => {
+      const rect = box.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      box.style.setProperty('--mx', x + 'px');
+      box.style.setProperty('--my', y + 'px');
+
+      const cx = rect.width / 2;
+      const cy = rect.height / 2;
+      const rotX = ((y - cy) / cy) * -8;
+      const rotY = ((x - cx) / cx) * 8;
+      box.style.transform = `perspective(500px) rotateX(${rotX}deg) rotateY(${rotY}deg) scale(1.02)`;
+    });
+
+    box.addEventListener('mouseleave', () => {
+      box.style.transform = 'perspective(500px) rotateX(0deg) rotateY(0deg) scale(1)';
+    });
+  }
+
+  setupSpotlightTilt('c3SupportBox');
+  setupSpotlightTilt('c3UserBox');
+</script>
+</body>
+</html>
