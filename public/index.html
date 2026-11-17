@@ -939,172 +939,147 @@ label{display:block;font-size:12.5px;color:var(--mute);margin:0 0 5px;font-weigh
 }
 
 /* ========================================================
-   CONCEPT 8: NEURAL SYNAPSE & CIRCUIT PULSE (SIDEBAR FOOTER)
+   EXECUTIVE ENTERPRISE PRO (SIDEBAR FOOTER)
    ======================================================== */
-.side-support-banner.c8-support,
-.side-user-card.c8-user {
+.side-support-banner.pro-support,
+.side-user-card.pro-user {
   position: relative;
-  background: #090918;
-  border-radius: 10px;
-  border: 1px solid rgba(168, 85, 247, 0.35);
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.88) 0%, rgba(10, 15, 29, 0.96) 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06);
   overflow: hidden;
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   text-decoration: none;
 }
 
-.side-support-banner.c8-support {
+.side-support-banner.pro-support {
   padding: 10px 12px;
   display: flex;
   align-items: center;
   gap: 11px;
 }
 
-.side-support-banner.c8-support:hover,
-.side-user-card.c8-user:hover {
-  border-color: #c084fc;
-  box-shadow: 0 0 24px rgba(168, 85, 247, 0.45);
+.side-user-card.pro-user {
+  padding: 10px 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.side-support-banner.pro-support:hover,
+.side-user-card.pro-user:hover {
+  border-color: rgba(99, 102, 241, 0.45);
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.5), 0 0 20px rgba(99, 102, 241, 0.2);
   transform: translateY(-1px);
 }
 
-.side-support-banner.c8-support:hover .c8-circuit-svg,
-.side-user-card.c8-user:hover .c8-circuit-svg {
-  opacity: 0.60;
-  filter: drop-shadow(0 0 6px rgba(168, 85, 247, 0.6));
-}
-
-.c8-circuit-svg {
+/* Subtle, Luxury Shimmer Sweep (Signature Stripe/Linear/Apple style) */
+.pro-shimmer-sweep {
   position: absolute;
-  inset: 0;
-  width: 100%;
+  top: 0;
+  left: -120%;
+  width: 60%;
   height: 100%;
-  pointer-events: none;
-  opacity: 0.30;
-  transition: opacity 0.3s ease, filter 0.3s ease;
-}
-
-.c8-wire-dash {
-  stroke-dasharray: 6 5;
-  animation: circuitFlow 3.5s linear infinite;
-}
-
-.c8-wire-cyan {
-  stroke-dasharray: 5 4;
-  animation: circuitFlowRev 4s linear infinite;
-}
-
-.c8-wire-purple {
-  stroke-dasharray: 7 5;
-  animation: circuitFlow 4.2s linear infinite;
-}
-
-.c8-wire-pink {
-  stroke-dasharray: 5 4;
-  animation: circuitFlowRev 3.8s linear infinite;
-}
-
-@keyframes circuitFlow {
-  from { stroke-dashoffset: 44; }
-  to { stroke-dashoffset: 0; }
-}
-
-@keyframes circuitFlowRev {
-  from { stroke-dashoffset: 0; }
-  to { stroke-dashoffset: 44; }
-}
-
-.c8-synapse-node {
-  animation: nodeGlow 2.5s ease-in-out infinite alternate;
-}
-
-@keyframes nodeGlow {
-  0% { r: 2.2; opacity: 0.5; }
-  100% { r: 3.8; opacity: 1; filter: drop-shadow(0 0 5px currentColor); }
-}
-
-.c8-energy-pulse {
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.04) 30%, rgba(99, 102, 241, 0.12) 50%, rgba(56, 189, 248, 0.15) 60%, transparent 100%);
+  transform: skewX(-20deg);
+  animation: proShimmerSweep 5.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   pointer-events: none;
   z-index: 1;
 }
 
-.c8-pulse-support {
-  background: #c084fc;
-  box-shadow: 0 0 10px #c084fc, 0 0 20px #a855f7;
-  animation: pulseTravelSupport 4s ease-in-out infinite;
+@keyframes proShimmerSweep {
+  0% { left: -120%; }
+  35%, 100% { left: 220%; }
 }
 
-.c8-pulse-user-1 {
-  background: #38bdf8;
-  box-shadow: 0 0 10px #38bdf8, 0 0 18px #0284c7;
-  animation: pulseTravelUser1 4.5s ease-in-out infinite;
+/* Ambient Back-Glow (Soft breathing depth) */
+.pro-ambient-glow {
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  width: 140px;
+  height: 80px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.16) 0%, rgba(14, 165, 233, 0.08) 50%, transparent 75%);
+  filter: blur(18px);
+  pointer-events: none;
+  animation: proAmbientFloat 6s ease-in-out infinite alternate;
+  z-index: 0;
 }
 
-.c8-pulse-user-2 {
-  background: #f472b6;
-  box-shadow: 0 0 10px #f472b6, 0 0 18px #db2777;
-  animation: pulseTravelUser2 5s ease-in-out infinite 1.5s;
+@keyframes proAmbientFloat {
+  0% { transform: translate(0, 0) scale(0.95); opacity: 0.6; }
+  100% { transform: translate(35px, 15px) scale(1.15); opacity: 0.9; }
 }
 
-@keyframes pulseTravelSupport {
-  0% { transform: translate(10px, 25px); opacity: 0; }
-  10% { opacity: 1; }
-  32% { transform: translate(68px, 6px); }
-  65% { transform: translate(148px, 6px); }
-  85% { transform: translate(168px, 25px); opacity: 1; }
-  100% { transform: translate(228px, 25px); opacity: 0; }
-}
-
-@keyframes pulseTravelUser1 {
-  0% { transform: translate(15px, 16px); opacity: 0; }
-  15% { opacity: 1; }
-  35% { transform: translate(75px, 38px); }
-  65% { transform: translate(175px, 38px); }
-  85% { transform: translate(195px, 16px); opacity: 1; }
-  100% { transform: translate(230px, 16px); opacity: 0; }
-}
-
-@keyframes pulseTravelUser2 {
-  0% { transform: translate(35px, 72px); opacity: 0; }
-  15% { opacity: 1; }
-  45% { transform: translate(115px, 72px); }
-  70% { transform: translate(135px, 52px); opacity: 1; }
-  90% { transform: translate(215px, 52px); opacity: 0.8; }
-  100% { transform: translate(230px, 52px); opacity: 0; }
-}
-
-.side-support-icon.c8-support-icon {
+/* Executive Support Icon */
+.side-support-icon.pro-support-icon {
   width: 32px;
   height: 32px;
-  border-radius: 8px;
-  background: rgba(168, 85, 247, 0.22);
-  border: 1px solid rgba(168, 85, 247, 0.5);
-  box-shadow: 0 0 16px rgba(168, 85, 247, 0.4);
+  border-radius: 9px;
+  background: rgba(99, 102, 241, 0.14);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  box-shadow: 0 2px 10px rgba(99, 102, 241, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 17px;
-  animation: floatingFloat 3.5s ease-in-out infinite;
+  font-size: 16px;
   flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.side-support-banner.pro-support:hover .pro-support-icon {
+  background: rgba(99, 102, 241, 0.25);
+  border-color: rgba(99, 102, 241, 0.5);
+  box-shadow: 0 0 14px rgba(99, 102, 241, 0.4);
+  transform: scale(1.05);
 }
 
 .side-support-title {
   font-size: 12.5px;
-  font-weight: 800;
-  color: #c084fc;
+  font-weight: 700;
+  color: #f1f5f9;
+  letter-spacing: -0.2px;
   line-height: 1.25;
 }
 
 .side-support-subtitle {
   font-size: 10.5px;
-  color: #cbd5e1;
+  color: #94a3b8;
   margin-top: 1px;
 }
 
+/* Live Operational Status Badge */
+.pro-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  padding: 1px 6px;
+  border-radius: 99px;
+}
+
+.pro-status-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 6px #34d399;
+  animation: proPulseDot 2s ease-in-out infinite;
+}
+
+@keyframes proPulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+/* User Card Avatar & Orbit */
 .side-user-avatar-wrap {
   position: relative;
   width: 38px;
@@ -1114,45 +1089,48 @@ label{display:block;font-size:12.5px;color:var(--mute);margin:0 0 5px;font-weigh
 
 .side-user-avatar-orbit {
   position: absolute;
-  inset: -4px;
+  inset: -3px;
   border-radius: 50%;
-  border: 1.5px solid rgba(168, 85, 247, 0.7);
-  animation: pingRadar 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+  border: 1.5px solid rgba(99, 102, 241, 0.35);
   pointer-events: none;
+  animation: proAvatarPulse 3s ease-in-out infinite alternate;
 }
 
-@keyframes pingRadar {
-  0% { transform: scale(0.9); opacity: 0.95; }
-  100% { transform: scale(1.65); opacity: 0; }
+@keyframes proAvatarPulse {
+  0% { transform: scale(1); opacity: 0.6; border-color: rgba(99, 102, 241, 0.3); }
+  100% { transform: scale(1.08); opacity: 1; border-color: rgba(56, 189, 248, 0.5); }
 }
 
-@keyframes floatingFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
+/* Action Buttons (Password / Logout) */
+.pro-user .who-actions a {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 7px;
+  transition: all 0.18s ease;
 }
 
-.c8-user .who-actions a {
-  background: rgba(168, 85, 247, 0.12);
-  border: 1px solid rgba(168, 85, 247, 0.32);
-  color: #e9d5ff;
-}
-
-.c8-user .who-actions a:hover {
-  background: rgba(168, 85, 247, 0.28);
-  border-color: #c084fc;
+.pro-user .who-actions a:hover {
+  background: rgba(99, 102, 241, 0.18);
+  border-color: rgba(99, 102, 241, 0.4);
   color: #ffffff;
-  box-shadow: 0 0 14px rgba(168, 85, 247, 0.45);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transform: translateY(-1px);
 }
 
-.c8-user .who-actions a#out:hover {
-  background: rgba(239, 68, 68, 0.22);
-  border-color: rgba(239, 68, 68, 0.5);
+.pro-user .who-actions a#out:hover {
+  background: rgba(239, 68, 68, 0.16);
+  border-color: rgba(239, 68, 68, 0.4);
   color: #fca5a5;
-  box-shadow: 0 0 14px rgba(239, 68, 68, 0.4);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
 }
 
-.side.is-mini .c8-circuit-svg,
-.side.is-mini .c8-energy-pulse {
+/* Collapsed Mini Mode Support */
+.side.is-mini .pro-ambient-glow,
+.side.is-mini .pro-shimmer-sweep {
   display: none !important;
 }
 
@@ -3530,33 +3508,24 @@ body.mobile-sidebar-open {
     </div>
     <div id="nav"></div>
     <div class="side-footer">
-      <div class="side-support-banner c8-support" id="supportBtn" title="Report an issue or bug with screenshot &amp; server.log">
-        <svg class="c8-circuit-svg" viewBox="0 0 240 60" preserveAspectRatio="none">
-          <path class="c8-wire-dash" d="M10,30 L50,30 L70,10 L150,10 L170,30 L230,30" stroke="#a855f7" stroke-width="1.5" fill="none" />
-          <path class="c8-wire-cyan" d="M20,50 L80,50 L100,40 L190,40" stroke="#38bdf8" stroke-width="1.2" fill="none" />
-          <circle cx="50" cy="30" r="3" fill="#a855f7" class="c8-synapse-node" />
-          <circle cx="170" cy="30" r="3" fill="#38bdf8" class="c8-synapse-node" />
-        </svg>
-        <div class="c8-energy-pulse c8-pulse-support"></div>
+      <div class="side-support-banner pro-support" id="supportBtn" title="Report an issue or bug with screenshot &amp; server.log">
+        <div class="pro-ambient-glow"></div>
+        <div class="pro-shimmer-sweep"></div>
         <div class="side-support-content" style="position:relative;z-index:2;display:flex;align-items:center;gap:11px;width:100%">
-          <div class="side-support-icon c8-support-icon">🛟</div>
+          <div class="side-support-icon pro-support-icon">🛟</div>
           <div class="side-support-body">
-            <div class="side-support-title">Support &amp; Bug Report</div>
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span class="side-support-title">Support &amp; Desk</span>
+              <span class="pro-status-badge"><span class="pro-status-dot"></span>Ready</span>
+            </div>
             <div class="side-support-subtitle">Email admin with server.log</div>
           </div>
         </div>
       </div>
-      <div class="side-user-card c8-user" id="sideUserCard">
-        <svg class="c8-circuit-svg" viewBox="0 0 240 100" preserveAspectRatio="none">
-          <path class="c8-wire-purple" d="M15,20 L60,20 L80,45 L180,45 L200,20 L235,20" stroke="#a855f7" stroke-width="1.5" fill="none" />
-          <path class="c8-wire-pink" d="M40,78 L120,78 L140,58 L220,58" stroke="#ec4899" stroke-width="1.2" fill="none" />
-          <circle cx="80" cy="45" r="3" fill="#a855f7" class="c8-synapse-node" />
-          <circle cx="180" cy="45" r="3" fill="#c084fc" class="c8-synapse-node" />
-          <circle cx="140" cy="58" r="2.5" fill="#ec4899" class="c8-synapse-node" />
-        </svg>
-        <div class="c8-energy-pulse c8-pulse-user-1"></div>
-        <div class="c8-energy-pulse c8-pulse-user-2"></div>
-        <div class="c8-content" style="position:relative;z-index:2;display:flex;flex-direction:column;gap:8px;width:100%">
+      <div class="side-user-card pro-user" id="sideUserCard">
+        <div class="pro-ambient-glow" style="right:0;left:auto;animation-delay:2.5s"></div>
+        <div class="pro-shimmer-sweep" style="animation-delay:2.5s"></div>
+        <div class="pro-content" style="position:relative;z-index:2;display:flex;flex-direction:column;gap:8px;width:100%">
           <div id="who"></div>
           <div id="whoActiveRow"></div>
           <div class="who-actions">
@@ -18208,16 +18177,16 @@ window.addEventListener('resize', syncInvMeshSize);
 
 
 // ==========================================
-// SIDEBAR BOTTOM: CONCEPT 8 - NEURAL SYNAPSE & CIRCUIT PULSE
+// SIDEBAR BOTTOM: EXECUTIVE ENTERPRISE PRO
 // ==========================================
-// Hardware-accelerated SVG circuit pathways, traveling energy pulses, and synaptic radar rings.
-function initSideNeuralSynapse() {
+// High-precision ambient shimmer and breathing depth running smoothly on the GPU compositor.
+function initSideExecutivePro() {
   const sb = document.getElementById('supportBtn');
   const ub = document.getElementById('sideUserCard');
-  if (sb && !sb.classList.contains('c8-support')) sb.classList.add('c8-support');
-  if (ub && !ub.classList.contains('c8-user')) ub.classList.add('c8-user');
+  if (sb && !sb.classList.contains('pro-support')) sb.classList.add('pro-support');
+  if (ub && !ub.classList.contains('pro-user')) ub.classList.add('pro-user');
 }
-window.initSideNeuralSynapse = initSideNeuralSynapse;
-setTimeout(initSideNeuralSynapse, 50);
+window.initSideExecutivePro = initSideExecutivePro;
+setTimeout(initSideExecutivePro, 50);
 
 </script></body></html>
