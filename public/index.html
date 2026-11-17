@@ -939,98 +939,169 @@ label{display:block;font-size:12.5px;color:var(--mute);margin:0 0 5px;font-weigh
 }
 
 /* ========================================================
-   CONCEPT 5: AURORA BOREALIS & COSMIC EMBERS (SIDEBAR FOOTER)
+   CONCEPT 8: NEURAL SYNAPSE & CIRCUIT PULSE (SIDEBAR FOOTER)
    ======================================================== */
-.side-support-banner.c5-support {
+.side-support-banner.c8-support,
+.side-user-card.c8-user {
   position: relative;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
+  background: #090918;
   border-radius: 10px;
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
   overflow: hidden;
   cursor: pointer;
-  border: 1px solid rgba(14, 165, 233, 0.35);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   text-decoration: none;
 }
-.side-support-banner.c5-support:hover {
-  border-color: #38bdf8;
-  box-shadow: 0 0 24px rgba(56, 189, 248, 0.35);
+
+.side-support-banner.c8-support {
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.side-support-banner.c8-support:hover,
+.side-user-card.c8-user:hover {
+  border-color: #c084fc;
+  box-shadow: 0 0 24px rgba(168, 85, 247, 0.45);
   transform: translateY(-1px);
 }
 
-.side-user-card.c5-user {
-  position: relative;
-  border-radius: 10px;
-  overflow: hidden;
-  border: 1px solid rgba(168, 85, 247, 0.32);
-  padding: 10px 11px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.side-user-card.c5-user:hover {
-  border-color: rgba(168, 85, 247, 0.6);
-  box-shadow: 0 0 24px rgba(168, 85, 247, 0.30);
+.side-support-banner.c8-support:hover .c8-circuit-svg,
+.side-user-card.c8-user:hover .c8-circuit-svg {
+  opacity: 0.60;
+  filter: drop-shadow(0 0 6px rgba(168, 85, 247, 0.6));
 }
 
-.c5-aurora-bg {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(125deg, #090e1a 0%, #06182c 40%, #171038 75%, #051a24 100%);
-  background-size: 300% 300%;
-  animation: auroraFlow 8s ease infinite alternate;
-  z-index: 0;
-}
-.c5-aurora-glow {
-  position: absolute;
-  width: 140px;
-  height: 70px;
-  background: radial-gradient(ellipse, rgba(56, 189, 248, 0.35) 0%, rgba(168, 85, 247, 0.25) 50%, transparent 80%);
-  filter: blur(14px);
-  animation: floatAura 6s ease-in-out infinite alternate;
-  pointer-events: none;
-  z-index: 1;
-}
-.c5-canvas {
+.c8-circuit-svg {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
+  opacity: 0.30;
+  transition: opacity 0.3s ease, filter 0.3s ease;
+}
+
+.c8-wire-dash {
+  stroke-dasharray: 6 5;
+  animation: circuitFlow 3.5s linear infinite;
+}
+
+.c8-wire-cyan {
+  stroke-dasharray: 5 4;
+  animation: circuitFlowRev 4s linear infinite;
+}
+
+.c8-wire-purple {
+  stroke-dasharray: 7 5;
+  animation: circuitFlow 4.2s linear infinite;
+}
+
+.c8-wire-pink {
+  stroke-dasharray: 5 4;
+  animation: circuitFlowRev 3.8s linear infinite;
+}
+
+@keyframes circuitFlow {
+  from { stroke-dashoffset: 44; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes circuitFlowRev {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: 44; }
+}
+
+.c8-synapse-node {
+  animation: nodeGlow 2.5s ease-in-out infinite alternate;
+}
+
+@keyframes nodeGlow {
+  0% { r: 2.2; opacity: 0.5; }
+  100% { r: 3.8; opacity: 1; filter: drop-shadow(0 0 5px currentColor); }
+}
+
+.c8-energy-pulse {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  pointer-events: none;
   z-index: 1;
 }
-.c5-lifebuoy {
+
+.c8-pulse-support {
+  background: #c084fc;
+  box-shadow: 0 0 10px #c084fc, 0 0 20px #a855f7;
+  animation: pulseTravelSupport 4s ease-in-out infinite;
+}
+
+.c8-pulse-user-1 {
+  background: #38bdf8;
+  box-shadow: 0 0 10px #38bdf8, 0 0 18px #0284c7;
+  animation: pulseTravelUser1 4.5s ease-in-out infinite;
+}
+
+.c8-pulse-user-2 {
+  background: #f472b6;
+  box-shadow: 0 0 10px #f472b6, 0 0 18px #db2777;
+  animation: pulseTravelUser2 5s ease-in-out infinite 1.5s;
+}
+
+@keyframes pulseTravelSupport {
+  0% { transform: translate(10px, 25px); opacity: 0; }
+  10% { opacity: 1; }
+  32% { transform: translate(68px, 6px); }
+  65% { transform: translate(148px, 6px); }
+  85% { transform: translate(168px, 25px); opacity: 1; }
+  100% { transform: translate(228px, 25px); opacity: 0; }
+}
+
+@keyframes pulseTravelUser1 {
+  0% { transform: translate(15px, 16px); opacity: 0; }
+  15% { opacity: 1; }
+  35% { transform: translate(75px, 38px); }
+  65% { transform: translate(175px, 38px); }
+  85% { transform: translate(195px, 16px); opacity: 1; }
+  100% { transform: translate(230px, 16px); opacity: 0; }
+}
+
+@keyframes pulseTravelUser2 {
+  0% { transform: translate(35px, 72px); opacity: 0; }
+  15% { opacity: 1; }
+  45% { transform: translate(115px, 72px); }
+  70% { transform: translate(135px, 52px); opacity: 1; }
+  90% { transform: translate(215px, 52px); opacity: 0.8; }
+  100% { transform: translate(230px, 52px); opacity: 0; }
+}
+
+.side-support-icon.c8-support-icon {
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  background: rgba(14, 165, 233, 0.25);
-  border: 1px solid rgba(56, 189, 248, 0.4);
+  background: rgba(168, 85, 247, 0.22);
+  border: 1px solid rgba(168, 85, 247, 0.5);
+  box-shadow: 0 0 16px rgba(168, 85, 247, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 17px;
   animation: floatingFloat 3.5s ease-in-out infinite;
-  box-shadow: 0 0 16px rgba(56, 189, 248, 0.4);
   flex-shrink: 0;
 }
-.side-support-body {
-  flex: 1;
-  min-width: 0;
-}
+
 .side-support-title {
   font-size: 12.5px;
   font-weight: 800;
-  color: #7dd3fc;
+  color: #c084fc;
   line-height: 1.25;
 }
+
 .side-support-subtitle {
   font-size: 10.5px;
-  color: #94a3b8;
+  color: #cbd5e1;
   margin-top: 1px;
 }
 
@@ -1040,17 +1111,48 @@ label{display:block;font-size:12.5px;color:var(--mute);margin:0 0 5px;font-weigh
   height: 38px;
   flex-shrink: 0;
 }
+
 .side-user-avatar-orbit {
   position: absolute;
-  inset: -3px;
+  inset: -4px;
   border-radius: 50%;
-  border: 1.5px dashed rgba(56, 189, 248, 0.6);
-  animation: spinSlow 12s linear infinite;
+  border: 1.5px solid rgba(168, 85, 247, 0.7);
+  animation: pingRadar 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;
   pointer-events: none;
 }
 
-.side.is-mini .c5-canvas,
-.side.is-mini .c5-aurora-glow {
+@keyframes pingRadar {
+  0% { transform: scale(0.9); opacity: 0.95; }
+  100% { transform: scale(1.65); opacity: 0; }
+}
+
+@keyframes floatingFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.c8-user .who-actions a {
+  background: rgba(168, 85, 247, 0.12);
+  border: 1px solid rgba(168, 85, 247, 0.32);
+  color: #e9d5ff;
+}
+
+.c8-user .who-actions a:hover {
+  background: rgba(168, 85, 247, 0.28);
+  border-color: #c084fc;
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(168, 85, 247, 0.45);
+}
+
+.c8-user .who-actions a#out:hover {
+  background: rgba(239, 68, 68, 0.22);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #fca5a5;
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.4);
+}
+
+.side.is-mini .c8-circuit-svg,
+.side.is-mini .c8-energy-pulse {
   display: none !important;
 }
 
@@ -3428,23 +3530,33 @@ body.mobile-sidebar-open {
     </div>
     <div id="nav"></div>
     <div class="side-footer">
-      <div class="side-support-banner c5-support" id="supportBtn" title="Report an issue or bug with screenshot &amp; server.log">
-        <div class="c5-aurora-bg"></div>
-        <div class="c5-aurora-glow"></div>
-        <canvas id="sideSupportMeshCanvas" class="c5-canvas"></canvas>
+      <div class="side-support-banner c8-support" id="supportBtn" title="Report an issue or bug with screenshot &amp; server.log">
+        <svg class="c8-circuit-svg" viewBox="0 0 240 60" preserveAspectRatio="none">
+          <path class="c8-wire-dash" d="M10,30 L50,30 L70,10 L150,10 L170,30 L230,30" stroke="#a855f7" stroke-width="1.5" fill="none" />
+          <path class="c8-wire-cyan" d="M20,50 L80,50 L100,40 L190,40" stroke="#38bdf8" stroke-width="1.2" fill="none" />
+          <circle cx="50" cy="30" r="3" fill="#a855f7" class="c8-synapse-node" />
+          <circle cx="170" cy="30" r="3" fill="#38bdf8" class="c8-synapse-node" />
+        </svg>
+        <div class="c8-energy-pulse c8-pulse-support"></div>
         <div class="side-support-content" style="position:relative;z-index:2;display:flex;align-items:center;gap:11px;width:100%">
-          <div class="side-support-icon c5-lifebuoy">🛟</div>
+          <div class="side-support-icon c8-support-icon">🛟</div>
           <div class="side-support-body">
             <div class="side-support-title">Support &amp; Bug Report</div>
             <div class="side-support-subtitle">Email admin with server.log</div>
           </div>
         </div>
       </div>
-      <div class="side-user-card c5-user" id="sideUserCard">
-        <div class="c5-aurora-bg" style="animation-duration:10s"></div>
-        <div class="c5-aurora-glow" style="right:0;left:auto;background:radial-gradient(ellipse, rgba(168,85,247,0.35) 0%, rgba(236,72,153,0.2) 60%, transparent 80%)"></div>
-        <canvas id="sideUserMeshCanvas" class="c5-canvas"></canvas>
-        <div class="c5-content" style="position:relative;z-index:2;display:flex;flex-direction:column;gap:8px;width:100%">
+      <div class="side-user-card c8-user" id="sideUserCard">
+        <svg class="c8-circuit-svg" viewBox="0 0 240 100" preserveAspectRatio="none">
+          <path class="c8-wire-purple" d="M15,20 L60,20 L80,45 L180,45 L200,20 L235,20" stroke="#a855f7" stroke-width="1.5" fill="none" />
+          <path class="c8-wire-pink" d="M40,78 L120,78 L140,58 L220,58" stroke="#ec4899" stroke-width="1.2" fill="none" />
+          <circle cx="80" cy="45" r="3" fill="#a855f7" class="c8-synapse-node" />
+          <circle cx="180" cy="45" r="3" fill="#c084fc" class="c8-synapse-node" />
+          <circle cx="140" cy="58" r="2.5" fill="#ec4899" class="c8-synapse-node" />
+        </svg>
+        <div class="c8-energy-pulse c8-pulse-user-1"></div>
+        <div class="c8-energy-pulse c8-pulse-user-2"></div>
+        <div class="c8-content" style="position:relative;z-index:2;display:flex;flex-direction:column;gap:8px;width:100%">
           <div id="who"></div>
           <div id="whoActiveRow"></div>
           <div class="who-actions">
@@ -18096,180 +18208,16 @@ window.addEventListener('resize', syncInvMeshSize);
 
 
 // ==========================================
-// SIDEBAR BOTTOM: CONCEPT 5 - AURORA BOREALIS & COSMIC EMBERS
+// SIDEBAR BOTTOM: CONCEPT 8 - NEURAL SYNAPSE & CIRCUIT PULSE
 // ==========================================
-let auroraEmbersLoop = null;
-
-function initSideAuroraEmbers() {
-  const sc = document.getElementById('sideSupportMeshCanvas');
+// Hardware-accelerated SVG circuit pathways, traveling energy pulses, and synaptic radar rings.
+function initSideNeuralSynapse() {
   const sb = document.getElementById('supportBtn');
-  const uc = document.getElementById('sideUserMeshCanvas');
   const ub = document.getElementById('sideUserCard');
-
-  if (!sc || !sb || !uc || !ub) return;
-
-  const sCtx = sc.getContext('2d');
-  const uCtx = uc.getContext('2d');
-  if (!sCtx || !uCtx) return;
-
-  function syncSizes() {
-    if (sb.clientWidth > 10 && sc.width !== sb.clientWidth) sc.width = sb.clientWidth;
-    if (sb.clientHeight > 10 && sc.height !== sb.clientHeight) sc.height = sb.clientHeight;
-    if (ub.clientWidth > 10 && uc.width !== ub.clientWidth) uc.width = ub.clientWidth;
-    if (ub.clientHeight > 10 && uc.height !== ub.clientHeight) uc.height = ub.clientHeight;
-  }
-  syncSizes();
-
-  let sMouse = { x: null, y: null };
-  let uMouse = { x: null, y: null };
-
-  sb.onmousemove = (e) => {
-    const r = sc.getBoundingClientRect();
-    sMouse.x = e.clientX - r.left;
-    sMouse.y = e.clientY - r.top;
-  };
-  sb.onmouseleave = () => { sMouse.x = null; sMouse.y = null; };
-
-  ub.onmousemove = (e) => {
-    const r = uc.getBoundingClientRect();
-    uMouse.x = e.clientX - r.left;
-    uMouse.y = e.clientY - r.top;
-  };
-  ub.onmouseleave = () => { uMouse.x = null; uMouse.y = null; };
-
-  const supportEmbers = [];
-  for (let i = 0; i < 18; i++) {
-    supportEmbers.push({
-      x: Math.random() * (sc.width || 240),
-      y: Math.random() * (sc.height || 55),
-      r: 1.0 + Math.random() * 2.2,
-      vy: -0.35 - Math.random() * 0.45,
-      vx: (Math.random() - 0.5) * 0.35,
-      alpha: 0.25 + Math.random() * 0.65,
-      color: Math.random() > 0.4 ? '#38bdf8' : '#22d3ee'
-    });
-  }
-
-  const userEmbers = [];
-  for (let i = 0; i < 20; i++) {
-    userEmbers.push({
-      x: Math.random() * (uc.width || 240),
-      y: Math.random() * (uc.height || 95),
-      r: 1.0 + Math.random() * 2.4,
-      vy: -0.35 - Math.random() * 0.45,
-      vx: (Math.random() - 0.5) * 0.35,
-      alpha: 0.25 + Math.random() * 0.65,
-      color: Math.random() > 0.5 ? '#a855f7' : '#ec4899'
-    });
-  }
-
-  if (auroraEmbersLoop) cancelAnimationFrame(auroraEmbersLoop);
-
-  function renderAurora() {
-    try {
-      syncSizes();
-
-      // 1. Support Banner Cosmic Embers
-      const sw = sc.width;
-      const sh = sc.height;
-      if (sw > 20 && sh > 20) {
-        sCtx.clearRect(0, 0, sw, sh);
-        supportEmbers.forEach(p => {
-          p.y += p.vy;
-          p.x += p.vx;
-          if (p.y < 0) { p.y = sh; p.x = Math.random() * sw; }
-          if (p.x < 0) p.x = sw;
-          if (p.x > sw) p.x = 0;
-
-          if (sMouse.x !== null && !isNaN(sMouse.x)) {
-            const dx = p.x - sMouse.x;
-            const dy = p.y - sMouse.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < 45 && dist > 1) {
-              const ang = Math.atan2(dy, dx);
-              p.x += Math.cos(ang) * 1.5;
-              p.y += Math.sin(ang) * 1.5;
-            }
-          }
-
-          sCtx.save();
-          sCtx.globalAlpha = p.alpha;
-          sCtx.fillStyle = p.color;
-          sCtx.shadowColor = p.color;
-          sCtx.shadowBlur = 6;
-          sCtx.beginPath();
-          sCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-          sCtx.fill();
-          sCtx.restore();
-        });
-      }
-
-      // 2. User Card Cosmic Embers
-      const uw = uc.width;
-      const uh = uc.height;
-      if (uw > 20 && uh > 20) {
-        uCtx.clearRect(0, 0, uw, uh);
-        userEmbers.forEach(p => {
-          p.y += p.vy;
-          p.x += p.vx;
-          if (p.y < 0) { p.y = uh; p.x = Math.random() * uw; }
-          if (p.x < 0) p.x = uw;
-          if (p.x > uw) p.x = 0;
-
-          if (uMouse.x !== null && !isNaN(uMouse.x)) {
-            const dx = p.x - uMouse.x;
-            const dy = p.y - uMouse.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < 45 && dist > 1) {
-              const ang = Math.atan2(dy, dx);
-              p.x += Math.cos(ang) * 1.5;
-              p.y += Math.sin(ang) * 1.5;
-            }
-          }
-
-          uCtx.save();
-          uCtx.globalAlpha = p.alpha;
-          uCtx.fillStyle = p.color;
-          uCtx.shadowColor = p.color;
-          uCtx.shadowBlur = 7;
-          uCtx.beginPath();
-          uCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-          uCtx.fill();
-          uCtx.restore();
-        });
-      }
-    } catch (err) {
-      console.warn('Aurora render warn:', err);
-    } finally {
-      auroraEmbersLoop = requestAnimationFrame(renderAurora);
-    }
-  }
-
-  auroraEmbersLoop = requestAnimationFrame(renderAurora);
+  if (sb && !sb.classList.contains('c8-support')) sb.classList.add('c8-support');
+  if (ub && !ub.classList.contains('c8-user')) ub.classList.add('c8-user');
 }
-window.initSideAuroraEmbers = initSideAuroraEmbers;
-
-// Heartbeat & lifecycle for Aurora Embers
-setInterval(() => {
-  const sc = document.getElementById('sideSupportMeshCanvas');
-  const uc = document.getElementById('sideUserMeshCanvas');
-  if (sc && uc && sc.isConnected && uc.isConnected && !auroraEmbersLoop) {
-    initSideAuroraEmbers();
-  }
-}, 300);
-
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') initSideAuroraEmbers();
-});
-window.addEventListener('focus', initSideAuroraEmbers);
-window.addEventListener('resize', () => {
-  const sc = document.getElementById('sideSupportMeshCanvas');
-  const uc = document.getElementById('sideUserMeshCanvas');
-  const sb = document.getElementById('supportBtn');
-  const ub = document.getElementById('sideUserCard');
-  if (sc && sb && sb.clientWidth > 10) sc.width = sb.clientWidth;
-  if (uc && ub && ub.clientWidth > 10) uc.width = ub.clientWidth;
-});
-setTimeout(initSideAuroraEmbers, 100);
+window.initSideNeuralSynapse = initSideNeuralSynapse;
+setTimeout(initSideNeuralSynapse, 50);
 
 </script></body></html>
