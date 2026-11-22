@@ -2644,10 +2644,7 @@ async function api(req, res, parts) {
   if (a === 'leadgen') {
     const uName = String(user.username || '').toLowerCase();
     const uDes = String(user.designation || '').toLowerCase();
-    const isOpsAdmin = uName === 'operationsadmin' || uDes === 'operations admin';
-    if (!isOpsAdmin) {
-      throw fail(403, 'Access Restricted: AI Lead Generation is currently only enabled for OperationsAdmin testing.');
-    }
+    const isOpsAdmin = uName === 'operationsadmin' || uDes === 'operations admin' || user.role === 'admin';
 
     const cfg = leadGenCfg();
 
@@ -2665,6 +2662,7 @@ async function api(req, res, parts) {
         });
       }
       if (m === 'POST') {
+        if (!isOpsAdmin) throw fail(403, 'Permission denied: Gemini API configuration can only be modified by OperationsAdmin or Administrator.');
         const b = await body(req);
         const newKey = String(b.apiKey || '').trim();
         const newModel = String(b.model || 'gemini-3.5-flash').trim();
@@ -2684,6 +2682,7 @@ async function api(req, res, parts) {
     }
 
     if (id === 'test' && m === 'POST') {
+      if (!isOpsAdmin) throw fail(403, 'Permission denied: Testing connection is restricted to OperationsAdmin or Administrator.');
       const b = await body(req);
       const keyToTest = (b.apiKey || cfg.geminiApiKey || '').trim();
       if (!keyToTest) throw fail(400, 'Please enter a Gemini API Key first');

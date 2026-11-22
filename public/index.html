@@ -6394,8 +6394,7 @@ function renderNav(activeTab) {
         return me.role === 'admin' || isOpsExec || canHr;
       }
       if (item[0] === 'leadgen') {
-        const isOpsAdmin = (me?.username || '').toLowerCase() === 'operationsadmin' || normalizeDesignation(me?.designation) === 'operations admin';
-        return isOpsAdmin;
+        return true;
       }
       if (item[0] === 'weeklybackup' && me.role !== 'admin' && !isOpsExec) return false;
       if (item[3] && me.role !== 'admin' && !isOpsExec) return false;
@@ -18202,11 +18201,8 @@ setTimeout(initSideExecutivePro, 50);
 // ============================================================================
 async function leadGenView(activeSubTab = 'crm') {
   const isOpsAdmin = (me?.username || '').toLowerCase() === 'operationsadmin' || 
-                     normalizeDesignation(me?.designation) === 'operations admin';
-  if (!isOpsAdmin) {
-    say('Access Restricted: AI Lead Generation is currently only enabled for OperationsAdmin testing.', 0);
-    return go('dash');
-  }
+                     normalizeDesignation(me?.designation) === 'operations admin' ||
+                     me?.role === 'admin';
 
   const view = $('#view');
   if (!view) return;
@@ -18251,7 +18247,7 @@ async function leadGenView(activeSubTab = 'crm') {
           <div style="position:relative;z-index:2;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px">
             <div>
               <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(99,102,241,0.25);border:1px solid rgba(129,140,248,0.4);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;color:#c7d2fe;margin-bottom:8px;">
-                <span>🔒 OperationsAdmin CRM Command</span> &bull; <span>Google Gemini Pro</span> &bull; <span>Smart Deduplication Active</span>
+                <span>⚡ Amigo B2B Customer Discovery &amp; Sales CRM</span> &bull; <span>Google Gemini Pro</span> &bull; <span>Smart Deduplication Active</span>
               </div>
               <h1 style="margin:0 0 4px;font-size:23px;font-weight:700;color:#f8fafc;display:flex;align-items:center;gap:10px">
                 <span>🎯 Amigo B2B Customer Discovery &amp; Sales CRM</span>
@@ -18262,15 +18258,18 @@ async function leadGenView(activeSubTab = 'crm') {
             </div>
 
             <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-              <button class="btn ghost sm" id="btnToggleSettings" style="background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.2);display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:8px">
-                <span>⚙️ Gemini Pro Settings</span>
-                <span style="font-size:10px;padding:2px 6px;border-radius:10px;background:#10b981;color:#fff">Configured</span>
-              </button>
+              ${isOpsAdmin ? `
+                <button class="btn ghost sm" id="btnToggleSettings" style="background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.2);display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:8px">
+                  <span>⚙️ Gemini Pro Settings</span>
+                  <span style="font-size:10px;padding:2px 6px;border-radius:10px;background:#10b981;color:#fff">Configured</span>
+                </button>
+              ` : ''}
             </div>
           </div>
         </div>
 
-        <!-- Gemini Settings Box (Collapsible) -->
+        <!-- Gemini Settings Box (Collapsible - Only accessible to OperationsAdmin / Admins) -->
+        ${isOpsAdmin ? `
         <div id="settingsBox" class="card" style="display:none;margin-bottom:18px;padding:18px 22px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:12px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
             <div>
@@ -18308,6 +18307,7 @@ async function leadGenView(activeSubTab = 'crm') {
           </div>
           <div id="settingsFeedback" style="margin-top:10px;font-size:12px;display:none"></div>
         </div>
+        ` : ''}
 
         <!-- KPI Metric Summary Bar -->
         <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(170px, 1fr));gap:12px;margin-bottom:18px">
