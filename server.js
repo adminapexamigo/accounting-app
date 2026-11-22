@@ -3110,28 +3110,82 @@ Return STRICTLY a JSON array of ${count} company objects with the keys above.`;
 // ---------- Shared Sync Meta & Real-Time Daily Database Backup Helpers ----------
 // (readSyncMeta & writeSyncMeta defined in outer scope)
 
+const SUPABASE_ALL_TABLES = [
+  'activity_logs',
+  'app_settings',
+  'clients',
+  'docs',
+  'invoices',
+  'leaves',
+  'ledgers',
+  'logins',
+  'products',
+  'purchases',
+  'salaryslips',
+  'sheets',
+  'users',
+  'vouchers',
+  'workupdates'
+];
+
+function rowsToPostgresCsv(rows, fields) {
+  if (!rows || !rows.length) {
+    return (fields ? fields.map(f => f.name).join(',') : '') + '\n';
+  }
+  const colNames = fields ? fields.map(f => f.name) : Object.keys(rows[0]);
+  const header = colNames.join(',');
+  const bodyLines = rows.map(r => colNames.map(c => {
+    let val = r[c];
+    if (val === null || val === undefined) return '';
+    if (typeof val === 'object') val = JSON.stringify(val);
+    val = String(val);
+    return /[",\n\r]/.test(val) ? '"' + val.replace(/"/g, '""') + '"' : val;
+  }).join(','));
+  return [header, ...bodyLines].join('\n') + '\n';
+}
+
 async function generateRealtimeDbBackupZip() {
-  if (db.isDbActive()) {
+  const fileMap = {};
+  const stats = {};
+  const fullDump = {
+    exportedAt: new Date().toISOString(),
+    source: 'Supabase PostgreSQL (schema: public)',
+    totalTables: SUPABASE_ALL_TABLES.length,
+    tables: {}
+  };
+
+  if (db.isDbActive() && db.pool) {
     try {
       await db.refreshCache(true);
+      // Query every single one of the 15 Supabase PostgreSQL tables directly
+      for (const t of SUPABASE_ALL_TABLES) {
+        try {
+          const res = await db.pool.query('SELECT * FROM public."' + t + '"');
+          stats[t] = res.rows.length;
+          fullDump.tables[t] = res.rows;
+          fileMap[t + '.csv'] = rowsToPostgresCsv(res.rows, res.fields);
+          fileMap[t + '.json'] = JSON.stringify(res.rows, null, 2);
+        } catch (tableErr) {
+          console.error(`Error querying Supabase table ${t}:`, tableErr.message);
+        }
+      }
+      fileMap['supabase_full_dump.json'] = JSON.stringify(fullDump, null, 2);
     } catch (e) {
-      console.error('Real-time database refresh error:', e.message);
+      console.error('Supabase real-time extraction error:', e.message);
     }
   }
 
-  const fileMap = {};
-  const stats = {};
-
-  // 1. Export all relational tables defined in SCHEMA
-  const tables = Object.keys(SCHEMA);
-  for (const t of tables) {
-    const list = readTable(t);
-    stats[t] = list.length;
-    const csvContent = [SCHEMA[t].join(',')].concat(list.map(o => SCHEMA[t].map(k => esc(o[k])).join(','))).join('\n') + '\n';
-    fileMap[t + '.csv'] = csvContent;
+  // Fallback or offline support if DB pool wasn't available
+  if (Object.keys(fileMap).length === 0) {
+    for (const t of Object.keys(SCHEMA)) {
+      const list = readTable(t);
+      stats[t] = list.length;
+      fileMap[t + '.csv'] = [SCHEMA[t].join(',')].concat(list.map(o => SCHEMA[t].map(k => esc(o[k])).join(','))).join('\n') + '\n';
+      fileMap[t + '.json'] = JSON.stringify(list, null, 2);
+    }
   }
 
-  // 2. Export all JSON configuration & dynamic stores
+  // Also include application-level JSON settings for complete 1-click restore
   const jsonKeys = ['company', 'leadgen', 'crm_leads', 'seen_leads', 'mail', 'monitoring', 'catalogue', 'cataloguemails', 'sync_meta'];
   for (const k of jsonKeys) {
     let val = null;
@@ -3149,7 +3203,7 @@ async function generateRealtimeDbBackupZip() {
     }
   }
 
-  // 3. Activity logs (if active)
+  // Activity logs
   if (db.isDbActive()) {
     try {
       const act = db.getCachedActivity();
@@ -3159,7 +3213,7 @@ async function generateRealtimeDbBackupZip() {
     } catch {}
   }
 
-  // 4. Create zip buffer
+  // Create zip buffer
   const zipBuf = createZip(fileMap);
   const todayStr = ldate();
   const timestamp = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'full', timeStyle: 'medium' });
@@ -3234,30 +3288,60 @@ To restore or inspect: Download the attachment, log into Amigo ERP Admin, go to 
             <div style="font-size:12px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">
               📊 Live Database Table Counts:
             </div>
-            <table style="width:100%;border-collapse:collapse;font-size:13px">
-              <tr>
-                <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">🧾 <b>Tax Invoices:</b></td>
-                <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.invoices || 0}</td>
-                <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">📑 <b>Quotations &amp; Docs:</b></td>
-                <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.docs || 0}</td>
+            <table style="width:100%;border-collapse:collapse;font-size:12.5px">
+              <tr style="background:#f1f5f9;border-bottom:2px solid #cbd5e1">
+                <th style="padding:6px 10px;text-align:left;color:#334155">Supabase Table</th>
+                <th style="padding:6px 10px;text-align:right;color:#334155">Live Rows</th>
+                <th style="padding:6px 10px;text-align:left;color:#334155">Supabase Table</th>
+                <th style="padding:6px 10px;text-align:right;color:#334155">Live Rows</th>
               </tr>
               <tr>
-                <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">👥 <b>Clients &amp; Parties:</b></td>
-                <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.clients || 0}</td>
-                <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">🏷️ <b>Products &amp; Spares:</b></td>
-                <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.products || 0}</td>
+                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">🧾 <code>invoices</code></td>
+                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.invoices ?? 0}</td>
+                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">📑 <code>docs</code></td>
+                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.docs ?? 0}</td>
               </tr>
               <tr>
-                <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">🏛️ <b>Ledgers &amp; Accounts:</b></td>
-                <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.ledgers || 0}</td>
-                <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">🎫 <b>Vouchers &amp; Entries:</b></td>
-                <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.vouchers || 0}</td>
+                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">👥 <code>clients</code></td>
+                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.clients ?? 0}</td>
+                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">🏷️ <code>products</code></td>
+                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.products ?? 0}</td>
               </tr>
               <tr>
-                <td style="padding:6px 10px;color:#1e293b">🎯 <b>CRM Leads Active:</b></td>
-                <td style="padding:6px 10px;font-weight:700;color:#059669;text-align:right">${crmCount}</td>
-                <td style="padding:6px 10px;color:#1e293b">✍️ <b>Work Updates Logged:</b></td>
-                <td style="padding:6px 10px;font-weight:700;color:#059669;text-align:right">${stats.workupdates || 0}</td>
+                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">🏛️ <code>ledgers</code></td>
+                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.ledgers ?? 0}</td>
+                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">🛒 <code>purchases</code></td>
+                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.purchases ?? 0}</td>
+              </tr>
+              <tr>
+                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">👤 <code>users</code></td>
+                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.users ?? 0}</td>
+                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">⏱️ <code>logins</code></td>
+                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.logins ?? 0}</td>
+              </tr>
+              <tr>
+                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">✍️ <code>workupdates</code></td>
+                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.workupdates ?? 0}</td>
+                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">⏱️ <code>activity_logs</code></td>
+                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.activity_logs ?? 0}</td>
+              </tr>
+              <tr>
+                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">⚙️ <code>app_settings</code></td>
+                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.app_settings ?? 0}</td>
+                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">🏖️ <code>leaves</code></td>
+                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.leaves ?? 0}</td>
+              </tr>
+              <tr>
+                <td style="padding:5px 10px;color:#1e293b">🎫 <code>vouchers</code></td>
+                <td style="padding:5px 10px;font-weight:700;color:#0b6fc4;text-align:right">${stats.vouchers ?? 0}</td>
+                <td style="padding:5px 10px;color:#1e293b">💵 <code>salaryslips</code></td>
+                <td style="padding:5px 10px;font-weight:700;color:#0b6fc4;text-align:right">${stats.salaryslips ?? 0}</td>
+              </tr>
+              <tr>
+                <td style="padding:5px 10px;color:#1e293b">📗 <code>sheets</code></td>
+                <td style="padding:5px 10px;font-weight:700;color:#0b6fc4;text-align:right">${stats.sheets ?? 0}</td>
+                <td style="padding:5px 10px;color:#1e293b">🎯 <b>CRM Leads Queue</b></td>
+                <td style="padding:5px 10px;font-weight:700;color:#059669;text-align:right">${crmCount}</td>
               </tr>
             </table>
           </div>
