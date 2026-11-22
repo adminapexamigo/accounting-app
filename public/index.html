@@ -6265,6 +6265,7 @@ const MENU_GROUPS = [
     icon: '✍️',
     items: [
       ['workupdates', 'Daily Work Update', '✍️'],
+      ['leadgen', 'AI Lead Generator (B2B)', '🎯'],
       ['weeklybackup', 'Weekly Backup & Email', '📤'],
       ['support', 'Support & Report Bug', '🛟']
     ]
@@ -6391,6 +6392,10 @@ function renderNav(activeTab) {
         const eff = getEffectivePermissions(me);
         const canHr = !!(eff.hr?.manage || eff.hr?.view);
         return me.role === 'admin' || isOpsExec || canHr;
+      }
+      if (item[0] === 'leadgen') {
+        const isOpsAdmin = (me?.username || '').toLowerCase() === 'operationsadmin' || normalizeDesignation(me?.designation) === 'operations admin';
+        return isOpsAdmin;
       }
       if (item[0] === 'weeklybackup' && me.role !== 'admin' && !isOpsExec) return false;
       if (item[3] && me.role !== 'admin' && !isOpsExec) return false;
@@ -6678,6 +6683,7 @@ function go(t) {
   if (viewEl && !hasCached && !['support'].includes(t)) {
     const titles = {
       dash: 'Financial Dashboard',
+      leadgen: 'AI B2B Lead Generator',
       invoices: 'Tax Invoices',
       purchases: 'Purchase Bills',
       clients: 'Client Directory',
@@ -6719,7 +6725,7 @@ function go(t) {
     `;
   }
 
-  ({dash,invoices,settings,ai:aiSettingsView,workupdates,logins,mail,monitoring,sheets:sheetsView,tally:tallyView,sync:syncView,weeklybackup:()=>syncView(true),quotation:()=>docs('quotation'),pi:()=>docs('pi'),po:()=>docs('po'),support:supportView,employees:employeesView,payroll:payrollView,leaves:leavesView,myprofile:myProfileView,mypayslips:myPayslipsView,myleaves:myLeavesView,catalogue:catalogueView,sendprofile:sendProfileView}[t]||(()=>crud(t)))(t).catch?.(e=>say(e.message));
+  ({dash,invoices,settings,ai:aiSettingsView,leadgen:leadGenView,workupdates,logins,mail,monitoring,sheets:sheetsView,tally:tallyView,sync:syncView,weeklybackup:()=>syncView(true),quotation:()=>docs('quotation'),pi:()=>docs('pi'),po:()=>docs('po'),support:supportView,employees:employeesView,payroll:payrollView,leaves:leavesView,myprofile:myProfileView,mypayslips:myPayslipsView,myleaves:myLeavesView,catalogue:catalogueView,sendprofile:sendProfileView}[t]||(()=>crud(t)))(t).catch?.(e=>say(e.message));
 }
 
 const load = async (t, forceFresh = false) => {
@@ -18188,5 +18194,522 @@ function initSideExecutivePro() {
 }
 window.initSideExecutivePro = initSideExecutivePro;
 setTimeout(initSideExecutivePro, 50);
+
+
+
+// ============================================================================
+// AI B2B Lead Generator View (Restricted to OperationsAdmin Testing)
+// ============================================================================
+async function leadGenView() {
+  const isOpsAdmin = (me?.username || '').toLowerCase() === 'operationsadmin' || 
+                     normalizeDesignation(me?.designation) === 'operations admin';
+  if (!isOpsAdmin) {
+    say('Access Restricted: AI Lead Generation is currently only enabled for OperationsAdmin testing.', 0);
+    return go('dash');
+  }
+
+  const view = $('#view');
+  if (!view) return;
+
+  // Initial loading state
+  view.innerHTML = `
+    <div style="padding:40px;text-align:center;color:#64748b;">
+      <div class="view-spinner-ring" style="margin:0 auto 16px;"></div>
+      <div style="font-size:16px;font-weight:700;color:#1e293b;">Loading AI Lead Generator Lab...</div>
+      <div style="font-size:12px;margin-top:4px;">Fetching product catalogue &amp; Gemini settings</div>
+    </div>
+  `;
+
+  // Fetch products and current leadgen settings
+  let products = [];
+  let settings = { configured: false, maskedKey: '', model: 'gemini-1.5-pro' };
+
+  try {
+    const [pList, sData] = await Promise.all([
+      load('products').catch(() => []),
+      api('GET', 'leadgen/settings').catch(() => ({ configured: false, maskedKey: '', model: 'gemini-1.5-pro' }))
+    ]);
+    products = pList || [];
+    settings = sData || settings;
+  } catch (err) {
+    console.warn('Error loading initial leadgen data:', err);
+  }
+
+  // Common industrial targets for Amigo Enterprises
+  const defaultIndustries = [
+    'Thermal Power Plants (Coal / Lignite / Biomass)',
+    'Cement Manufacturing & Grinding Units',
+    'Integrated Steel Plants & Sponge Iron Units',
+    'Chemical, Petrochemical & Fertilizer Plants',
+    'Sugar Mills & Cogeneration Power Units',
+    'Pulp & Paper Manufacturing Mills',
+    'Boiler & Pollution Control Fabricators / EPC Contractors'
+  ];
+
+  const defaultLocations = [
+    'Maharashtra (Pune, Nagpur, Chandrapur, Solapur)',
+    'Gujarat (Surat, Vadodara, Bharuch, Ahmedabad)',
+    'Chhattisgarh & Odisha (Raipur, Bilaspur, Jharsuguda)',
+    'Karnataka & Andhra Pradesh (Bellary, Visakhapatnam)',
+    'Pan-India (Major Heavy Industrial Belts)'
+  ];
+
+  view.innerHTML = `
+    <div style="max-width:1300px;margin:0 auto;padding-bottom:50px">
+      <!-- Hero Header -->
+      <div class="hud-hero" style="margin-bottom:20px;padding:24px 28px;background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%);border-radius:16px;color:#fff;position:relative;overflow:hidden;box-shadow:0 10px 25px -5px rgba(0,0,0,0.25);">
+        <div style="position:relative;z-index:2;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">
+          <div>
+            <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(99,102,241,0.25);border:1px solid rgba(129,140,248,0.4);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;color:#c7d2fe;margin-bottom:10px;">
+              <span>🔒 OperationsAdmin Experimental Lab</span> &bull; <span>Google Gemini Pro</span>
+            </div>
+            <h1 style="margin:0 0 6px;font-size:24px;font-weight:700;color:#f8fafc;display:flex;align-items:center;gap:10px">
+              <span>🎯 AI B2B Lead Generator &amp; Customer Discovery</span>
+            </h1>
+            <div style="font-size:13px;color:#94a3b8;max-width:750px;line-height:1.5">
+              Discover active industrial plants, factories, and procurement managers in India who need Amigo Enterprises' ESP spares, insulators, controllers, and heating elements with verified contact details.
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <button class="btn ghost sm" id="btnToggleSettings" style="background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.2);display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px">
+              <span>⚙️ Gemini Pro Settings</span>
+              <span id="cfgStatusBadge" style="font-size:10px;padding:2px 6px;border-radius:10px;background:${settings.configured ? '#10b981' : '#f59e0b'};color:#fff">${settings.configured ? 'Configured' : 'Key Needed'}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Drawer / Modal Card -->
+      <div id="settingsBox" class="card" style="display:${settings.configured ? 'none' : 'block'};margin-bottom:20px;padding:20px 24px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div>
+            <h3 style="margin:0 0 4px;font-size:16px;color:#0f172a;display:flex;align-items:center;gap:8px">
+              <span>✨ Google Gemini API Key Configuration</span>
+            </h3>
+            <div style="font-size:12px;color:#64748b">
+              Your key powers the real-time Google search grounding and structured contact extraction.
+            </div>
+          </div>
+          <a href="https://aistudio.google.com/app/apikey" target="_blank" style="font-size:12px;color:#4f46e5;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:4px">
+            Get Free Gemini API Key &nearr;
+          </a>
+        </div>
+        
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:16px;align-items:end">
+          <div>
+            <label style="display:block;font-size:12px;font-weight:600;color:#334155;margin-bottom:6px">Gemini API Key</label>
+            <div style="position:relative">
+              <input type="password" id="txtGeminiKey" class="inp" placeholder="${settings.configured ? settings.maskedKey : 'Paste AI Studio Key (AIzaSy...)'}" style="width:100%;padding-right:40px;font-family:monospace" />
+              <button type="button" id="btnToggleKeyEye" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#64748b">👁️</button>
+            </div>
+          </div>
+
+          <div>
+            <label style="display:block;font-size:12px;font-weight:600;color:#334155;margin-bottom:6px">Gemini Model</label>
+            <select id="selGeminiModel" class="inp" style="width:100%">
+              <option value="gemini-3.5-flash" ${settings.model === 'gemini-3.5-flash' ? 'selected' : ''}>gemini-3.5-flash (Recommended - Fast &amp; High Accuracy)</option>
+              <option value="gemini-3.8-flash" ${settings.model === 'gemini-3.8-flash' ? 'selected' : ''}>gemini-3.8-flash (Latest Flash Model)</option>
+              <option value="gemini-3.7-flash" ${settings.model === 'gemini-3.7-flash' ? 'selected' : ''}>gemini-3.7-flash (Hybrid Reasoning &amp; Speed)</option>
+              <option value="gemini-3.1-pro-preview" ${settings.model === 'gemini-3.1-pro-preview' ? 'selected' : ''}>gemini-3.1-pro-preview (Deep Thinking Pro)</option>
+            </select>
+          </div>
+
+          <div style="display:flex;gap:10px">
+            <button class="btn" id="btnSaveKey" style="background:#0b6fc4;color:#fff;border-radius:8px;padding:9px 18px">💾 Save Key</button>
+            <button class="btn ghost" id="btnTestKey" style="border-radius:8px;padding:9px 14px">⚡ Test Connection</button>
+          </div>
+        </div>
+        <div id="settingsFeedback" style="margin-top:12px;font-size:13px;display:none"></div>
+      </div>
+
+      <!-- Lead Search Formulation Panel -->
+      <div class="card" style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:24px;box-shadow:0 4px 12px rgba(0,0,0,0.03);margin-bottom:24px">
+        <h2 style="margin:0 0 16px;font-size:17px;font-weight:700;color:#0f172a;display:flex;align-items:center;gap:8px">
+          <span>🔍 Formulate Industrial Customer Search</span>
+        </h2>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:18px;margin-bottom:18px">
+          <!-- Product Selector -->
+          <div>
+            <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:6px">Select Amigo Product</label>
+            <select id="selLeadProduct" class="inp" style="width:100%;font-size:13px">
+              ${products.map(p => `<option value="${h(p.name)}">${h(p.name)} ${p.hsn ? ' (HSN: ' + p.hsn + ')' : ''}</option>`).join('')}
+              <option value="__custom__">➕ Type Custom Product or Category...</option>
+            </select>
+            <input type="text" id="txtCustomProduct" class="inp" placeholder="e.g. ESP Discharge Electrode, Ceramic Insulator, Rapping Hammer" style="width:100%;margin-top:8px;display:none" />
+          </div>
+
+          <!-- Target Industry -->
+          <div>
+            <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:6px">Target Industrial Sector</label>
+            <select id="selIndustry" class="inp" style="width:100%;font-size:13px">
+              ${defaultIndustries.map(ind => `<option value="${h(ind)}">${h(ind)}</option>`).join('')}
+              <option value="All Heavy Industrial Manufacturing Units">All Heavy Industrial Sectors</option>
+            </select>
+          </div>
+
+          <!-- Target Location -->
+          <div>
+            <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:6px">Geographic Location</label>
+            <input type="text" id="txtLocation" class="inp" value="Maharashtra (Pune, Nagpur, Chandrapur)" list="locSuggestions" style="width:100%;font-size:13px" />
+            <datalist id="locSuggestions">
+              ${defaultLocations.map(loc => `<option value="${h(loc)}"></option>`).join('')}
+            </datalist>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;padding-top:14px;border-top:1px solid #f1f5f9">
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#64748b">
+            <span>Result Batch Size:</span>
+            <select id="selBatchSize" class="inp" style="width:75px;padding:4px 8px">
+              <option value="5">5</option>
+              <option value="8" selected>8</option>
+              <option value="12">12</option>
+            </select>
+            <span style="font-size:11px;color:#94a3b8">(Keeps accuracy high &amp; response fast)</span>
+          </div>
+
+          <button id="btnLaunchDiscovery" class="btn" style="background:linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);color:#fff;border:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:700;display:inline-flex;align-items:center;gap:10px;box-shadow:0 4px 14px rgba(79,70,229,0.3);cursor:pointer">
+            <span id="btnIcon">🚀</span> <span id="btnText">Launch Live AI Customer Discovery</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Search Progress Indicator (hidden by default) -->
+      <div id="discoveryProgress" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:20px;margin-bottom:24px;text-align:center">
+        <div class="view-spinner-ring" style="margin:0 auto 12px"></div>
+        <div id="progressStepTitle" style="font-weight:700;color:#166534;font-size:15px">Gemini Pro is searching live Google indexes &amp; directories...</div>
+        <div id="progressStepSub" style="font-size:12px;color:#15803d;margin-top:4px">Connecting to verified manufacturing units, power stations &amp; procurement directories...</div>
+      </div>
+
+      <!-- Discovered Leads Container -->
+      <div id="leadsResultsContainer" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px">
+          <div>
+            <h2 id="resultsHeading" style="margin:0;font-size:18px;font-weight:700;color:#0f172a">Discovered Customer Leads</h2>
+            <div id="resultsSubheading" style="font-size:13px;color:#64748b;margin-top:3px">Verified potential corporate buyers for your selected product</div>
+          </div>
+          <div style="display:flex;gap:10px">
+            <button id="btnExportCsv" class="btn ghost sm" style="display:inline-flex;align-items:center;gap:6px">
+              <span>📥 Export CSV</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03)">
+          <div style="overflow-x:auto">
+            <table class="tbl" style="width:100%;border-collapse:collapse;font-size:13px">
+              <thead>
+                <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;text-align:left;color:#475569;font-weight:600">
+                  <th style="padding:12px 16px;min-width:240px">Company / Plant Name</th>
+                  <th style="padding:12px 16px;min-width:180px">Contact Person</th>
+                  <th style="padding:12px 16px;min-width:170px">Phone / Mobile</th>
+                  <th style="padding:12px 16px;min-width:190px">Email Address</th>
+                  <th style="padding:12px 16px;min-width:220px">Plant Location / Address</th>
+                  <th style="padding:12px 16px;min-width:140px">Match &amp; Need</th>
+                  <th style="padding:12px 16px;min-width:130px;text-align:center">Action</th>
+                </tr>
+              </thead>
+              <tbody id="leadsTableBody">
+                <!-- Rows injected here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Hook up UI events
+  let lastDiscoveredLeads = [];
+
+  // Toggle settings
+  const btnToggleSettings = $('#btnToggleSettings');
+  const settingsBox = $('#settingsBox');
+  if (btnToggleSettings && settingsBox) {
+    btnToggleSettings.addEventListener('click', () => {
+      settingsBox.style.display = settingsBox.style.display === 'none' ? 'block' : 'none';
+    });
+  }
+
+  // Key eye toggle
+  const txtGeminiKey = $('#txtGeminiKey');
+  const btnToggleKeyEye = $('#btnToggleKeyEye');
+  if (btnToggleKeyEye && txtGeminiKey) {
+    btnToggleKeyEye.addEventListener('click', () => {
+      txtGeminiKey.type = txtGeminiKey.type === 'password' ? 'text' : 'password';
+    });
+  }
+
+  // Save Key
+  const btnSaveKey = $('#btnSaveKey');
+  const selGeminiModel = $('#selGeminiModel');
+  const settingsFeedback = $('#settingsFeedback');
+  if (btnSaveKey) {
+    btnSaveKey.addEventListener('click', async () => {
+      const apiKey = (txtGeminiKey.value || '').trim();
+      const model = selGeminiModel.value;
+      if (!apiKey && !settings.configured) {
+        settingsFeedback.style.display = 'block';
+        settingsFeedback.style.color = '#dc2626';
+        settingsFeedback.innerText = 'Please enter an API key first.';
+        return;
+      }
+      btnSaveKey.disabled = true;
+      btnSaveKey.innerText = 'Saving...';
+      try {
+        const res = await api('POST', 'leadgen/settings', { apiKey, model });
+        settingsFeedback.style.display = 'block';
+        settingsFeedback.style.color = '#16a34a';
+        settingsFeedback.innerText = '✓ Key and model saved successfully!';
+        $('#cfgStatusBadge').innerText = 'Configured';
+        $('#cfgStatusBadge').style.background = '#10b981';
+        settings.configured = true;
+      } catch (e) {
+        settingsFeedback.style.display = 'block';
+        settingsFeedback.style.color = '#dc2626';
+        settingsFeedback.innerText = 'Error: ' + e.message;
+      } finally {
+        btnSaveKey.disabled = false;
+        btnSaveKey.innerText = '💾 Save Key';
+      }
+    });
+  }
+
+  // Test Key
+  const btnTestKey = $('#btnTestKey');
+  if (btnTestKey) {
+    btnTestKey.addEventListener('click', async () => {
+      const apiKey = (txtGeminiKey.value || '').trim();
+      const model = selGeminiModel.value;
+      btnTestKey.disabled = true;
+      btnTestKey.innerText = 'Testing...';
+      settingsFeedback.style.display = 'block';
+      settingsFeedback.style.color = '#475569';
+      settingsFeedback.innerText = 'Testing connection with Google Gemini servers...';
+      try {
+        const res = await api('POST', 'leadgen/test', { apiKey, model });
+        settingsFeedback.style.color = '#16a34a';
+        settingsFeedback.innerText = '✓ ' + (res.message || 'Connection successful!');
+      } catch (e) {
+        settingsFeedback.style.color = '#dc2626';
+        settingsFeedback.innerText = 'Connection error: ' + e.message;
+      } finally {
+        btnTestKey.disabled = false;
+        btnTestKey.innerText = '⚡ Test Connection';
+      }
+    });
+  }
+
+  // Custom product toggle
+  const selLeadProduct = $('#selLeadProduct');
+  const txtCustomProduct = $('#txtCustomProduct');
+  if (selLeadProduct && txtCustomProduct) {
+    selLeadProduct.addEventListener('change', () => {
+      txtCustomProduct.style.display = selLeadProduct.value === '__custom__' ? 'block' : 'none';
+      if (selLeadProduct.value === '__custom__') txtCustomProduct.focus();
+    });
+  }
+
+  // Launch Discovery
+  const btnLaunchDiscovery = $('#btnLaunchDiscovery');
+  const discoveryProgress = $('#discoveryProgress');
+  const leadsResultsContainer = $('#leadsResultsContainer');
+  const leadsTableBody = $('#leadsTableBody');
+
+  if (btnLaunchDiscovery) {
+    btnLaunchDiscovery.addEventListener('click', async () => {
+      let product = selLeadProduct.value;
+      if (product === '__custom__') {
+        product = (txtCustomProduct.value || '').trim();
+      }
+      if (!product) {
+        say('Please select or specify a product first.', 0);
+        return;
+      }
+
+      const industry = ($('#selIndustry')?.value || '').trim();
+      const location = ($('#txtLocation')?.value || 'Maharashtra').trim();
+      const maxResults = parseInt($('#selBatchSize')?.value) || 8;
+      const customKey = (txtGeminiKey?.value || '').trim();
+      const customModel = selGeminiModel?.value;
+
+      btnLaunchDiscovery.disabled = true;
+      $('#btnText').innerText = 'Agent Researching Real-time...';
+      $('#btnIcon').innerText = '⏳';
+      discoveryProgress.style.display = 'block';
+      leadsResultsContainer.style.display = 'none';
+
+      try {
+        const res = await api('POST', 'leadgen/discover', {
+          product,
+          industry,
+          location,
+          maxResults,
+          apiKey: customKey,
+          model: customModel
+        });
+
+        if (!res.leads || !res.leads.length) {
+          throw new Error('No companies returned. Try broadening the location or product term.');
+        }
+
+        lastDiscoveredLeads = res.leads;
+        renderLeadsTable(res.leads, product, location);
+        leadsResultsContainer.style.display = 'block';
+      } catch (err) {
+        say('Discovery error: ' + err.message, 0);
+        if (err.message.includes('key') || err.message.includes('API key')) {
+          settingsBox.style.display = 'block';
+          txtGeminiKey?.focus();
+        }
+      } finally {
+        btnLaunchDiscovery.disabled = false;
+        $('#btnText').innerText = 'Launch Live AI Customer Discovery';
+        $('#btnIcon').innerText = '🚀';
+        discoveryProgress.style.display = 'none';
+      }
+    });
+  }
+
+  // Render Table Function
+  function renderLeadsTable(leads, prod, loc) {
+    $('#resultsHeading').innerText = `Discovered ${leads.length} Target Plants for "${prod}"`;
+    $('#resultsSubheading').innerText = `Target Location: ${loc} &bull; Powered by Google Gemini Pro Live Discovery`;
+
+    leadsTableBody.innerHTML = leads.map((lead, idx) => {
+      const phoneDisplay = lead.mobile || lead.phone || 'N/A';
+      const cleanPhone = phoneDisplay.replace(/[^\d+]/g, '');
+      const emailDisplay = lead.email || 'N/A';
+      const scoreBadgeColor = lead.matchScore >= 9 ? '#10b981' : (lead.matchScore >= 7 ? '#0b6fc4' : '#64748b');
+
+      return `
+        <tr style="border-bottom:1px solid #f1f5f9;vertical-align:top">
+          <td style="padding:14px 16px">
+            <div style="font-weight:700;color:#0f172a;font-size:14px">${h(lead.name)}</div>
+            <div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap">
+              <span style="font-size:10px;background:#f1f5f9;color:#475569;padding:2px 8px;border-radius:6px;font-weight:600">${h(lead.industry)}</span>
+              ${lead.gstin ? `<span style="font-size:10px;background:#e0e7ff;color:#4338ca;padding:2px 8px;border-radius:6px;font-weight:600">GSTIN: ${h(lead.gstin)}</span>` : ''}
+              ${lead.website ? `<a href="${lead.website.startsWith('http') ? lead.website : 'https://' + lead.website}" target="_blank" style="font-size:10px;color:#0b6fc4;text-decoration:none;padding:2px 4px">&nearr; Website</a>` : ''}
+            </div>
+          </td>
+
+          <td style="padding:14px 16px">
+            <div style="font-weight:600;color:#334155">${h(lead.contact || 'Purchase / Plant Head')}</div>
+            <div style="font-size:11px;color:#64748b">Procurement &amp; Spares</div>
+          </td>
+
+          <td style="padding:14px 16px">
+            <div style="display:flex;align-items:center;gap:6px">
+              ${cleanPhone.length >= 8 
+                ? `<a href="tel:${cleanPhone}" style="color:#0b6fc4;font-weight:600;text-decoration:none">${h(phoneDisplay)}</a>`
+                : `<span style="color:#64748b">${h(phoneDisplay)}</span>`
+              }
+              ${lead.isPhoneValid ? `<span title="Valid phone format" style="color:#10b981;font-size:12px">✓</span>` : ''}
+            </div>
+            ${cleanPhone.length >= 10 ? `
+              <div style="margin-top:4px">
+                <a href="https://wa.me/${cleanPhone.replace(/^\+/, '')}" target="_blank" style="font-size:11px;color:#16a34a;text-decoration:none;display:inline-flex;align-items:center;gap:3px">
+                  <span>💬 WhatsApp</span>
+                </a>
+              </div>
+            ` : ''}
+          </td>
+
+          <td style="padding:14px 16px">
+            ${emailDisplay !== 'N/A' 
+              ? `<a href="mailto:${h(emailDisplay)}" style="color:#0b6fc4;text-decoration:none;font-weight:500">${h(emailDisplay)}</a>`
+              : `<span style="color:#94a3b8">Not listed</span>`
+            }
+          </td>
+
+          <td style="padding:14px 16px;font-size:12px;color:#334155;line-height:1.4">
+            <div>${h(lead.address || (lead.city + ', ' + lead.state))}</div>
+          </td>
+
+          <td style="padding:14px 16px">
+            <div style="display:inline-flex;align-items:center;gap:4px;background:${scoreBadgeColor}15;color:${scoreBadgeColor};padding:3px 8px;border-radius:12px;font-size:11px;font-weight:700">
+              <span>${lead.matchScore}/10 Match</span>
+            </div>
+            <div style="font-size:11px;color:#64748b;margin-top:4px;line-height:1.3" title="${h(lead.buyingReason)}">
+              ${h(lead.buyingReason.length > 70 ? lead.buyingReason.slice(0, 70) + '...' : lead.buyingReason)}
+            </div>
+          </td>
+
+          <td style="padding:14px 16px;text-align:center">
+            <button class="btn sm btnAddClient" data-idx="${idx}" style="background:#0b6fc4;color:#fff;border-radius:6px;padding:6px 10px;font-size:11px;width:100%;white-space:nowrap">
+              ➕ Add to Clients
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    // Attach click handlers to "Add to Clients" buttons
+    document.querySelectorAll('.btnAddClient').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const idx = parseInt(btn.getAttribute('data-idx'));
+        const lead = leads[idx];
+        if (!lead) return;
+
+        btn.disabled = true;
+        btn.innerText = 'Saving...';
+
+        try {
+          const res = await api('POST', 'leadgen/add-client', {
+            name: lead.name,
+            phone: lead.phone || lead.mobile,
+            mobile: lead.mobile,
+            email: lead.email,
+            address: lead.address || (lead.city + ', ' + lead.state),
+            gstin: lead.gstin,
+            contact: lead.contact
+          });
+
+          btn.style.background = '#10b981';
+          btn.innerText = res.alreadyExists ? '✓ Already Added' : '✓ In Clients';
+          say(res.message || 'Client added successfully!', 1);
+        } catch (err) {
+          btn.disabled = false;
+          btn.innerText = '➕ Add to Clients';
+          say('Failed to add client: ' + err.message, 0);
+        }
+      });
+    });
+  }
+
+  // Export CSV
+  const btnExportCsv = $('#btnExportCsv');
+  if (btnExportCsv) {
+    btnExportCsv.addEventListener('click', () => {
+      if (!lastDiscoveredLeads.length) return;
+      const headers = ['Company Name', 'Industry', 'Contact Person', 'Phone', 'Mobile', 'Email', 'Address', 'City', 'State', 'GSTIN', 'Match Score', 'Buying Reason', 'Website'];
+      const rows = lastDiscoveredLeads.map(l => [
+        `"${(l.name || '').replace(/"/g, '""')}"`,
+        `"${(l.industry || '').replace(/"/g, '""')}"`,
+        `"${(l.contact || '').replace(/"/g, '""')}"`,
+        `"${(l.phone || '').replace(/"/g, '""')}"`,
+        `"${(l.mobile || '').replace(/"/g, '""')}"`,
+        `"${(l.email || '').replace(/"/g, '""')}"`,
+        `"${(l.address || '').replace(/"/g, '""')}"`,
+        `"${(l.city || '').replace(/"/g, '""')}"`,
+        `"${(l.state || '').replace(/"/g, '""')}"`,
+        `"${(l.gstin || '').replace(/"/g, '""')}"`,
+        l.matchScore || '',
+        `"${(l.buyingReason || '').replace(/"/g, '""')}"`,
+        `"${(l.website || '').replace(/"/g, '""')}"`
+      ]);
+
+      const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Amigo_Leads_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  }
+}
 
 </script></body></html>

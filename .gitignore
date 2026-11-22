@@ -23,3 +23,6 @@ data/emp_docs/
 .DS_Store
 Thumbs.db
 *.log
+
+# Local leadgen settings with API keys
+data/leadgen.json

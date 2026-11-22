@@ -1379,6 +1379,119 @@ CRITICAL RULES:
 
   return await callGroq({ apiKey, model, messages, temperature: 0.2 });
 }
+
+// ---------- Gemini & Lead Generation Helpers ----------
+const leadGenCfg = () => {
+  const dbSetting = db.isDbActive() ? (db.getCachedSetting('leadgen') || {}) : {};
+  let fileSetting = {};
+  try {
+    const lf = path.join(DATA, 'leadgen.json');
+    if (fs.existsSync(lf)) fileSetting = JSON.parse(fs.readFileSync(lf, 'utf8'));
+  } catch {}
+  const combined = { geminiApiKey: '', geminiModel: 'gemini-3.5-flash', ...fileSetting, ...dbSetting };
+  if (process.env.GEMINI_API_KEY) combined.geminiApiKey = process.env.GEMINI_API_KEY;
+  return combined;
+};
+
+function extractJsonArrayFromText(raw) {
+  if (!raw) return [];
+  let cleaned = String(raw).trim();
+  cleaned = cleaned.replace(/^\`\`\`(?:json)?\s*/i, '').replace(/\s*\`\`\`$/i, '').trim();
+  try {
+    const parsed = JSON.parse(cleaned);
+    if (Array.isArray(parsed)) return parsed;
+    if (Array.isArray(parsed.leads)) return parsed.leads;
+    if (Array.isArray(parsed.companies)) return parsed.companies;
+    return [parsed];
+  } catch (e) {}
+
+  const firstBracket = cleaned.indexOf('[');
+  const lastBracket = cleaned.lastIndexOf(']');
+  if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
+    try {
+      const arr = JSON.parse(cleaned.substring(firstBracket, lastBracket + 1));
+      if (Array.isArray(arr)) return arr;
+    } catch (e) {}
+  }
+
+  const firstBrace = cleaned.indexOf('{');
+  const lastBrace = cleaned.lastIndexOf('}');
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    try {
+      const obj = JSON.parse(cleaned.substring(firstBrace, lastBrace + 1));
+      if (Array.isArray(obj.leads)) return obj.leads;
+      if (Array.isArray(obj.companies)) return obj.companies;
+      return [obj];
+    } catch (e) {}
+  }
+
+  return [];
+}
+
+async function callGeminiOnce({ apiKey, model = 'gemini-1.5-pro', prompt, systemInstruction, enableSearch = true }) {
+  if (!apiKey) throw new Error('Google Gemini API key required. Please configure it in Gemini Settings.');
+  const cleanModel = model || 'gemini-1.5-pro';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(cleanModel)}:generateContent?key=${apiKey.trim()}`;
+
+  const payload = {
+    contents: [
+      {
+        role: 'user',
+        parts: [{ text: prompt }]
+      }
+    ]
+  };
+
+  if (systemInstruction) {
+    payload.systemInstruction = {
+      parts: [{ text: systemInstruction }]
+    };
+  }
+
+  if (enableSearch) {
+    payload.tools = [{ googleSearch: {} }];
+  }
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  const resText = await res.text();
+  let json;
+  try {
+    json = JSON.parse(resText);
+  } catch (e) {
+    throw new Error(`Invalid response from Gemini service (HTTP ${res.status}): ${resText.slice(0, 200)}`);
+  }
+
+  if (!res.ok) {
+    const errMsg = json.error?.message || `Gemini API error (HTTP ${res.status})`;
+    throw new Error(errMsg);
+  }
+
+  const candidate = json.candidates?.[0];
+  const textParts = candidate?.content?.parts?.map(p => p.text).filter(Boolean).join('\n') || '';
+  const searchSources = candidate?.groundingMetadata?.groundingChunks?.map(c => c.web).filter(Boolean) || [];
+
+  return { text: textParts, searchSources };
+}
+
+async function callGeminiWithFallback({ apiKey, model = 'gemini-3.5-flash', prompt, systemInstruction }) {
+  const activeModel = (model === 'gemini-1.5-pro' || model === 'gemini-2.5-flash' || !model) ? 'gemini-3.5-flash' : model;
+  try {
+    return await callGeminiOnce({ apiKey, model: activeModel, prompt, systemInstruction, enableSearch: true });
+  } catch (err) {
+    const msg = (err.message || '').toLowerCase();
+    // Fall back to direct generation without search grounding if quota/tool limit is encountered
+    if (msg.includes('tool') || msg.includes('search') || msg.includes('grounding') || msg.includes('quota') || msg.includes('rate') || msg.includes('429') || msg.includes('not supported') || msg.includes('unknown field') || msg.includes('permission')) {
+      return await callGeminiOnce({ apiKey, model: activeModel, prompt, systemInstruction, enableSearch: false });
+    }
+    throw err;
+  }
+}
+
 // ---------- Setup ----------
 function init() {
   if (IS_SERVERLESS || db.isDbActive()) return;
@@ -2416,6 +2529,209 @@ async function api(req, res, parts) {
       }
     }
   }
+
+  if (a === 'leadgen') {
+    const uName = String(user.username || '').toLowerCase();
+    const uDes = String(user.designation || '').toLowerCase();
+    const isOpsAdmin = uName === 'operationsadmin' || uDes === 'operations admin';
+    if (!isOpsAdmin) {
+      throw fail(403, 'Access Restricted: AI Lead Generation is currently only enabled for OperationsAdmin testing.');
+    }
+
+    const cfg = leadGenCfg();
+
+    if (id === 'settings') {
+      if (m === 'GET') {
+        const masked = cfg.geminiApiKey ? (cfg.geminiApiKey.slice(0, 4) + '...' + cfg.geminiApiKey.slice(-4)) : '';
+        return send(res, 200, {
+          ok: true,
+          configured: !!cfg.geminiApiKey,
+          maskedKey: masked,
+          model: cfg.geminiModel || 'gemini-3.5-flash',
+          availableModels: ['gemini-3.5-flash', 'gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.1-pro-preview']
+        });
+      }
+      if (m === 'POST') {
+        const b = await body(req);
+        const newKey = String(b.apiKey || '').trim();
+        const newModel = String(b.model || 'gemini-1.5-pro').trim();
+        const update = { ...cfg };
+        if (newKey) update.geminiApiKey = newKey;
+        if (newModel) update.geminiModel = newModel;
+
+        if (db.isDbActive()) {
+          await db.saveSetting('leadgen', update).catch(() => {});
+        }
+        try {
+          fs.writeFileSync(path.join(DATA, 'leadgen.json'), JSON.stringify(update, null, 2));
+        } catch {}
+
+        return send(res, 200, { ok: true, message: 'Gemini settings saved successfully!' });
+      }
+    }
+
+    if (id === 'test' && m === 'POST') {
+      const b = await body(req);
+      const keyToTest = (b.apiKey || cfg.geminiApiKey || '').trim();
+      if (!keyToTest) throw fail(400, 'Please enter a Gemini API Key first');
+      const modelToTest = b.model || cfg.geminiModel || 'gemini-1.5-pro';
+
+      try {
+        const result = await callGeminiOnce({
+          apiKey: keyToTest,
+          model: modelToTest,
+          prompt: 'Respond with exactly: "OK"',
+          enableSearch: false
+        });
+        return send(res, 200, {
+          ok: true,
+          message: `Connected successfully to Google Gemini (${modelToTest})!`,
+          sampleResponse: result.text
+        });
+      } catch (err) {
+        throw fail(400, `Gemini connection failed: ${err.message}`);
+      }
+    }
+
+    if (id === 'discover' && m === 'POST') {
+      const b = await body(req);
+      const activeKey = (b.apiKey || cfg.geminiApiKey || '').trim();
+      if (!activeKey) throw fail(400, 'Gemini API key is not configured. Please enter your key in Gemini Settings.');
+
+      const activeModel = b.model || cfg.geminiModel || 'gemini-1.5-pro';
+      const product = String(b.product || '').trim();
+      const industry = String(b.industry || '').trim();
+      const location = String(b.location || 'Maharashtra and Pan-India').trim();
+      const maxResults = Math.min(Math.max(parseInt(b.maxResults) || 6, 3), 15);
+
+      if (!product) throw fail(400, 'Please select or enter a product');
+
+      const systemPrompt = `You are an expert industrial procurement researcher and B2B lead generation specialist for Amigo Enterprises, Pune (Maharashtra, India).
+Amigo Enterprises manufactures and supplies Electrostatic Precipitator (ESP) spares, insulators, controllers, rapper diodes, thermostats, and shutdown maintenance equipment for heavy process industries.
+
+YOUR MISSION:
+Search real-time Google information and verified business sources to identify genuine operating industrial plants, manufacturing units, or engineering contractors in India that actively consume or require this product.
+
+PRODUCT SOUGHT: "${product}"
+TARGET INDUSTRY: "${industry || 'Thermal Power Plants, Cement Factories, Integrated Steel Mills, Chemical Plants, Sugar Co-generation'}"
+TARGET REGION: "${location}"
+
+RULES:
+1. Provide REAL, currently operating industrial firms / plants (do not invent or fabricate company names).
+2. For each company, provide authentic contact information:
+   - name: Official Plant / Company Name (e.g. "Adani Power Tiroda", "UltraTech Cement Awarpur", "JSW Steel Dolvi", "Tata Power", "Shree Cement")
+   - industry: Specific industry segment
+   - address: Physical plant location or registered office address with City, State, Pincode
+   - city: City
+   - state: State
+   - phone: Official phone number or procurement landline / mobile
+   - mobile: Direct mobile / WhatsApp number if publicly available
+   - email: Purchase, store, or general inquiry email
+   - contact: Contact person name with title (e.g. "General Manager - Procurement", "Head of Maintenance", "Store Manager")
+   - website: Official website URL or verified directory link
+   - gstin: Public GST number if available
+   - matchScore: Number from 1 to 10 (10 being immediate critical buyer)
+   - buyingReason: Concrete technical reason explaining why this specific plant requires "${product}" for their ESP or boiler operation.
+
+FORMAT:
+Return STRICTLY a JSON array of ${maxResults} objects matching the keys above. No conversational text or markdown code fences outside the JSON.`;
+
+      const userPrompt = `Search live Google data and find ${maxResults} real operating plants in ${location} that purchase "${product}" (${industry || 'Heavy Industry'}). Return ONLY the valid JSON array.`;
+
+      try {
+        const { text, searchSources } = await callGeminiWithFallback({
+          apiKey: activeKey,
+          model: activeModel,
+          prompt: userPrompt,
+          systemInstruction: systemPrompt
+        });
+
+        const leads = extractJsonArrayFromText(text);
+
+        // Verification & cleanup pass on the leads
+        const verifiedLeads = leads.map(l => {
+          const rawPhone = String(l.phone || l.mobile || '').replace(/[^\d+]/g, '');
+          const isPhoneValid = rawPhone.length >= 8;
+          const email = String(l.email || '').trim();
+          const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+          return {
+            name: String(l.name || 'Unnamed Enterprise').trim(),
+            industry: String(l.industry || industry || 'Industrial Plant').trim(),
+            address: String(l.address || '').trim(),
+            city: String(l.city || '').trim(),
+            state: String(l.state || '').trim(),
+            phone: String(l.phone || '').trim(),
+            mobile: String(l.mobile || '').trim(),
+            email: email,
+            contact: String(l.contact || 'Purchase / Maintenance Head').trim(),
+            website: String(l.website || '').trim(),
+            gstin: String(l.gstin || '').trim(),
+            matchScore: typeof l.matchScore === 'number' ? l.matchScore : 8,
+            buyingReason: String(l.buyingReason || `Regular requirement for ${product} in plant emission & ESP maintenance.`).trim(),
+            isPhoneValid,
+            isEmailValid
+          };
+        });
+
+        return send(res, 200, {
+          ok: true,
+          product,
+          location,
+          count: verifiedLeads.length,
+          leads: verifiedLeads,
+          sources: searchSources.slice(0, 5)
+        });
+      } catch (err) {
+        console.error('Gemini Lead Discovery Error:', err);
+        throw fail(500, `Lead discovery failed: ${err.message}`);
+      }
+    }
+
+    if (id === 'add-client' && m === 'POST') {
+      const b = await body(req);
+      const name = String(b.name || '').trim();
+      if (!name) throw fail(400, 'Company name is required');
+
+      const clients = readTable('clients');
+      const existing = clients.find(c => (c.name || '').trim().toLowerCase() === name.toLowerCase());
+      if (existing) {
+        return send(res, 200, {
+          ok: true,
+          alreadyExists: true,
+          message: `"${name}" already exists in your Clients Directory!`,
+          client: existing
+        });
+      }
+
+      const newClient = {
+        id: newId(),
+        name: name,
+        email: String(b.email || '').trim(),
+        phone: String(b.phone || b.mobile || '').trim(),
+        address: String(b.address || '').trim(),
+        gstin: String(b.gstin || '').trim(),
+        contact: String(b.contact || '').trim(),
+        mobile: String(b.mobile || '').trim(),
+        createdAt: new Date().toISOString()
+      };
+
+      await locked(async () => {
+        const current = readTable('clients');
+        current.push(newClient);
+        await writeTable('clients', current);
+      });
+
+      return send(res, 200, {
+        ok: true,
+        message: `Successfully added "${name}" to Client Directory!`,
+        client: newClient
+      });
+    }
+
+    throw fail(404, 'Not found');
+  }
+
   if (a === 'sync') {
     if (m === 'GET' && id === 'live') {
       return send(res, 200, { revisions: db.getRevisions(), serverTime: Date.now() });
