@@ -2938,8 +2938,9 @@ Amigo Enterprises, Pune`;
       });
     }
 
-    // Delete / Archive from CRM
+    // Delete / Archive from CRM (Restricted to OperationsAdmin and Administrator)
     if (id === 'delete-lead' && m === 'POST') {
+      if (!isOpsAdmin) throw fail(403, 'Permission denied: Only OperationsAdmin or Administrator can delete records from the sales calling queue.');
       const b = await body(req);
       const leadId = String(b.leadId || '').trim();
       let leads = readCrmLeads();

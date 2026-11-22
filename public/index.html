@@ -18856,9 +18856,11 @@ async function leadGenView(activeSubTab = 'crm') {
                 <button class="btn ghost sm btnCrmHistory" data-id="${l.id}" style="font-size:10px;color:#475569;padding:3px 6px">
                   📜 History (${histCount})
                 </button>
-                <button class="btn ghost sm btnCrmDelete" data-id="${l.id}" style="font-size:10px;color:#94a3b8;padding:3px 6px">
+                ${isOpsAdmin ? `
+                <button class="btn ghost sm btnCrmDelete" data-id="${l.id}" style="font-size:10px;color:#94a3b8;padding:3px 6px" title="Delete Lead (Admin Only)">
                   🗑️
                 </button>
+                ` : ''}
               </div>
             </div>
           </div>
