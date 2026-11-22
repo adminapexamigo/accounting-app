@@ -4183,6 +4183,247 @@ window.addEventListener('unhandledrejection', e => {
   window.clientErrorLog.push(line);
   if (window.clientErrorLog.length > 50) window.clientErrorLog.shift();
 });
+
+/* === Modern Executive Dialog & Confirmation UI System === */
+function appConfirm(message, options = {}) {
+  return new Promise(resolve => {
+    const isDestructive = options.danger || /delete|remove|clear all|withdraw|reject|decline|invalid|blacklist/i.test(message + ' ' + (options.title || ''));
+    const isSuccess = options.theme === 'success' || /convert|approve/i.test(message + ' ' + (options.title || ''));
+
+    let icon = options.icon;
+    if (!icon) {
+      if (isDestructive) icon = '🗑️';
+      else if (isSuccess) icon = '🤝';
+      else if (/backup|sync|mail|send|email/i.test(message)) icon = '📦';
+      else icon = '❓';
+    }
+
+    let title = options.title;
+    if (!title) {
+      if (isDestructive) title = 'Confirm Action';
+      else if (isSuccess) title = 'Confirm Operation';
+      else if (/backup/i.test(message)) title = 'Database Backup & Dispatch';
+      else title = 'Please Confirm';
+    }
+
+    const confirmText = options.confirmText || (isDestructive ? 'Delete / Proceed' : (isSuccess ? 'Confirm' : 'Yes, Proceed'));
+    const cancelText = options.cancelText !== undefined ? options.cancelText : 'Cancel';
+
+    const overlay = document.createElement('div');
+    overlay.className = 'app-dialog-overlay';
+    overlay.style.cssText = `
+      position: fixed; inset: 0; background: rgba(15, 23, 42, 0.72);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      z-index: 100000; display: flex; align-items: center; justify-content: center;
+      padding: 16px; opacity: 0; transition: opacity 0.2s ease;
+    `;
+
+    const iconBg = isDestructive ? '#fee2e2' : (isSuccess ? '#dcfce7' : '#e0e7ff');
+    const iconColor = isDestructive ? '#dc2626' : (isSuccess ? '#15803d' : '#4338ca');
+    const confirmBtnBg = isDestructive ? '#dc2626' : (isSuccess ? '#16a34a' : '#4f46e5');
+
+    // Split paragraphs
+    const paragraphs = String(message || '').split(/\n\n+/).filter(Boolean);
+    const msgHtml = paragraphs.map(p => {
+      if (p.includes('\n•') || p.startsWith('•')) {
+        const lines = p.split('\n');
+        return '<ul style="margin:6px 0;padding-left:18px;color:#475569;font-size:13px">' + lines.map(l => `<li>${h(l.replace(/^[•\-\*]\s*/, ''))}</li>`).join('') + '</ul>';
+      }
+      return `<p style="margin:0 0 8px;font-size:13.5px;color:#475569;line-height:1.6">${h(p).replace(/\n/g, '<br>')}</p>`;
+    }).join('');
+
+    overlay.innerHTML = `
+      <div class="app-dialog-card" style="
+        width: 480px; max-width: 95vw; background: #ffffff; border-radius: 18px;
+        box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.4), 0 0 0 1px rgba(226, 232, 240, 0.9);
+        overflow: hidden; transform: scale(0.92); transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      ">
+        <div style="padding: 24px 26px 20px">
+          <div style="display: flex; align-items: flex-start; gap: 16px">
+            <div style="
+              width: 48px; height: 48px; border-radius: 14px; background: ${iconBg};
+              color: ${iconColor}; display: flex; align-items: center; justify-content: center;
+              font-size: 24px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+            ">${icon}</div>
+            <div style="flex: 1; min-width: 0">
+              <h3 style="margin: 0 0 8px; font-size: 17px; font-weight: 700; color: #0f172a; line-height: 1.3">
+                ${h(title)}
+              </h3>
+              <div>${msgHtml}</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="
+          padding: 14px 24px; background: #f8fafc; border-top: 1px solid #e2e8f0;
+          display: flex; justify-content: flex-end; align-items: center; gap: 10px;
+        ">
+          ${cancelText ? `
+          <button type="button" class="btn ghost sm btn-dialog-cancel" style="
+            background: #ffffff; border: 1px solid #cbd5e1; color: #475569; font-weight: 600;
+            padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer;
+          ">${h(cancelText)}</button>
+          ` : ''}
+          <button type="button" class="btn sm btn-dialog-confirm" style="
+            background: ${confirmBtnBg}; color: #ffffff; font-weight: 700;
+            padding: 8px 20px; border-radius: 8px; font-size: 13px; border: none; cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+          ">${h(confirmText)}</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => {
+      overlay.style.opacity = '1';
+      const card = overlay.querySelector('.app-dialog-card');
+      if (card) card.style.transform = 'scale(1)';
+    });
+
+    const cleanup = (val) => {
+      overlay.style.opacity = '0';
+      const card = overlay.querySelector('.app-dialog-card');
+      if (card) card.style.transform = 'scale(0.92)';
+      setTimeout(() => overlay.remove(), 180);
+      resolve(val);
+    };
+
+    const cancelBtn = overlay.querySelector('.btn-dialog-cancel');
+    if (cancelBtn) cancelBtn.onclick = () => cleanup(false);
+    overlay.querySelector('.btn-dialog-confirm').onclick = () => cleanup(true);
+
+    overlay.onclick = (e) => {
+      if (e.target === overlay) cleanup(false);
+    };
+
+    const keyHandler = (e) => {
+      if (e.key === 'Escape') {
+        document.removeEventListener('keydown', keyHandler);
+        cleanup(false);
+      } else if (e.key === 'Enter') {
+        document.removeEventListener('keydown', keyHandler);
+        cleanup(true);
+      }
+    };
+    document.addEventListener('keydown', keyHandler);
+    overlay.querySelector('.btn-dialog-confirm').focus();
+  });
+}
+
+function appPrompt(message, defaultValue = '', options = {}) {
+  return new Promise(resolve => {
+    let icon = options.icon || '📝';
+    let title = options.title || 'Required Information';
+    const isMultiline = options.multiline || (defaultValue && defaultValue.length > 50) || /feedback|requirement|notes|reason/i.test(message);
+
+    const overlay = document.createElement('div');
+    overlay.className = 'app-dialog-overlay';
+    overlay.style.cssText = `
+      position: fixed; inset: 0; background: rgba(15, 23, 42, 0.72);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      z-index: 100000; display: flex; align-items: center; justify-content: center;
+      padding: 16px; opacity: 0; transition: opacity 0.2s ease;
+    `;
+
+    const paragraphs = String(message || '').split(/\n\n+/).filter(Boolean);
+    const msgHtml = paragraphs.map(p => `<p style="margin:0 0 10px;font-size:13.5px;color:#475569;line-height:1.5">${h(p).replace(/\n/g, '<br>')}</p>`).join('');
+
+    const inputControl = isMultiline
+      ? `<textarea class="inp" id="appPromptInput" rows="3" style="width:100%;font-size:13.5px;padding:10px 12px;border:1.5px solid #cbd5e1;border-radius:10px;box-sizing:border-box" placeholder="${h(options.placeholder || 'Type here...')}">${h(defaultValue || '')}</textarea>`
+      : `<input type="${options.inputType || 'text'}" class="inp" id="appPromptInput" value="${h(defaultValue || '')}" style="width:100%;font-size:13.5px;padding:10px 12px;border:1.5px solid #cbd5e1;border-radius:10px;box-sizing:border-box" placeholder="${h(options.placeholder || 'Type here...')}" />`;
+
+    overlay.innerHTML = `
+      <div class="app-dialog-card" style="
+        width: 480px; max-width: 95vw; background: #ffffff; border-radius: 18px;
+        box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.4), 0 0 0 1px rgba(226, 232, 240, 0.9);
+        overflow: hidden; transform: scale(0.92); transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      ">
+        <div style="padding: 24px 26px 18px">
+          <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 12px">
+            <div style="
+              width: 48px; height: 48px; border-radius: 14px; background: #e0e7ff;
+              color: #4338ca; display: flex; align-items: center; justify-content: center;
+              font-size: 24px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+            ">${icon}</div>
+            <div style="flex: 1; min-width: 0">
+              <h3 style="margin: 0 0 6px; font-size: 17px; font-weight: 700; color: #0f172a">
+                ${h(title)}
+              </h3>
+              <div>${msgHtml}</div>
+            </div>
+          </div>
+          <div>${inputControl}</div>
+        </div>
+
+        <div style="
+          padding: 14px 24px; background: #f8fafc; border-top: 1px solid #e2e8f0;
+          display: flex; justify-content: flex-end; align-items: center; gap: 10px;
+        ">
+          <button type="button" class="btn ghost sm btn-dialog-cancel" style="
+            background: #ffffff; border: 1px solid #cbd5e1; color: #475569; font-weight: 600;
+            padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer;
+          ">Cancel</button>
+          <button type="button" class="btn sm btn-dialog-submit" style="
+            background: #4f46e5; color: #ffffff; font-weight: 700;
+            padding: 8px 20px; border-radius: 8px; font-size: 13px; border: none; cursor: pointer;
+            box-shadow: 0 2px 8px rgba(79,70,229,0.3);
+          ">${h(options.submitText || 'Save / Submit')}</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => {
+      overlay.style.opacity = '1';
+      const card = overlay.querySelector('.app-dialog-card');
+      if (card) card.style.transform = 'scale(1)';
+      const inp = overlay.querySelector('#appPromptInput');
+      if (inp) {
+        inp.focus();
+        if (inp.select) inp.select();
+      }
+    });
+
+    const cleanup = (val) => {
+      overlay.style.opacity = '0';
+      const card = overlay.querySelector('.app-dialog-card');
+      if (card) card.style.transform = 'scale(0.92)';
+      setTimeout(() => overlay.remove(), 180);
+      resolve(val);
+    };
+
+    overlay.querySelector('.btn-dialog-cancel').onclick = () => cleanup(null);
+    overlay.querySelector('.btn-dialog-submit').onclick = () => {
+      const inp = overlay.querySelector('#appPromptInput');
+      cleanup(inp ? inp.value.trim() : '');
+    };
+
+    overlay.onclick = (e) => {
+      if (e.target === overlay) cleanup(null);
+    };
+
+    const keyHandler = (e) => {
+      if (e.key === 'Escape') {
+        document.removeEventListener('keydown', keyHandler);
+        cleanup(null);
+      } else if (e.key === 'Enter' && !isMultiline) {
+        document.removeEventListener('keydown', keyHandler);
+        const inp = overlay.querySelector('#appPromptInput');
+        cleanup(inp ? inp.value.trim() : '');
+      }
+    };
+    document.addEventListener('keydown', keyHandler);
+  });
+}
+
+function appAlert(message, options = {}) {
+  return appConfirm(message, { ...options, cancelText: '', confirmText: options.confirmText || 'OK' });
+}
+
+window.appConfirm = appConfirm;
+window.appPrompt = appPrompt;
+window.appAlert = appAlert;
+
 const say = (t, ok) => {
   if (!t) { $('#msg').innerHTML = ''; return; }
   if (!ok) {
@@ -4596,7 +4837,12 @@ async function workupdates(){
  const form=adm?'':st.submitted?'<div class="msg ok">✓ Today\'s update is submitted. Thank you!</div>':`<div class="card"><h3>Today's work update — ${dmy(st.date)}</h3><div class="field-label-ai"><label style="margin:0">What work did you do today? *</label><button type="button" class="btn-ai-assist" onclick="openAiMenu('wk','workupdate',this)">✨ AI Assist <span style="font-size:9px">▼</span></button></div><textarea id="wk" rows="5" placeholder="e.g. Created 3 invoices, followed up with client X, updated stock list…"></textarea><br><br><div class="grid"><div><div class="field-label-ai"><label style="margin:0">Pending / blockers (optional)</label><button type="button" class="btn-ai-assist" onclick="openAiMenu('wp','workupdate',this)">✨ AI Assist <span style="font-size:9px">▼</span></button></div><textarea id="wp" rows="2"></textarea></div><div><label>Hours worked (optional)</label><input id="wh" type="number" min="0" max="24" step="0.5"></div></div><br><button class="btn" id="wsub">Submit &amp; email update</button></div>`;
  $('#view').innerHTML=`<h1>${adm?'Daily work updates':'My work update'}</h1>${form}<div class="card" style="overflow:auto"><table><tr><th>Date</th>${adm?'<th>Employee</th>':''}<th>Login</th><th>Submitted</th><th>Hrs</th><th>Work done</th><th>Pending</th><th>Email</th>${adm?'<th>Actions</th>':''}</tr>${L.map(r=>`<tr><td>${dmy(r.date)}</td>${adm?`<td>${h(r.fullName||r.username)}</td>`:''}<td>${tmf(r.loginTime)}</td><td>${tmf(r.submittedAt)}</td><td>${h(r.hours)}</td><td style="white-space:pre-wrap;max-width:320px">${h(r.work)}</td><td style="white-space:pre-wrap;max-width:200px">${h(r.pending)}</td><td>${h(r.emailStatus)}</td>${adm?`<td class="n" style="white-space:nowrap"><button class="btn ghost sm" data-r="${r.id}">Resend email</button> <button class="btn red sm" data-d="${r.id}">Delete</button></td>`:''}</tr>`).join('')||'<tr><td>No updates yet</td></tr>'}</table></div>`;
  if($('#wsub'))$('#wsub').onclick=async e=>{e.target.disabled=true;e.target.textContent='Submitting…';try{const r=await api('POST','workupdates',{work:$('#wk').value,pending:$('#wp').value,hours:$('#wh').value});wu.submitted=true;await workupdates();say(/^sent/.test(r.emailStatus)?'Update submitted and emailed.':'Update saved, but the email did not go out ('+r.emailStatus+'). The admin can resend it.',/^sent/.test(r.emailStatus))}catch(er){e.target.disabled=false;e.target.textContent='Submit & email update';say(er.message)}};
- $('#view').onclick=async e=>{const d=e.target.dataset;try{if(d.r){e.target.textContent='Sending…';const r=await api('POST','workupdates/'+d.r+'/resend');await workupdates();say('Email: '+r.emailStatus,/^sent/.test(r.emailStatus))}if(d.d&&confirm('Delete this update?')){await api('DELETE','workupdates/'+d.d);workupdates()}}catch(er){say(er.message)}};
+ $('#view').onclick=async e=>{const d=e.target.dataset;try{if(d.r){e.target.textContent='Sending…';const r=await api('POST','workupdates/'+d.r+'/resend');await workupdates();say('Email: '+r.emailStatus,/^sent/.test(r.emailStatus))}if(d.d && await appConfirm('Delete this daily work update? This action cannot be undone.', {
+    title: 'Delete Work Update',
+    icon: '🗑️',
+    confirmText: 'Delete Update',
+    danger: true
+  })){await api('DELETE','workupdates/'+d.d);workupdates()}}catch(er){say(er.message)}};
   } catch(err) {
     say(err.message || 'Error loading work updates');
     $('#view').innerHTML = `<div class="card" style="padding:32px;text-align:center"><div style="font-size:32px;margin-bottom:8px">💼</div><h3>Daily Work Update</h3><p style="color:var(--mute)">${h(err.message || 'Please check your connection and retry.')}</p><button class="btn sm" onclick="workupdates()">Retry</button></div>`;
@@ -4947,7 +5193,12 @@ async function monitoring(activeTab = 'live') {
     };
 
     $('#btnReloadHolidays').onclick = async () => {
-      if (!confirm('Populate standard Indian public holidays for 2026/2027?')) return;
+      if (!await appConfirm('Populate standard Indian public holidays for 2026/2027 into the attendance & payroll calendar?', {
+        title: 'Populate Indian Public Holidays',
+        icon: '📅',
+        confirmText: 'Populate Holidays',
+        danger: false
+      })) return;
       const stdHolidays = [
         { id: 'h-2026-01-26', date: '2026-01-26', name: 'Republic Day' },
         { id: 'h-2026-03-03', date: '2026-03-03', name: 'Holi' },
@@ -4978,7 +5229,12 @@ async function monitoring(activeTab = 'live') {
 
     document.querySelectorAll('.btn-del-holiday').forEach(b => {
       b.onclick = async () => {
-        if (!confirm('Remove this holiday?')) return;
+        if (!await appConfirm('Remove this holiday from the calendar?', {
+          title: 'Remove Holiday',
+          icon: '🗑️',
+          confirmText: 'Remove',
+          danger: true
+        })) return;
         try {
           const curHols = (cfg.holidays || []).filter(x => x.id !== b.dataset.id);
           await api('PUT', 'monitoring/settings', { holidays: curHols });
@@ -5320,7 +5576,12 @@ async function docs(type){
     const xBtn = e.target.closest('[data-x]');
     if (xBtn) { docForm(type, L.find(x => x.id == xBtn.dataset.x)); return; }
     const dBtn = e.target.closest('[data-d]');
-    if (dBtn && confirm('Delete this document permanently?')) {
+    if (dBtn && await appConfirm('Delete this document permanently? This action cannot be undone.', {
+      title: 'Delete Document',
+      icon: '🗑️',
+      confirmText: 'Delete Document',
+      danger: true
+    })) {
       try {
         await api('DELETE', 'docs/' + dBtn.dataset.d);
         docs(type);
@@ -6222,8 +6483,14 @@ $('#lbtn').onclick=async()=>{
 };
 $('#forgot').onclick=async()=>{const r=await resetDialog($('#lu').value);if(r){$('#lu').value=r.user;$('#lp').value='';$('#lmsg').innerHTML='<div class="msg ok">Password changed. Log in with your new password.</div>'}};
 $('#lp').onkeydown=e=>{if(e.key=='Enter')$('#lbtn').click()};
-$('#out').onclick=async()=>{if(wu.required&&!wu.submitted&&!confirm("Today's work update is not submitted yet. Log out anyway?"))return;localStorage.removeItem('amigo_token');if(typeof SessionCache!=='undefined')SessionCache.clearAll();await api('POST','logout').catch(()=>{});showLogin()};
-$('#pw').onclick=()=>{const o=prompt('Current password:');if(!o)return;const n=prompt('New password (min 8 characters):');if(!n)return;api('POST','password',{oldPassword:o,newPassword:n}).then(()=>say('Password changed',1)).catch(e=>say(e.message))};
+$('#out').onclick=async()=>{if(wu.required && !wu.submitted && !await appConfirm("Today's work update is not submitted yet. Are you sure you want to log out anyway?", {
+      title: 'Unsubmitted Work Update',
+      icon: '⚠️',
+      confirmText: 'Log Out Anyway',
+      cancelText: 'Stay & Submit',
+      danger: true
+    })) return;localStorage.removeItem('amigo_token');if(typeof SessionCache!=='undefined')SessionCache.clearAll();await api('POST','logout').catch(()=>{});showLogin()};
+$('#pw').onclick=async()=>{const o=await appPrompt('Enter your current password:', '', {title:'Change Password', icon:'🔑', inputType:'password', confirmText:'Next'});if(!o)return;const n=await appPrompt('Enter new password (minimum 8 characters):', '', {title:'Set New Password', icon:'🔒', inputType:'password', confirmText:'Update Password'});if(!n)return;try{await api('POST','password',{oldPassword:o,newPassword:n});say('Password changed successfully!',1)}catch(e){say(e.message)}};
 if ($('#supportBtn')) $('#supportBtn').onclick = () => openSupportModal();
 const MENU_GROUPS = [
   {
@@ -7134,7 +7401,12 @@ async function crud(t){const c=CFG[t],L=await load(t),adm=me.role=='admin';let e
    $('#pcam').onclick=async()=>{try{face=await camera({title:'Take profile photo'});$('#pimg').src=face.photo;$('#pimg').style.display='block';pst('✓ Face detected')}catch(er){if(er.message!='Cancelled')pst(er.message)}}}
   f.onsubmit=async e=>{e.preventDefault();const b=Object.fromEntries(new FormData(f));if(t=='users'){b.faceRequired=false;b.otpRequired=false;if(face){b.photo=face.photo;b.descriptor=face.descriptor}}try{edit?await api('PUT',t+'/'+edit.id,b):await api('POST',t,b);edit=null;await load(t).then(x=>L.splice(0,L.length,...x));draw();say('Saved',1)}catch(er){say(er.message)}};
   $('#cx')&&($('#cx').onclick=()=>{edit=null;draw()});
-  $('#view').onclick=async e=>{const d=e.target.dataset;if(d.perm){const u=L.find(x=>x.id==d.perm);if(u)openPermissionsModal(u,()=>load(t,true).then(x=>{L.splice(0,L.length,...x);draw()}));return}if(d.e){edit=L.find(x=>x.id==d.e);draw();scrollTo(0,0)}if(d.d&&confirm('Delete this record?')){try{await api('DELETE',t+'/'+d.d);L.splice(0,L.length,...await load(t));draw()}catch(er){say(er.message)}}}};draw()}
+  $('#view').onclick=async e=>{const d=e.target.dataset;if(d.perm){const u=L.find(x=>x.id==d.perm);if(u)openPermissionsModal(u,()=>load(t,true).then(x=>{L.splice(0,L.length,...x);draw()}));return}if(d.e){edit=L.find(x=>x.id==d.e);draw();scrollTo(0,0)}if(d.d && await appConfirm('Are you sure you want to delete this record? This action cannot be undone.', {
+      title: 'Delete Record',
+      icon: '🗑️',
+      confirmText: 'Delete Record',
+      danger: true
+    })){try{await api('DELETE',t+'/'+d.d);L.splice(0,L.length,...await load(t));draw()}catch(er){say(er.message)}}}};draw()}
 // ---- invoices ----
 async function invoices(){
   if (!can('invoices', 'view')) {
@@ -7372,7 +7644,12 @@ async function invoices(){
     const xBtn = e.target.closest('[data-x]');
     if (xBtn) { builder(L.find(x => x.id == xBtn.dataset.x)); return; }
     const dBtn = e.target.closest('[data-d]');
-    if (dBtn && confirm('Delete this invoice permanently?')) {
+    if (dBtn && await appConfirm('Delete this invoice permanently? This action cannot be undone.', {
+      title: 'Delete Tax Invoice',
+      icon: '🗑️',
+      confirmText: 'Delete Invoice',
+      danger: true
+    })) {
       try {
         await api('DELETE', 'invoices/' + dBtn.dataset.d);
         invoices();
@@ -8837,7 +9114,12 @@ async function sheetsView() {
         const item = L.find(x => x.id === d.pr);
         if (item) printSheet(item);
       }
-      if (d.del && confirm('Are you sure you want to delete this document?')) {
+      if (d.del && await appConfirm('Are you sure you want to delete this document permanently? This action cannot be undone.', {
+        title: 'Delete Document',
+        icon: '🗑️',
+        confirmText: 'Delete Document',
+        danger: true
+      })) {
         try {
           await api('DELETE', 'sheets/' + d.del);
           sheetsView();
@@ -9366,10 +9648,10 @@ async function wordEditor(ex) {
       exec('insertHTML', hdr);
     };
 
-    $('#wTable').onclick = () => {
-      const r = prompt('Number of rows:', '3');
+    $('#wTable').onclick = async () => {
+      const r = await appPrompt('Enter number of table rows:', '3', { title: 'Insert Table Rows', icon: '📊', inputType: 'number', confirmText: 'Next' });
       if (!r) return;
-      const c = prompt('Number of columns:', '4');
+      const c = await appPrompt('Enter number of table columns:', '4', { title: 'Insert Table Columns', icon: '📊', inputType: 'number', confirmText: 'Insert Table' });
       if (!c) return;
       let tbl = '<table style="width:100%;border-collapse:collapse;margin:14px 0"><thead><tr style="background:#f1f5f9">';
       for (let j = 0; j < +c; j++) tbl += `<th style="border:1px solid #94a3b8;padding:7px 10px">Header ${j+1}</th>`;
@@ -10282,7 +10564,12 @@ async function tallyDayBook() {
         const item = vouchers.find(x => x.id === d.edit);
         if (item) tallyVoucherEntry(item.voucherType, item);
       }
-      if (d.del && confirm('Are you sure you want to delete this voucher?')) {
+      if (d.del && await appConfirm('Are you sure you want to delete this voucher?', {
+        title: 'Delete Accounting Voucher',
+        icon: '🗑️',
+        confirmText: 'Delete Voucher',
+        danger: true
+      })) {
         try {
           await api('DELETE', 'vouchers/' + d.del);
           say('Voucher deleted', 1);
@@ -11245,7 +11532,12 @@ async function syncView(isEmployeeMode = false) {
   if (btnDaily) {
     btnDaily.onclick = async () => {
       const fb = $('#dailyBackupFeedback');
-      if (!confirm('Take a live real-time snapshot of the database and email the backup ZIP immediately to kuldeep.amigo@gmail.com and budamale7@gmail.com?')) return;
+      if (!await appConfirm('Take a live real-time snapshot of the database and email the backup ZIP immediately to kuldeep.amigo@gmail.com and budamale7@gmail.com?', {
+        title: 'Send Live Real-Time Database Backup',
+        icon: '📦',
+        confirmText: '⚡ Send Backup Now',
+        theme: 'primary'
+      })) return;
       btnDaily.disabled = true;
       btnDaily.innerHTML = '<span>⏳ Generating &amp; Emailing Live DB Backup...</span>';
       if (fb) { fb.style.display = 'block'; fb.style.background = '#eff6ff'; fb.style.color = '#1d4ed8'; fb.innerText = 'Extracting 100% real-time data from Supabase PostgreSQL database and creating ZIP archive...'; }
@@ -11324,7 +11616,12 @@ async function syncView(isEmployeeMode = false) {
 
     importBtn.onclick = async () => {
       if (!chosenFile) return;
-      if (!confirm(`Are you sure you want to merge "${chosenFile.name}" into the central database?\n\n• Duplicate records will be updated/overridden.\n• New records will be inserted.\n• A safety backup will be created automatically.`)) return;
+      if (!await appConfirm(`Are you sure you want to merge "${chosenFile.name}" into the central database?\n\n• Duplicate records will be updated / merged.\n• New records will be safely inserted.\n• A snapshot backup is created automatically.`, {
+        title: 'Merge Central Database',
+        icon: '🔄',
+        confirmText: 'Start Database Merge',
+        danger: false
+      })) return;
 
       importBtn.disabled = true;
       importBtn.innerHTML = '⏳ Reading &amp; Merging…';
@@ -11411,7 +11708,10 @@ async function captureScreenFrame() {
     return canvas.toDataURL('image/png', 0.88);
   } catch (err) {
     if (err.name !== 'NotAllowedError') {
-      alert('Screen capture note: ' + err.message + '\n\nYou can also take a screenshot with Win + Shift + S and press Ctrl + V to paste, or browse an image file.');
+      await appAlert('Screen capture note: ' + err.message + '\n\nYou can also take a screenshot with Win + Shift + S and press Ctrl + V to paste, or browse an image file.', {
+        title: 'Screen Capture Note',
+        icon: '📷'
+      });
     }
     return null;
   }
@@ -13121,7 +13421,13 @@ async function handleDocFileUpload(e, userId, docType) {
 async function verifyEmployeeDoc(userId, docType, status) {
   let note = '';
   if (status === 'Rejected') {
-    note = prompt('Please enter rejection reason (e.g. Blurry photo, name mismatch):') || '';
+    note = await appPrompt('Please enter rejection reason for this document:', '', {
+      title: 'Reject Employee Document',
+      icon: '❌',
+      placeholder: 'e.g. Blurry photo, name mismatch, expired document...',
+      multiline: true,
+      confirmText: 'Confirm Rejection'
+    }) || '';
     if (!note) return;
   }
   try {
@@ -13393,7 +13699,12 @@ async function payrollView() {
 
   // Batch generate
   $('#batchGenBtn').onclick = async () => {
-    if (!confirm(`Generate salary slips for ALL staff for ${monthNames[+window.payrollSelectedMonth]} ${window.payrollSelectedYear}?`)) return;
+    if (!await appConfirm(`Generate salary slips for ALL staff for ${monthNames[+window.payrollSelectedMonth]} ${window.payrollSelectedYear}?`, {
+      title: 'Batch Payroll Generation',
+      icon: '💵',
+      confirmText: 'Generate Salary Slips',
+      theme: 'success'
+    })) return;
     
     const m = window.payrollSelectedMonth;
     const y = window.payrollSelectedYear;
@@ -13457,7 +13768,12 @@ async function payrollView() {
 }
 
 async function deleteSalarySlip(id) {
-  if (!confirm('Are you sure you want to delete this salary slip?')) return;
+  if (!await appConfirm('Are you sure you want to delete this salary slip?', {
+      title: 'Delete Salary Slip',
+      icon: '🗑️',
+      confirmText: 'Delete Slip',
+      danger: true
+    })) return;
   try {
     await api('DELETE', 'salaryslips/' + id);
     SessionCache.remove('salaryslips');
@@ -14934,7 +15250,12 @@ async function sendLeaveReminder(leaveId, btn) {
 }
 
 async function approveLeave(leaveId, empName) {
-  if (!confirm(`Are you sure you want to APPROVE the leave request for ${empName}?\nThis will deduct the days from their quota and send an approval email confirmation.`)) return;
+  if (!await appConfirm(`Are you sure you want to approve the leave request for ${empName}?\n\nThis will deduct days from their annual quota and dispatch an approval email confirmation.`, {
+    title: 'Approve Leave Request',
+    icon: '✅',
+    confirmText: 'Approve & Deduct Quota',
+    danger: false
+  })) return;
   try {
     await api('PUT', `leaves/${leaveId}`, { action: 'approve' });
     say(`✅ Leave approved for ${empName}! Quota deducted and confirmation emailed.`, 1);
@@ -14945,7 +15266,12 @@ async function approveLeave(leaveId, empName) {
 }
 
 async function rejectLeavePrompt(leaveId, empName) {
-  const reason = prompt(`Enter reason for declining ${empName}'s leave request:`);
+  const reason = await appPrompt(`Enter reason for declining ${empName}'s leave request:`, '', {
+        title: 'Decline Leave Application',
+        icon: '📝',
+        placeholder: 'Enter reason for rejection...',
+        submitText: 'Decline Leave'
+      });
   if (reason === null) return;
   try {
     await api('PUT', `leaves/${leaveId}`, { action: 'reject', rejectionReason: reason || 'Declined by Administrator' });
@@ -14957,7 +15283,12 @@ async function rejectLeavePrompt(leaveId, empName) {
 }
 
 async function cancelLeaveRequest(leaveId) {
-  if (!confirm('Are you sure you want to withdraw / cancel this pending leave request?')) return;
+  if (!await appConfirm('Are you sure you want to withdraw / cancel this pending leave request?', {
+        title: 'Withdraw Leave Application',
+        icon: '⚠️',
+        confirmText: 'Withdraw Request',
+        danger: true
+      })) return;
   try {
     await api('DELETE', `leaves/${leaveId}`);
     say('Leave request cancelled successfully.', 1);
@@ -15672,7 +16003,12 @@ async function saveCatalogueChanges() {
 }
 
 async function resetCatalogueToDefaults() {
-  if (!confirm('Are you sure you want to reset the catalogue back to official original defaults? All custom edits will be reverted.')) return;
+  if (!await appConfirm('Are you sure you want to reset the company catalogue back to official original defaults? All custom edits will be reverted.', {
+    title: 'Reset Catalogue Defaults',
+    icon: '⚠️',
+    confirmText: 'Reset to Defaults',
+    danger: true
+  })) return;
   try {
     window.catData = await api('POST', 'catalogue/reset');
     window.catModified = false;
@@ -15776,8 +16112,13 @@ function addCatalogueProduct(pageNumber) {
   say(`➕ New product card added to Page ${pageNumber}! Click title to rename or replace photo.`, 1);
 }
 
-function deleteCatalogueProduct(productId) {
-  if (!confirm('Are you sure you want to remove this product from the catalogue?')) return;
+async function deleteCatalogueProduct(productId) {
+  if (!await appConfirm('Are you sure you want to remove this product from the catalogue?', {
+          title: 'Remove Catalogue Product',
+          icon: '🗑️',
+          confirmText: 'Remove Product',
+          danger: true
+        })) return;
   window.catData.products = (window.catData.products || []).filter(p => p.id !== productId);
   window.catModified = true;
   const wrapper = $('#cat-pages-wrapper');
@@ -15801,8 +16142,13 @@ function addPrimeCustomer() {
   say('➕ New Prime Customer added! You can now edit the name, one-line info, and upload their logo.', 1);
 }
 
-function deletePrimeCustomer(customerId) {
-  if (!confirm('Are you sure you want to remove this client from Prime Customers?')) return;
+async function deletePrimeCustomer(customerId) {
+  if (!await appConfirm('Are you sure you want to remove this client from Prime Customers?', {
+          title: 'Remove Prime Customer',
+          icon: '🗑️',
+          confirmText: 'Remove Customer',
+          danger: true
+        })) return;
   window.catData.primeCustomers = (window.catData.primeCustomers || []).filter(c => c.id !== customerId);
   window.catModified = true;
   const wrapper = $('#cat-pages-wrapper');
@@ -17334,7 +17680,12 @@ async function sendProfileView(activeTab = 'compose', prefillClient = null) {
       }
       const recordId = btn.getAttribute('data-id');
       const clientName = btn.getAttribute('data-client') || 'this record';
-      if (!confirm('Are you sure you want to delete the sent history record for "' + clientName + '"? This action cannot be undone.')) {
+      if (!await appConfirm('Are you sure you want to delete the sent history record for "' + clientName + '"? This action cannot be undone.', {
+        title: 'Delete Sent History Record',
+        icon: '🗑️',
+        confirmText: 'Delete Record',
+        danger: true
+      })) {
         return;
       }
       try {
@@ -17355,7 +17706,12 @@ async function sendProfileView(activeTab = 'compose', prefillClient = null) {
         say('Access denied: Only administrators can delete sent history records.');
         return;
       }
-      if (!confirm('Are you sure you want to delete ALL sent profile email history records? This cannot be undone.')) {
+      if (!await appConfirm('Are you sure you want to delete ALL sent profile email history records? This action cannot be undone.', {
+        title: 'Clear All Sent History',
+        icon: '⚠️',
+        confirmText: 'Delete All History',
+        danger: true
+      })) {
         return;
       }
       try {
@@ -17776,7 +18132,12 @@ async function deleteCatalogueMailHistoryItem(id, clientName = '') {
     say('Access denied: Only administrators can delete sent history records.');
     return;
   }
-  if (!confirm('Delete this sent history record' + (clientName ? ' for ' + clientName : '') + '? This action cannot be undone.')) {
+  if (!await appConfirm('Delete this sent history record' + (clientName ? ' for ' + clientName : '') + '? This action cannot be undone.', {
+    title: 'Delete Sent History Record',
+    icon: '🗑️',
+    confirmText: 'Delete Record',
+    danger: true
+  })) {
     return;
   }
   try {
@@ -18974,7 +19335,12 @@ async function leadGenView(activeSubTab = 'crm') {
     document.querySelectorAll('.btnCrmCall').forEach(btn => {
       btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-id');
-        const notes = prompt('Enter Call Feedback / Customer Requirement (e.g. Discussed with stores head, needs quotation in Jan shutdown):');
+        const notes = await appPrompt('Enter Call Feedback / Customer Requirement (e.g. Discussed with stores head, needs quotation in Jan shutdown):', '', {
+          title: 'Log Call Feedback & Notes',
+          icon: '📞',
+          placeholder: 'Type call notes or customer feedback...',
+          submitText: 'Save Call Feedback'
+        });
         if (notes === null) return;
         try {
           await api('POST', 'leadgen/lead-action', { leadId: id, action: 'call_done', notes });
@@ -18991,11 +19357,22 @@ async function leadGenView(activeSubTab = 'crm') {
         const name = btn.getAttribute('data-name');
 
         if (!toEmail) {
-          toEmail = prompt(`Enter email address to send Amigo Company Profile to ${name}:`);
+          toEmail = await appPrompt(`Enter email address to send Amigo Company Profile to ${name}:`, toEmail, {
+          title: 'Send Amigo Company Profile & Catalogue',
+          icon: '✉️',
+          placeholder: 'purchase@plant.com',
+          submitText: 'Next'
+        });
           if (!toEmail) return;
         }
 
-        const customNote = prompt(`Confirm sending Amigo Company Profile & Product Catalogue to ${toEmail}:\n(Optional: Add custom message below, or leave blank)`, '');
+        const customNote = await appPrompt(`Confirm sending Amigo Company Profile & Catalogue to ${toEmail}:`, '', {
+          title: 'Email Company Profile & Catalogue',
+          icon: '📧',
+          placeholder: 'Optional: Add personal executive message (or leave blank to send default pitch)...',
+          multiline: true,
+          confirmText: 'Send Profile Email'
+        });
         if (customNote === null) return;
 
         btn.disabled = true;
@@ -19016,9 +19393,18 @@ async function leadGenView(activeSubTab = 'crm') {
     document.querySelectorAll('.btnCrmFollowUp').forEach(btn => {
       btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-id');
-        const nextDate = prompt('Enter Follow-up Date (e.g. Next Monday / 15-Dec):', 'Next Monday');
+        const nextDate = await appPrompt('Enter Follow-up Date (e.g. Next Monday / 15-Dec):', 'Next Monday', {
+          title: 'Schedule Sales Follow-up',
+          icon: '📅',
+          submitText: 'Next'
+        });
         if (nextDate === null) return;
-        const notes = prompt('Follow-up Note (e.g. Client requested callback after budget approval):', '');
+        const notes = await appPrompt('Follow-up Note (e.g. Client requested callback after budget approval):', '', {
+          title: 'Follow-up Details',
+          icon: '📝',
+          placeholder: 'Type follow-up details...',
+          submitText: 'Schedule Follow-up'
+        });
         if (notes === null) return;
         try {
           await api('POST', 'leadgen/lead-action', { leadId: id, action: 'follow_up', nextFollowUp: nextDate, notes });
@@ -19032,7 +19418,12 @@ async function leadGenView(activeSubTab = 'crm') {
       btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-id');
         const name = btn.getAttribute('data-name');
-        if (!confirm(`Confirm converting "${name}" into official Client Directory?\n\nThis will permanently register them as a Client for Invoicing and Quotations.`)) return;
+        if (!await appConfirm(`Confirm converting "${name}" into official Client Directory?\n\nThis will permanently register them as an official Client for Invoicing and Quotations.`, {
+          title: 'Convert Prospect to Client',
+          icon: '🤝',
+          confirmText: 'Convert & Register Client',
+          danger: false
+        })) return;
 
         try {
           const res = await api('POST', 'leadgen/lead-action', { leadId: id, action: 'convert', notes: 'Converted to official client directory' });
@@ -19045,7 +19436,12 @@ async function leadGenView(activeSubTab = 'crm') {
     document.querySelectorAll('.btnCrmInvalidNum').forEach(btn => {
       btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-id');
-        if (!confirm('Mark this number as Invalid / Disconnected?\n\nThis will permanently blacklist the number so it is never dialed or returned in future searches.')) return;
+        if (!await appConfirm('Mark this phone number as Invalid or Disconnected?\n\nThis will blacklist the number so it is never dialed or returned in future discovery searches.', {
+          title: 'Flag Invalid Number',
+          icon: '📵',
+          confirmText: 'Mark Invalid / Dead',
+          danger: true
+        })) return;
         try {
           await api('POST', 'leadgen/lead-action', { leadId: id, action: 'invalid_number', notes: 'Number disconnected / not in service' });
           say('Lead marked invalid & number blacklisted from future searches.', 1);
@@ -19065,7 +19461,12 @@ async function leadGenView(activeSubTab = 'crm') {
     document.querySelectorAll('.btnCrmDelete').forEach(btn => {
       btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-id');
-        if (!confirm('Remove this lead from the CRM pipeline?')) return;
+        if (!await appConfirm('Remove this lead from the CRM pipeline?', {
+          title: 'Remove Lead from Pipeline',
+          icon: '🗑️',
+          confirmText: 'Delete Lead',
+          danger: true
+        })) return;
         try {
           await api('POST', 'leadgen/delete-lead', { leadId: id });
           refreshPipeline();
