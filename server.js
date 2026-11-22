@@ -3106,6 +3106,224 @@ Return STRICTLY a JSON array of ${count} company objects with the keys above.`;
     throw fail(404, 'Not found');
   }
 
+
+// ---------- Shared Sync Meta & Real-Time Daily Database Backup Helpers ----------
+// (readSyncMeta & writeSyncMeta defined in outer scope)
+
+async function generateRealtimeDbBackupZip() {
+  if (db.isDbActive()) {
+    try {
+      await db.refreshCache(true);
+    } catch (e) {
+      console.error('Real-time database refresh error:', e.message);
+    }
+  }
+
+  const fileMap = {};
+  const stats = {};
+
+  // 1. Export all relational tables defined in SCHEMA
+  const tables = Object.keys(SCHEMA);
+  for (const t of tables) {
+    const list = readTable(t);
+    stats[t] = list.length;
+    const csvContent = [SCHEMA[t].join(',')].concat(list.map(o => SCHEMA[t].map(k => esc(o[k])).join(','))).join('\n') + '\n';
+    fileMap[t + '.csv'] = csvContent;
+  }
+
+  // 2. Export all JSON configuration & dynamic stores
+  const jsonKeys = ['company', 'leadgen', 'crm_leads', 'seen_leads', 'mail', 'monitoring', 'catalogue', 'cataloguemails', 'sync_meta'];
+  for (const k of jsonKeys) {
+    let val = null;
+    if (db.isDbActive()) {
+      val = db.getCachedSetting(k);
+    }
+    if (!val) {
+      try {
+        const fp = path.join(DATA, k + '.json');
+        if (fs.existsSync(fp)) val = JSON.parse(fs.readFileSync(fp, 'utf8'));
+      } catch {}
+    }
+    if (val !== null && val !== undefined) {
+      fileMap[k + '.json'] = JSON.stringify(val, null, 2);
+    }
+  }
+
+  // 3. Activity logs (if active)
+  if (db.isDbActive()) {
+    try {
+      const act = db.getCachedActivity();
+      if (act && Object.keys(act).length) {
+        fileMap['activity_logs.json'] = JSON.stringify(act, null, 2);
+      }
+    } catch {}
+  }
+
+  // 4. Create zip buffer
+  const zipBuf = createZip(fileMap);
+  const todayStr = ldate();
+  const timestamp = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'full', timeStyle: 'medium' });
+
+  return {
+    fileMap,
+    zipBuf,
+    stats,
+    todayStr,
+    timestamp,
+    sizeKb: (zipBuf.length / 1024).toFixed(1),
+    fileCount: Object.keys(fileMap).length
+  };
+}
+
+async function sendDailyBackupEmail(triggerSource = 'Automated Schedule (6:30 PM IST)') {
+  const mCfg = mailCfg();
+  if (!mCfg.smtpUser || !mCfg.smtpPass) {
+    throw new Error('SMTP credentials are not configured in system settings.');
+  }
+
+  const recipients = ['kuldeep.amigo@gmail.com', 'budamale7@gmail.com'];
+  const backup = await generateRealtimeDbBackupZip();
+  const { zipBuf, stats, todayStr, timestamp, sizeKb, fileCount } = backup;
+
+  // Read CRM lead count
+  let crmCount = 0;
+  try {
+    const crmLeads = readCrmLeads();
+    crmCount = Array.isArray(crmLeads) ? crmLeads.length : 0;
+  } catch {}
+
+  const subject = `📦 Daily Real-Time Database Backup [${dmy(todayStr)}] - 6:30 PM IST`;
+  const text = `Amigo Enterprises - Daily Database Backup & Health Report
+Date: ${timestamp}
+Trigger: ${triggerSource}
+Data Source: Live Supabase PostgreSQL Database (Real-Time Pull)
+
+Summary Metrics:
+- Tax Invoices: ${stats.invoices || 0}
+- Quotations & Docs: ${stats.docs || 0}
+- Active Clients: ${stats.clients || 0}
+- Products & Spares: ${stats.products || 0}
+- Ledger Accounts: ${stats.ledgers || 0}
+- Accounting Vouchers: ${stats.vouchers || 0}
+- CRM Leads in Queue: ${crmCount}
+- Work Updates Logged: ${stats.workupdates || 0}
+- Users: ${stats.users || 0}
+
+Attached File: Amigo_ERP_Complete_Database_Backup_${todayStr}.zip (${sizeKb} KB)
+Contains ${fileCount} tables and master files.
+
+To restore or inspect: Download the attachment, log into Amigo ERP Admin, go to Administration -> Data Sync & Merge, and upload the zip file.`;
+
+  const html = emailHtml({
+    title: `Daily Database Backup - ${dmy(todayStr)}`,
+    preheader: `Real-time database backup for ${dmy(todayStr)} (6:30 PM IST)`,
+    body: `
+      <tr>
+        <td style="padding:24px 28px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+            <h2 style="margin:0;color:#0b4f8a;font-size:20px">📦 Daily Database Backup &amp; Health Report</h2>
+            <span style="font-size:11px;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;padding:4px 10px;border-radius:20px;font-weight:700">🟢 100% REAL-TIME DB PULL</span>
+          </div>
+
+          <p style="margin:0 0 16px;color:#334155;font-size:14px;line-height:1.6">
+            This is the automated daily backup of <b>Amigo Enterprises</b> containing all real-time transactional, accounting, and master records compiled on <b>${hx(timestamp)}</b>.
+          </p>
+
+          <!-- Metrics Matrix -->
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:20px">
+            <div style="font-size:12px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">
+              📊 Live Database Table Counts:
+            </div>
+            <table style="width:100%;border-collapse:collapse;font-size:13px">
+              <tr>
+                <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">🧾 <b>Tax Invoices:</b></td>
+                <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.invoices || 0}</td>
+                <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">📑 <b>Quotations &amp; Docs:</b></td>
+                <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.docs || 0}</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">👥 <b>Clients &amp; Parties:</b></td>
+                <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.clients || 0}</td>
+                <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">🏷️ <b>Products &amp; Spares:</b></td>
+                <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.products || 0}</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">🏛️ <b>Ledgers &amp; Accounts:</b></td>
+                <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.ledgers || 0}</td>
+                <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">🎫 <b>Vouchers &amp; Entries:</b></td>
+                <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.vouchers || 0}</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 10px;color:#1e293b">🎯 <b>CRM Leads Active:</b></td>
+                <td style="padding:6px 10px;font-weight:700;color:#059669;text-align:right">${crmCount}</td>
+                <td style="padding:6px 10px;color:#1e293b">✍️ <b>Work Updates Logged:</b></td>
+                <td style="padding:6px 10px;font-weight:700;color:#059669;text-align:right">${stats.workupdates || 0}</td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- Attachment Box -->
+          <div style="background:#eff6ff;border-left:4px solid #3b82f6;padding:14px 18px;border-radius:8px;font-size:13px;color:#1e293b;margin-bottom:18px">
+            <div style="font-weight:700;font-size:14px;color:#1d4ed8;margin-bottom:6px">📁 Attached Backup Archive:</div>
+            <b>File Name:</b> <code>Amigo_ERP_Complete_Database_Backup_${todayStr}.zip</code><br>
+            <b>Size:</b> ${sizeKb} KB (${fileCount} total tables &amp; JSON registries)<br>
+            <b>Trigger Source:</b> ${hx(triggerSource)}<br>
+            <b>Recipients:</b> ${recipients.join(', ')}
+          </div>
+
+          <div style="background:#fafafa;border:1px dashed #cbd5e1;padding:12px 16px;border-radius:8px;font-size:12px;color:#64748b">
+            <b>Admin Restore Guide:</b>
+            Download the attached <code>.zip</code> file. In Amigo ERP, log in as Administrator &rarr; navigate to <b>Administration &rarr; Data Sync &amp; Merge</b> &rarr; click <b>Upload &amp; Merge data.zip</b> to restore records or inspect any CSV file directly in Microsoft Excel.
+          </div>
+        </td>
+      </tr>
+    `
+  });
+
+  await smtpSend(mCfg, {
+    to: recipients.join(', '),
+    subject,
+    text,
+    html,
+    images: mailImages(),
+    attachments: [
+      {
+        name: `Amigo_ERP_Complete_Database_Backup_${todayStr}.zip`,
+        type: 'application/zip',
+        data: zipBuf
+      }
+    ]
+  });
+
+  // Save audit in sync_meta
+  try {
+    const meta = readSyncMeta();
+    meta.lastDailyBackupAt = new Date().toISOString();
+    meta.lastDailyBackupSize = zipBuf.length;
+    meta.lastDailyBackupRecipients = recipients;
+    meta.history = meta.history || [];
+    meta.history.unshift({
+      at: meta.lastDailyBackupAt,
+      by: triggerSource,
+      type: 'daily_email_backup',
+      size: zipBuf.length,
+      recipients
+    });
+    if (meta.history.length > 50) meta.history = meta.history.slice(0, 50);
+    await writeSyncMeta(meta);
+  } catch (err) {
+    console.error('Error saving daily backup meta:', err.message);
+  }
+
+  return {
+    ok: true,
+    recipients,
+    sizeKb,
+    fileCount,
+    timestamp
+  };
+}
+
   if (a === 'sync') {
     if (m === 'GET' && id === 'live') {
       return send(res, 200, { revisions: db.getRevisions(), serverTime: Date.now() });
@@ -3133,6 +3351,17 @@ Return STRICTLY a JSON array of ${count} company objects with the keys above.`;
       const meta = readSyncMeta();
       const isSunday = new Date().getDay() === 0;
       return send(res, 200, { ...meta, isSunday });
+    }
+
+    if (m === 'POST' && id === 'send-daily-backup') {
+      const isOpsAdmin = user.role === 'admin' || String(user.username || '').toLowerCase() === 'operationsadmin';
+      if (!isOpsAdmin) throw fail(403, 'Permission denied: Only Administrator or OperationsAdmin can trigger daily backup.');
+      const result = await sendDailyBackupEmail(`Admin Manual Trigger (${user.fullName || user.username})`);
+      return send(res, 200, {
+        ok: true,
+        message: 'Daily real-time database backup emailed successfully to kuldeep.amigo@gmail.com and budamale7@gmail.com',
+        ...result
+      });
     }
 
     if (m === 'GET' && id === 'export') {
@@ -4749,6 +4978,15 @@ const handler = async (req, res) => {
       }
       await checkInactivityAlerts();
       return send(res, 200, { ok: true, timestamp: new Date().toISOString() });
+    }
+    if (p === '/api/cron/daily-backup') {
+      try {
+        const result = await sendDailyBackupEmail('Automated Vercel Cron (6:30 PM IST)');
+        return send(res, 200, { ok: true, timestamp: new Date().toISOString(), ...result });
+      } catch (err) {
+        console.error('Daily backup cron failed:', err.message);
+        return send(res, 500, { ok: false, error: err.message });
+      }
     }
     if (p.startsWith('/api/')) return await api(req, res, p.slice(5).split('/').filter(Boolean));
     serve(req, res, p);

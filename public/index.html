@@ -11056,6 +11056,43 @@ async function syncView(isEmployeeMode = false) {
       </div>
     </div>
 
+    <!-- Dedicated Real-Time Daily Database Backup Card (6:30 PM IST) -->
+    <div class="card" style="margin-bottom:24px;border:1.5px solid #6366f1;background:linear-gradient(135deg,#f8fafc 0%,#eef2ff 100%);padding:20px 24px;border-radius:14px;box-shadow:0 4px 18px rgba(99,102,241,0.08)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px">
+        <div style="display:flex;align-items:flex-start;gap:14px">
+          <div style="width:44px;height:44px;border-radius:12px;background:#4f46e5;color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;box-shadow:0 4px 12px rgba(79,70,229,0.3)">
+            📦
+          </div>
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <h3 style="margin:0;font-size:17px;color:#1e1b4b">Daily Real-Time Database Backup (6:30 PM IST)</h3>
+              <span style="font-size:11px;background:#10b981;color:#fff;padding:2px 8px;border-radius:12px;font-weight:700">🟢 Active Automation</span>
+              <span style="font-size:11px;background:#6366f1;color:#fff;padding:2px 8px;border-radius:12px;font-weight:700">⚡ Live PostgreSQL Pull</span>
+            </div>
+            <div style="color:#475569;font-size:13px;margin-top:4px;line-height:1.5">
+              Automated daily cron takes a real-time snapshot directly from the Supabase PostgreSQL database at <b>6:30 PM IST</b> every day and emails the complete ZIP archive (all transactions, CRM leads &amp; settings) to:
+            </div>
+            <div style="margin-top:6px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+              <span style="font-size:12px;font-family:monospace;background:#fff;border:1px solid #cbd5e1;padding:3px 8px;border-radius:6px;color:#0f172a">✉️ kuldeep.amigo@gmail.com</span>
+              <span style="font-size:12px;font-family:monospace;background:#fff;border:1px solid #cbd5e1;padding:3px 8px;border-radius:6px;color:#0f172a">✉️ budamale7@gmail.com</span>
+            </div>
+            <div style="font-size:12px;color:#64748b;margin-top:6px">
+              <b>Last Daily Backup:</b> ${status.lastDailyBackupAt ? new Date(status.lastDailyBackupAt).toLocaleString('en-IN') : 'Scheduled for today at 6:30 PM IST'}
+              ${status.lastDailyBackupSize ? ` &bull; <b>Size:</b> ${(status.lastDailyBackupSize / 1024).toFixed(1)} KB` : ''}
+            </div>
+          </div>
+        </div>
+        ${isAdm ? `
+        <div>
+          <button class="btn" id="btnSendDailyBackupNow" style="background:#4f46e5;color:#fff;border-radius:8px;font-weight:700;display:inline-flex;align-items:center;gap:6px;padding:9px 16px;box-shadow:0 2px 8px rgba(79,70,229,0.3)">
+            <span>⚡ Send Live DB Backup Now</span>
+          </button>
+        </div>
+        ` : ''}
+      </div>
+      <div id="dailyBackupFeedback" style="display:none;margin-top:12px;padding:8px 14px;border-radius:6px;font-size:12px"></div>
+    </div>
+
     <!-- Main Workflow Sections -->
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;margin-bottom:24px">
       <!-- Section 1: Export Current Data -->
@@ -11203,6 +11240,28 @@ async function syncView(isEmployeeMode = false) {
 
   // Event handlers
   $('#syncRefreshBtn').onclick = () => syncView(isEmployeeMode);
+
+  const btnDaily = $('#btnSendDailyBackupNow');
+  if (btnDaily) {
+    btnDaily.onclick = async () => {
+      const fb = $('#dailyBackupFeedback');
+      if (!confirm('Take a live real-time snapshot of the database and email the backup ZIP immediately to kuldeep.amigo@gmail.com and budamale7@gmail.com?')) return;
+      btnDaily.disabled = true;
+      btnDaily.innerHTML = '<span>⏳ Generating &amp; Emailing Live DB Backup...</span>';
+      if (fb) { fb.style.display = 'block'; fb.style.background = '#eff6ff'; fb.style.color = '#1d4ed8'; fb.innerText = 'Extracting 100% real-time data from Supabase PostgreSQL database and creating ZIP archive...'; }
+      try {
+        const res = await api('POST', 'sync/send-daily-backup', {});
+        if (fb) { fb.style.background = '#ecfdf5'; fb.style.color = '#065f46'; fb.innerText = '✓ ' + (res.message || 'Daily real-time backup emailed successfully!'); }
+        say('✓ Daily real-time database backup emailed successfully!', 1);
+        setTimeout(() => syncView(isEmployeeMode), 2000);
+      } catch (e) {
+        if (fb) { fb.style.background = '#fef2f2'; fb.style.color = '#991b1b'; fb.innerText = 'Error: ' + e.message; }
+        say('Error sending daily backup: ' + e.message, 0);
+        btnDaily.disabled = false;
+        btnDaily.innerHTML = '<span>⚡ Send Live DB Backup Now</span>';
+      }
+    };
+  }
 
   $('#syncBtnEmail').onclick = async () => {
     const btn = $('#syncBtnEmail');
