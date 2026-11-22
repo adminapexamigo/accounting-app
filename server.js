@@ -3147,32 +3147,53 @@ function rowsToPostgresCsv(rows, fields) {
 async function generateRealtimeDbBackupZip() {
   const fileMap = {};
   const stats = {};
-  const fullDump = {
-    exportedAt: new Date().toISOString(),
-    source: 'Supabase PostgreSQL (schema: public)',
-    totalTables: SUPABASE_ALL_TABLES.length,
-    tables: {}
-  };
+  let tablesToBackup = [];
 
   if (db.isDbActive() && db.pool) {
     try {
       await db.refreshCache(true);
-      // Query every single one of the 15 Supabase PostgreSQL tables directly
-      for (const t of SUPABASE_ALL_TABLES) {
-        try {
-          const res = await db.pool.query('SELECT * FROM public."' + t + '"');
-          stats[t] = res.rows.length;
-          fullDump.tables[t] = res.rows;
-          fileMap[t + '.csv'] = rowsToPostgresCsv(res.rows, res.fields);
-          fileMap[t + '.json'] = JSON.stringify(res.rows, null, 2);
-        } catch (tableErr) {
-          console.error(`Error querying Supabase table ${t}:`, tableErr.message);
-        }
+      // Dynamic Table Discovery: query PostgreSQL catalog to discover all present and future tables
+      const discoveryQuery = `
+        SELECT table_name 
+        FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+          AND table_type = 'BASE TABLE'
+        ORDER BY table_name ASC
+      `;
+      const discRes = await db.pool.query(discoveryQuery);
+      if (discRes.rows && discRes.rows.length) {
+        tablesToBackup = discRes.rows.map(r => r.table_name);
       }
-      fileMap['supabase_full_dump.json'] = JSON.stringify(fullDump, null, 2);
-    } catch (e) {
-      console.error('Supabase real-time extraction error:', e.message);
+    } catch (discErr) {
+      console.error('Dynamic table discovery error:', discErr.message);
     }
+  }
+
+  // Fallback to standard table list if discovery was empty or offline
+  if (!tablesToBackup.length) {
+    tablesToBackup = SUPABASE_ALL_TABLES.slice();
+  }
+
+  const fullDump = {
+    exportedAt: new Date().toISOString(),
+    source: 'Supabase PostgreSQL (schema: public)',
+    totalTables: tablesToBackup.length,
+    tables: {}
+  };
+
+  if (db.isDbActive() && db.pool) {
+    for (const t of tablesToBackup) {
+      try {
+        const res = await db.pool.query('SELECT * FROM public."' + t + '"');
+        stats[t] = res.rows.length;
+        fullDump.tables[t] = res.rows;
+        fileMap[t + '.csv'] = rowsToPostgresCsv(res.rows, res.fields);
+        fileMap[t + '.json'] = JSON.stringify(res.rows, null, 2);
+      } catch (tableErr) {
+        console.error(`Error querying dynamic Supabase table ${t}:`, tableErr.message);
+      }
+    }
+    fileMap['supabase_full_dump.json'] = JSON.stringify(fullDump, null, 2);
   }
 
   // Fallback or offline support if DB pool wasn't available
@@ -3246,6 +3267,26 @@ async function sendDailyBackupEmail(triggerSource = 'Automated Schedule (6:30 PM
     crmCount = Array.isArray(crmLeads) ? crmLeads.length : 0;
   } catch {}
 
+  const sortedTableNames = Object.keys(stats).sort();
+  const dynamicTableRows = [];
+  for (let i = 0; i < sortedTableNames.length; i += 2) {
+    const t1 = sortedTableNames[i];
+    const t2 = sortedTableNames[i + 1];
+    dynamicTableRows.push(`
+      <tr>
+        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">🗄️ <code>${hx(t1)}</code></td>
+        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats[t1] ?? 0}</td>
+        ${t2 ? `
+        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">🗄️ <code>${hx(t2)}</code></td>
+        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats[t2] ?? 0}</td>
+        ` : `
+        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#94a3b8">—</td>
+        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#94a3b8;text-align:right">—</td>
+        `}
+      </tr>
+    `);
+  }
+
   const subject = `📦 Daily Real-Time Database Backup [${dmy(todayStr)}] - 6:30 PM IST`;
   const text = `Amigo Enterprises - Daily Database Backup & Health Report
 Date: ${timestamp}
@@ -3295,53 +3336,10 @@ To restore or inspect: Download the attachment, log into Amigo ERP Admin, go to 
                 <th style="padding:6px 10px;text-align:left;color:#334155">Supabase Table</th>
                 <th style="padding:6px 10px;text-align:right;color:#334155">Live Rows</th>
               </tr>
-              <tr>
-                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">🧾 <code>invoices</code></td>
-                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.invoices ?? 0}</td>
-                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">📑 <code>docs</code></td>
-                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.docs ?? 0}</td>
-              </tr>
-              <tr>
-                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">👥 <code>clients</code></td>
-                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.clients ?? 0}</td>
-                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">🏷️ <code>products</code></td>
-                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.products ?? 0}</td>
-              </tr>
-              <tr>
-                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">🏛️ <code>ledgers</code></td>
-                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.ledgers ?? 0}</td>
-                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">🛒 <code>purchases</code></td>
-                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.purchases ?? 0}</td>
-              </tr>
-              <tr>
-                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">👤 <code>users</code></td>
-                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.users ?? 0}</td>
-                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">⏱️ <code>logins</code></td>
-                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.logins ?? 0}</td>
-              </tr>
-              <tr>
-                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">✍️ <code>workupdates</code></td>
-                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.workupdates ?? 0}</td>
-                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">⏱️ <code>activity_logs</code></td>
-                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.activity_logs ?? 0}</td>
-              </tr>
-              <tr>
-                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">⚙️ <code>app_settings</code></td>
-                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.app_settings ?? 0}</td>
-                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">🏖️ <code>leaves</code></td>
-                <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats.leaves ?? 0}</td>
-              </tr>
-              <tr>
-                <td style="padding:5px 10px;color:#1e293b">🎫 <code>vouchers</code></td>
-                <td style="padding:5px 10px;font-weight:700;color:#0b6fc4;text-align:right">${stats.vouchers ?? 0}</td>
-                <td style="padding:5px 10px;color:#1e293b">💵 <code>salaryslips</code></td>
-                <td style="padding:5px 10px;font-weight:700;color:#0b6fc4;text-align:right">${stats.salaryslips ?? 0}</td>
-              </tr>
-              <tr>
-                <td style="padding:5px 10px;color:#1e293b">📗 <code>sheets</code></td>
-                <td style="padding:5px 10px;font-weight:700;color:#0b6fc4;text-align:right">${stats.sheets ?? 0}</td>
-                <td style="padding:5px 10px;color:#1e293b">🎯 <b>CRM Leads Queue</b></td>
-                <td style="padding:5px 10px;font-weight:700;color:#059669;text-align:right">${crmCount}</td>
+              ${dynamicTableRows.join('')}
+              <tr style="background:#f8fafc">
+                <td style="padding:6px 10px;color:#1e293b" colspan="2">🎯 <b>B2B CRM Leads in Calling Queue:</b></td>
+                <td style="padding:6px 10px;font-weight:700;color:#059669;text-align:right" colspan="2">${crmCount} leads</td>
               </tr>
             </table>
           </div>
