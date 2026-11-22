@@ -16273,1934 +16273,9 @@ function renderPrimeCustomerCardHTML(c, isEdit) {
 
 
 // ============================================================================
-// COMPANY CATALOGUE & PROFILE EMAIL SENDER & TRACKING (Dynamic & AI-Powered)
+// AI B2B Lead Generator & CRM Sales Pipeline Tracker (OperationsAdmin Testing)
 // ============================================================================
-
-const OFFICIAL_CATALOGUE_EMAIL_DRAFT = (clientName = '', senderName = 'Ashwini Kharat', senderPhone = '8421159145', senderEmail = 'amigo.sales6423@gmail.com') => `Dear Sir/Madam${clientName ? ` (Attn: ${clientName})` : ''},
-Greetings from Amigo Enterprises, Pune!
-
-We are pleased to introduce Amigo Enterprises, a reliable supplier of mechanical and electrical spare parts and a trusted service provider specializing in Electrostatic Precipitator (ESP) spares, maintenance, inspection, and retrofitting services.
-
-We aim to help our customers improve ESP performance, minimize downtime, and resolve operational issues during preventive maintenance and plant shutdowns. Our team provides both mechanical and electrical support, focusing on quality, dependable service, and competitive pricing.
-
-Our Product Range – ESP Spares:
-• Collecting & Discharge Electrodes • Rectifier Transformers & Spares
-• Rapper Panels, Coils, Boot Seals & FRP • All Types of Insulators & Gaskets
-• Access, Hopper & Penthouse Doors • Heaters (Hopper, Insulator & Purge Air)
-• Tumbling Hammers • Rotary Air Valves (RAV) • Top & Bottom Tadpole Seals • GD Screens
-
-Our Specialized Technical Services:
-• Mechanical & Electrical Maintenance & Overhauling
-• Retrofitting of Old Panels with Modern Microprocessor Controllers
-• Comprehensive Mechanical & Electrical ESP Inspections & Shutdown Planning
-
-Esteemed Customers Across Industries:
-Emami Papers, Shree Cement, Chakra Cement, Reliance Cement, Garden Silk Mill, BRFL Textile, Shri Ambalika Sugar, EID Parry, Thanush Ispat, Shree Mega Power, Suvan Steel, Shree Kanak Durga Steel, Durva Infratech.
-
-We would be pleased to share our company credentials and complete technical product catalogue (attached) for your kind reference. If you have any ongoing or upcoming requirements related to ESP spares, maintenance, or shutdown activities, please feel free to contact us.
-
-We look forward to establishing a long-term business relationship with your esteemed organization.
-
-Thank you for your time and consideration.
-
-Warm regards,
-${senderName} | Sales Executive
-AMIGO ENTERPRISES PUNE
-📞 ${senderPhone} | ✉️ ${senderEmail}
-Office No:- 401, Baban Villa, Sno-6/17, Chovisawadi, Haveli Pune, 412105`;
-
-function buildClientCompanyProfileHtml({ clientName, subject, bodyText, senderName, senderPhone, senderEmail, senderDesignation }) {
-  const origin = window.location.origin || '';
-  const logoUrl = origin + '/logo.png';
-  const brand = `<img src="${logoUrl}" width="120" alt="Amigo Enterprises" style="display:block;border:0;outline:none;height:auto;max-height:44px;object-fit:contain">`;
-
-  const sName = senderName || 'Ashwini Kharat';
-  const sPhone = senderPhone || '8421159145';
-  const sEmail = senderEmail || 'amigo.sales6423@gmail.com';
-  const sDesig = senderDesignation || 'Sales Executive';
-
-  const formattedBody = (bodyText || '')
-    .split(/\n\n+/)
-    .map(p => p.trim())
-    .filter(Boolean)
-    .map(p => `<p style="margin:0 0 12px;font-size:14px;line-height:1.68;color:#243242;letter-spacing:-0.1px">${h(p).replace(/\n/g, '<br>')}</p>`)
-    .join('');
-
-  return `<!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>${h(subject || 'Company Profile & Product Catalogue | Amigo Enterprises')}</title>
-</head>
-<body style="margin:0;padding:0;background:#edf2f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;color:#1e293b">
-
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#edf2f7;padding:28px 12px">
-<tr><td align="center">
-
-  <!-- MAIN 1100PX ENTERPRISE CARD CONTAINER -->
-  <table role="presentation" width="1100" cellpadding="0" cellspacing="0" style="width:100%;max-width:1100px;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 12px 35px -5px rgba(15,23,42,0.12),0 4px 12px -2px rgba(15,23,42,0.06);border:1px solid #d8e2ec">
-    
-    <!-- DUAL PRECISION BRAND STRIPE (Crimson Red & Royal Sky Gradient) -->
-    <tr>
-      <td style="background:linear-gradient(90deg, #c1272d 0%, #dc2626 24%, #0284c7 24.1%, #0b4f8a 70%, #061e38 100%);height:5px;font-size:0;line-height:0">&nbsp;</td>
-    </tr>
-
-    <!-- EXECUTIVE HEADER: BRAND EMBLEM & AUTHORITY CREDENTIALS -->
-    <tr>
-      <td style="background:linear-gradient(135deg, #06162a 0%, #0d2847 48%, #0b4f8a 100%);padding:18px 32px;color:#ffffff">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-          <tr>
-            <!-- Left: Logo Mounted on Elevated Gloss Card -->
-            <td valign="middle" width="145" style="padding-right:18px">
-              <div style="background:#ffffff;padding:7px 14px;border-radius:10px;display:inline-block;box-shadow:0 4px 14px rgba(0,0,0,0.22);border:1px solid rgba(255,255,255,0.9)">
-                ${brand}
-              </div>
-            </td>
-
-            <!-- Center: Enterprise Title & Tagline -->
-            <td valign="middle" style="padding-left:16px;border-left:1px solid rgba(255,255,255,0.18)">
-              <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px">
-                <span style="font-size:22px;font-weight:900;color:#ffffff;letter-spacing:0.8px;line-height:1.1;text-shadow:0 1px 3px rgba(0,0,0,0.4)">AMIGO ENTERPRISES</span>
-                <span style="background:linear-gradient(135deg, #c1272d 0%, #991b1b 100%);color:#ffffff;font-size:9.5px;font-weight:800;padding:3px 9px;border-radius:4px;letter-spacing:0.8px;text-transform:uppercase;box-shadow:0 2px 4px rgba(193,39,45,0.4)">PUNE &bull; INDIA</span>
-              </div>
-              <div style="font-size:12.5px;color:#93c5fd;font-weight:600;margin-top:4px;letter-spacing:0.2px">
-                Engineering Solutions &bull; Electrostatic Precipitator (ESP) Spares &bull; Maintenance &bull; Retrofitting
-              </div>
-            </td>
-
-            <!-- Right: ISO Trust & Direct Hotline Pills -->
-            <td valign="middle" align="right" style="padding-left:14px">
-              <table role="presentation" cellpadding="0" cellspacing="0" style="display:inline-table">
-                <tr>
-                  <td style="padding-right:10px">
-                    <div style="background:rgba(2,132,199,0.22);border:1px solid rgba(56,189,248,0.55);border-radius:7px;padding:5px 12px;text-align:right">
-                      <div style="font-size:8.5px;color:#7dd3fc;font-weight:700;letter-spacing:0.8px;text-transform:uppercase">QUALITY ASSURED</div>
-                      <div style="font-size:11px;font-weight:800;color:#ffffff;letter-spacing:0.3px">🛡️ ISO 9001:2015</div>
-                    </div>
-                  </td>
-                  <td>
-                    <div style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.3);border-radius:7px;padding:5px 14px;text-align:right">
-                      <div style="font-size:8.5px;color:#cbd5e1;font-weight:700;letter-spacing:0.8px;text-transform:uppercase">DIRECT SALES DESK</div>
-                      <div style="font-size:12px;font-weight:900;margin-top:2px">
-                        <a href="tel:${h(sPhone)}" style="color:#ffffff !important;text-decoration:none !important;font-weight:900"><span style="color:#ffffff !important;text-decoration:none !important">📞 +91 ${h(sPhone)}</span></a>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-
-    <!-- PERSONALIZED VIP CLIENT ACCENT BANNER (Dynamic) -->
-    ${clientName ? `
-    <tr>
-      <td style="background:linear-gradient(90deg, #f0f7ff 0%, #e6f2fe 65%, #f8fafc 100%);padding:10px 32px;border-bottom:1px solid #bfdbfe">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-          <tr>
-            <td valign="middle">
-              <span style="display:inline-block;background:#0b4f8a;color:#ffffff;font-size:9.5px;font-weight:800;padding:3px 9px;border-radius:4px;letter-spacing:0.6px;text-transform:uppercase;margin-right:8px">TARGET PROPOSAL</span>
-              <span style="font-size:12px;font-weight:700;color:#475569">EXCLUSIVELY PREPARED FOR:</span>
-              <span style="font-size:13.5px;font-weight:900;color:#0369a1;margin-left:6px;background:#ffffff;padding:3px 12px;border-radius:5px;border:1px solid #7dd3fc;box-shadow:0 1px 3px rgba(3,105,161,0.08)">${h(clientName)}</span>
-            </td>
-            <td valign="middle" align="right">
-              <span style="font-size:11px;font-weight:700;color:#0284c7;background:rgba(2,132,199,0.1);padding:3px 10px;border-radius:12px">⚡ Priority Industrial Outreach</span>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>` : ''}
-
-    <!-- MAIN BODY CONTENT AREA -->
-    <tr>
-      <td style="padding:28px 32px 20px">
-        
-        <!-- Pitch Letter Body (Refined Typography) -->
-        <div style="font-size:14px;line-height:1.68;color:#243242;margin-bottom:24px">
-          ${formattedBody || `<p style="margin:0 0 12px;font-size:14.5px;line-height:1.6;color:#0f2b48"><b>Dear Sir/Madam, Greetings from Amigo Enterprises, Pune!</b></p><p style="margin:0 0 12px;font-size:14px;line-height:1.68;color:#334155">We are pleased to introduce <b>Amigo Enterprises</b>, a trusted supplier of mechanical and electrical spare parts specializing in <b>Electrostatic Precipitator (ESP) spares, maintenance, inspection, and retrofitting services</b>.</p><p style="margin:0 0 12px;font-size:14px;line-height:1.68;color:#334155">Our goal is to help our plant customers improve ESP collection efficiency, minimize downtime, and resolve operational issues during preventive maintenance and plant shutdowns.</p>`}
-        </div>
-
-        <!-- 3-COLUMN ENTERPRISE CAPABILITY SHOWCASE CARDS (Across 1100px) -->
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px">
-          <tr>
-            <!-- Card 1: ESP Spares Range (Amigo Royal Blue Theme) -->
-            <td width="32%" valign="top" style="background:#ffffff;border:1px solid #cbd5e1;border-top:4px solid #0b4f8a;border-radius:10px;padding:16px 18px;box-shadow:0 3px 8px rgba(0,0,0,0.04)">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px">
-                <tr>
-                  <td width="32" valign="middle">
-                    <div style="background:#e0f2fe;color:#0b4f8a;width:30px;height:30px;border-radius:8px;text-align:center;line-height:30px;font-size:16px">⚡</div>
-                  </td>
-                  <td valign="middle" style="padding-left:8px">
-                    <div style="font-size:12.5px;font-weight:900;color:#0b4f8a;letter-spacing:0.4px">ESP HEAVY-DUTY SPARES</div>
-                    <div style="font-size:10px;color:#64748b;font-weight:600">100% OEM Interchangeable</div>
-                  </td>
-                </tr>
-              </table>
-              <div style="font-size:11.5px;color:#334155;line-height:1.6;border-top:1px dashed #e2e8f0;padding-top:10px">
-                &bull; Collecting &amp; Discharge Electrodes<br>
-                &bull; Rectifier Transformers &amp; Spares<br>
-                &bull; Rapper Panels, Coils, Boot Seals &amp; FRP<br>
-                &bull; Insulators, Gaskets, RAV &amp; Purge Heaters<br>
-                &bull; Tumbling Hammers, Seals &amp; GD Screens
-              </div>
-            </td>
-
-            <td width="2%">&nbsp;</td>
-
-            <!-- Card 2: Technical Services (Amigo Crimson Theme) -->
-            <td width="32%" valign="top" style="background:#ffffff;border:1px solid #cbd5e1;border-top:4px solid #c1272d;border-radius:10px;padding:16px 18px;box-shadow:0 3px 8px rgba(0,0,0,0.04)">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px">
-                <tr>
-                  <td width="32" valign="middle">
-                    <div style="background:#fee2e2;color:#c1272d;width:30px;height:30px;border-radius:8px;text-align:center;line-height:30px;font-size:16px">🛠️</div>
-                  </td>
-                  <td valign="middle" style="padding-left:8px">
-                    <div style="font-size:12.5px;font-weight:900;color:#c1272d;letter-spacing:0.4px">TECHNICAL SERVICES</div>
-                    <div style="font-size:10px;color:#64748b;font-weight:600">Shutdown &amp; Maintenance Support</div>
-                  </td>
-                </tr>
-              </table>
-              <div style="font-size:11.5px;color:#334155;line-height:1.6;border-top:1px dashed #e2e8f0;padding-top:10px">
-                &bull; Mechanical Overhauling &amp; Internal Alignment<br>
-                &bull; Electrical Maintenance &amp; Troubleshooting<br>
-                &bull; Microprocessor Controller Retrofitting<br>
-                &bull; Pre-Shutdown Audits &amp; Efficiency Inspections<br>
-                &bull; Rapid Emergency Turnaround On-site
-              </div>
-            </td>
-
-            <td width="2%">&nbsp;</td>
-
-            <!-- Card 3: Esteemed Clients (Emerald Green Theme) -->
-            <td width="32%" valign="top" style="background:#ffffff;border:1px solid #cbd5e1;border-top:4px solid #059669;border-radius:10px;padding:16px 18px;box-shadow:0 3px 8px rgba(0,0,0,0.04)">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px">
-                <tr>
-                  <td width="32" valign="middle">
-                    <div style="background:#dcfce7;color:#059669;width:30px;height:30px;border-radius:8px;text-align:center;line-height:30px;font-size:16px">🏆</div>
-                  </td>
-                  <td valign="middle" style="padding-left:8px">
-                    <div style="font-size:12.5px;font-weight:900;color:#059669;letter-spacing:0.4px">ESTEEMED CLIENTS</div>
-                    <div style="font-size:10px;color:#64748b;font-weight:600">50+ Reputed Industrial Plants</div>
-                  </td>
-                </tr>
-              </table>
-              <div style="font-size:11.5px;color:#334155;line-height:1.6;border-top:1px dashed #e2e8f0;padding-top:10px">
-                <b>Cement &amp; Steel:</b> Shree Cement, Reliance, Chakra Cement, Thanush Ispat, Suvan Steel, Kanak Durga.<br>
-                <b>Paper &amp; Textile:</b> Emami Papers, Garden Silk, BRFL Textile.<br>
-                <b>Power &amp; Sugar:</b> Shree Mega Power, EID Parry, Ambalika Sugar.
-              </div>
-            </td>
-          </tr>
-        </table>
-
-        <!-- HERO CATALOGUE ATTACHMENT CARD (High Impact) -->
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 55%, #d1fae5 100%);border:2px solid #059669;border-radius:10px;padding:14px 22px;box-shadow:0 4px 14px rgba(5,150,105,0.12)">
-          <tr>
-            <!-- Document Icon -->
-            <td width="42" valign="middle" align="center" style="font-size:32px;line-height:1">
-              📄
-            </td>
-            <!-- Document Info -->
-            <td valign="middle" style="padding-left:14px">
-              <div style="display:flex;align-items:center;gap:8px">
-                <span style="font-size:14px;font-weight:900;color:#065f46;letter-spacing:0.3px">
-                  OFFICIAL PRODUCT CATALOGUE &amp; TECHNICAL SPECIFICATIONS (PDF)
-                </span>
-                <span style="background:#059669;color:#ffffff;font-size:9.5px;font-weight:800;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:0.5px">ATTACHED</span>
-              </div>
-              <div style="font-size:12px;color:#047857;margin-top:4px;line-height:1.45">
-                Complete engineering drawings, dimensional parameters, spares material grades, panel wiring schematics &amp; customer credentials are attached to this email for your kind reference.
-              </div>
-            </td>
-            <!-- Action Pill -->
-            <td valign="middle" align="right" style="padding-left:16px">
-              <div style="background:#065f46;color:#ffffff;font-size:11px;font-weight:800;padding:8px 16px;border-radius:6px;letter-spacing:0.5px;white-space:nowrap;box-shadow:0 2px 6px rgba(6,95,70,0.3)">
-                📎 PDF READY IN ATTACHMENTS
-              </div>
-            </td>
-          </tr>
-        </table>
-
-      </td>
-    </tr>
-
-    <!-- EXECUTIVE 3-COLUMN SIGNATURE & CORPORATE FOOTER -->
-    <tr>
-      <td style="background:#f8fafc;padding:18px 32px;border-top:1px solid #e2e8f0">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-          <tr>
-            <!-- Col 1: Dedicated Sales Contact -->
-            <td valign="top" width="34%" style="padding-right:18px">
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-                <span style="font-size:15px;font-weight:900;color:#06162a">${h(sName)}</span>
-                <span style="background:#e0f2fe;color:#0284c7;font-size:10px;font-weight:800;padding:2px 7px;border-radius:3px">${h(sDesig)}</span>
-              </div>
-              <div style="font-size:12px;color:#334155;margin-top:6px;line-height:1.6;font-weight:600">
-                📞 <a href="tel:${h(sPhone)}" style="color:#0b4f8a;text-decoration:none;font-weight:700">${h(sPhone)}</a><br>
-                ✉️ <a href="mailto:${h(sEmail)}" style="color:#0284c7;text-decoration:none;font-weight:700">${h(sEmail)}</a>
-              </div>
-            </td>
-
-            <!-- Col 2: Corporate Office Address -->
-            <td valign="top" width="38%" style="padding-left:18px;padding-right:18px;border-left:1px solid #e2e8f0">
-              <div style="font-size:12px;font-weight:900;color:#0b4f8a;letter-spacing:0.4px">
-                🏢 AMIGO ENTERPRISES PUNE
-              </div>
-              <div style="font-size:11.5px;color:#64748b;line-height:1.5;margin-top:4px">
-                Office No:- 401, Baban Villa, Sno-6/17, Chovisawadi,<br>
-                Haveli Pune, Pimpri Chinchwad, Maharashtra &ndash; 412105
-              </div>
-              <div style="font-size:10.5px;color:#0284c7;font-weight:600;margin-top:4px">
-                📍 Pune Industrial Zone &bull; Prompt Pan-India Dispatch
-              </div>
-            </td>
-
-            <!-- Col 3: Quality Commitment Pillars -->
-            <td valign="top" width="28%" align="right" style="padding-left:18px;border-left:1px solid #e2e8f0">
-              <div style="font-size:11px;font-weight:800;color:#06162a;margin-bottom:6px">THE AMIGO COMMITMENT</div>
-              <div style="font-size:10.5px;color:#475569;line-height:1.6">
-                ✅ <b>100% Precision Spares</b><br>
-                ⏱️ <b>Rapid Shutdown Turnaround</b><br>
-                💰 <b>Competitive Direct Pricing</b>
-              </div>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-
-    <!-- SLEEK BOTTOM COMPLIANCE BAR -->
-    <tr>
-      <td style="background:#06162a;padding:10px 32px;text-align:center">
-        <div style="font-size:10.5px;color:#94a3b8;line-height:1.5">
-          &copy; Amigo Enterprises, Pune &bull; Electrostatic Precipitator (ESP) Spares &bull; Maintenance &bull; Inspection &bull; Retrofitting Services.<br>
-          <span style="color:#64748b">This communication and its technical attachments are intended exclusively for the addressed recipient.</span>
-        </div>
-      </td>
-    </tr>
-
-  </table>
-
-</td></tr>
-</table>
-
-</body>
-</html>`;
-}
-
-async function generateCataloguePdfBlob() {
-  await ensurePdfLibs();
-  if (!window.catData || !Array.isArray(window.catData.products) || !window.catData.products.length) {
-    try {
-      window.catData = await api('GET', 'catalogue', null, true);
-    } catch (catLoadErr) {
-      console.warn('Could not load catalogue from server for PDF generation:', catLoadErr);
-    }
-  }
-  if (!window.catData || !Array.isArray(window.catData.products)) {
-    throw new Error('Catalogue data is not loaded. Please wait a moment and try again.');
-  }
-  const pagesHtml = renderCatalogueAllPagesHTML(true);
-  const css = `
-    .cat-page {
-      width: 700px !important;
-      min-width: 700px !important;
-      max-width: 700px !important;
-      min-height: 990px !important;
-      max-height: 990px !important;
-      height: 990px !important;
-      padding: 10mm 14mm !important;
-      background: #ffffff !important;
-      border: none !important;
-      box-sizing: border-box !important;
-      display: flex !important;
-      flex-direction: column !important;
-      justify-content: space-between !important;
-      position: relative !important;
-      overflow: hidden !important;
-    }
-    .cat-page::before {
-      content: '' !important;
-      position: absolute !important;
-      top: 3.5mm !important;
-      left: 3.5mm !important;
-      right: 3.5mm !important;
-      bottom: 3.5mm !important;
-      border: 1.5px solid #0284c7 !important;
-      pointer-events: none !important;
-      border-radius: 3px !important;
-    }
-    .cat-page > div { position: relative !important; z-index: 1 !important; }
-    .cat-page-header { display: flex !important; align-items: center !important; justify-content: space-between !important; border-bottom: 2px solid #0284c7 !important; padding-bottom: 8px !important; margin-bottom: 12px !important; }
-    .cat-page-footer { display: flex !important; align-items: center !important; justify-content: space-between !important; border-top: 1.5px solid #cbd5e1 !important; padding-top: 8px !important; margin-top: 12px !important; font-size: 11px !important; color: #64748b !important; font-weight: 600 !important; }
-    .cat-product-card { border: 1.5px solid #0284c7 !important; border-radius: 8px !important; background: #ffffff !important; overflow: hidden !important; display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: space-between !important; padding: 6px !important; text-align: center !important; height: 172px !important; position: relative !important; }
-    .cat-product-img-box { width: 100% !important; height: 116px !important; display: flex !important; align-items: center !important; justify-content: center !important; background: #f8fafc !important; border-radius: 5px !important; padding: 4px !important; overflow: hidden !important; }
-    .cat-product-img { max-width: 100% !important; max-height: 100% !important; object-fit: contain !important; }
-    .cat-product-title { font-size: 10px !important; font-weight: 800 !important; color: #0f172a !important; margin-top: 5px !important; text-transform: uppercase !important; line-height: 1.2 !important; letter-spacing: 0.3px !important; width: 100% !important; text-align: center !important; }
-    .cat-client-card { background: #ffffff !important; border: 1.5px solid #cbd5e1 !important; border-radius: 6px !important; padding: 6px 10px !important; display: flex !important; align-items: center !important; gap: 10px !important; min-height: 48px !important; page-break-inside: avoid !important; }
-    .cat-client-logo-box { width: 52px !important; height: 42px !important; border-radius: 4px !important; background: #f8fafc !important; border: 1px solid #e2e8f0 !important; display: flex !important; align-items: center !important; justify-content: center !important; padding: 3px !important; flex-shrink: 0 !important; }
-    .cat-client-logo { max-width: 100% !important; max-height: 100% !important; object-fit: contain !important; }
-    .cat-card-del-btn, .cat-product-card-add, .cat-photo-replace-btn, .cat-no-print { display: none !important; }
-  `;
-
-  // Create temporary container for capturing page-by-page (optimized lightweight PDF generation < 1MB)
-  const captureBox = document.createElement('div');
-  captureBox.id = 'catPdfCaptureBox';
-  captureBox.style.cssText = 'position:fixed;top:0;left:0;width:700px;min-width:700px;max-width:700px;margin:0;padding:0;background:#ffffff;color:#000000;box-sizing:border-box;z-index:99998;visibility:visible;pointer-events:none;';
-  captureBox.innerHTML = `
-    <style>${css}</style>
-    <div id="catPagesWrap" style="width:700px;min-width:700px;max-width:700px;margin:0;padding:0;background:#ffffff;">
-      ${pagesHtml}
-    </div>
-  `;
-  document.body.append(captureBox);
-
-  try {
-    const imgs = Array.from(captureBox.querySelectorAll('img'));
-    if (imgs.length) {
-      await Promise.all(imgs.map(im => {
-        if (im.complete) return Promise.resolve();
-        return new Promise(r => { im.onload = r; im.onerror = r; });
-      }));
-    }
-    await new Promise(r => setTimeout(r, 120));
-
-    const pageEls = Array.from(captureBox.querySelectorAll('.cat-page'));
-    if (!pageEls.length) throw new Error('No catalogue pages found to render');
-
-    const jsPDFClass = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
-    if (!jsPDFClass) throw new Error('PDF generator library (jsPDF) is not loaded.');
-
-    const pdf = new jsPDFClass({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4',
-      compress: true
-    });
-
-    const pageWidth = pdf.internal.pageSize.getWidth(); // 210 mm
-    const pageHeight = pdf.internal.pageSize.getHeight(); // 297 mm
-    const marginX = 8;
-    const marginY = 8;
-    const maxW = pageWidth - (marginX * 2); // 194 mm
-    const maxH = pageHeight - (marginY * 2); // 281 mm
-
-    for (let i = 0; i < pageEls.length; i++) {
-      if (i > 0) pdf.addPage();
-      const pEl = pageEls[i];
-      const canvas = await window.html2canvas(pEl, {
-        scale: 1.25,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-        width: 700,
-        height: 990
-      });
-      const imgData = canvas.toDataURL('image/jpeg', 0.80);
-      const imgW = maxW;
-      const imgH = Math.min(maxH, (canvas.height * imgW) / canvas.width);
-      const posX = (pageWidth - imgW) / 2;
-      const posY = (pageHeight - imgH) / 2;
-      pdf.addImage(imgData, 'JPEG', posX, posY, imgW, imgH, undefined, 'FAST');
-    }
-
-    const pdfUri = pdf.output('datauristring');
-    const base64 = pdfUri && pdfUri.includes(',') ? pdfUri.split(',')[1] : pdfUri;
-    if (!base64 || base64.length < 500) {
-      throw new Error('PDF output is too small or blank');
-    }
-
-    return {
-      name: 'Amigo_Enterprises_Company_Catalogue.pdf',
-      type: 'application/pdf',
-      base64
-    };
-  } finally {
-    captureBox.remove();
-  }
-}
-
-
-// =========================================================================
-// SEND COMPANY PROFILE & CATALOGUE DEDICATED VIEW (STANDALONE HUB)
-// =========================================================================
-async function sendProfileView(activeTab = 'compose', prefillClient = null) {
-  const normDes = normalizeDesignation(me?.designation);
-  const isAllowed = me?.role === 'admin' || normDes === 'operations executive' || normDes === 'sales executive' || me?.username === 'Ashwini' || can('sendprofile', 'view');
-  if (!isAllowed) {
-    say('Access restricted: Send Company Profile is reserved for Sales Executives, Operations Executives, and Administrators.');
-    return go(getDefaultLandingTab());
-  }
-
-  const view = $('#view');
-  if (!view) return;
-
-  view.innerHTML = `
-    <div style="padding:40px;text-align:center;color:#64748b;">
-      <div class="view-spinner-ring" style="margin:0 auto 16px;"></div>
-      <div style="font-size:16px;font-weight:700;color:#1e293b;">Loading Company Profile Hub...</div>
-      <div style="font-size:12px;margin-top:4px;">Retrieving client directory &amp; mail history</div>
-    </div>
-  `;
-
-  let clients = [];
-  let history = [];
-  try {
-    const [cL, hL, cD] = await Promise.all([
-      load('clients').catch(() => []),
-      api('GET', 'catalogue/mail-history').catch(() => []),
-      (!window.catData || !window.catData.products) ? api('GET', 'catalogue').catch(() => null) : Promise.resolve(window.catData)
-    ]);
-    clients = Array.isArray(cL) ? cL : [];
-    history = Array.isArray(hL) ? hL : [];
-    if (cD && (!window.catData || !window.catData.products)) {
-      window.catData = cD;
-    }
-    clients.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
-  } catch (err) {}
-
-  const defaultSenderName = me?.fullName || (normDes === 'sales executive' ? 'Ashwini Kharat' : (me?.username || 'Ashwini Kharat'));
-  const defaultSenderPhone = me?.contact || '8421159145';
-  const defaultSenderEmail = me?.email || (normDes === 'sales executive' ? 'amigo.sales6423@gmail.com' : (me?.email || 'amigo.sales6423@gmail.com'));
-  const defaultSenderDesig = me?.designation || (normDes === 'sales executive' ? 'Sales Executive' : (normDes === 'operations executive' ? 'Operations Executive' : 'Management'));
-
-  let selectedClientName = prefillClient?.name || '';
-  let defaultTo = prefillClient?.email || '';
-  let defaultSubject = `Company Profile & Product Catalogue | Amigo Enterprises Pune${selectedClientName ? ' - ' + selectedClientName : ''}`;
-  let defaultBody = OFFICIAL_CATALOGUE_EMAIL_DRAFT(selectedClientName, defaultSenderName, defaultSenderPhone, defaultSenderEmail);
-
-  view.innerHTML = `
-    <div class="sendprofile-page" style="max-width:1340px;margin:0 auto;padding-bottom:50px;">
-      <!-- Hero Top Bar -->
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:20px;background:#ffffff;padding:20px 24px;border-radius:14px;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
-        <div>
-          <div style="display:inline-flex;align-items:center;gap:6px;background:#eff6ff;color:#1d4ed8;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;border:1px solid #bfdbfe;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">
-            <span>🚀</span><span>Client Outreach &amp; ESP Pitch Hub</span>
-          </div>
-          <h1 style="margin:0;font-size:24px;font-weight:800;color:#0f2b48;line-height:1.2;">
-            Send Company Profile
-          </h1>
-          <p style="margin:6px 0 0;font-size:13px;color:#64748b;max-width:760px;line-height:1.5;">
-            Share official Amigo Enterprises credentials, Electrostatic Precipitator (ESP) spares catalogue, and technical maintenance &amp; retrofitting services directly with prospects and clients.
-          </p>
-        </div>
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-          <button type="button" class="btn ghost sm" onclick="go('catalogue')" style="font-weight:600;font-size:12.5px;padding:7px 14px;border-color:#cbd5e1;color:#334155;">
-            📖 View Company Catalogue
-          </button>
-        </div>
-      </div>
-
-      <!-- Navigation Tabs -->
-      <div style="display:flex;gap:8px;border-bottom:2px solid #e2e8f0;margin-bottom:22px;">
-        <button type="button" class="btn ghost sm ${activeTab === 'compose' ? 'active' : ''}" id="spvTabCompose" style="font-size:13px;font-weight:700;padding:9px 20px;border-radius:8px 8px 0 0;${activeTab === 'compose' ? 'background:#0284c7;color:#ffffff;border-color:#0284c7;' : 'color:#475569;'}">
-          📧 Compose &amp; Send Profile
-        </button>
-        <button type="button" class="btn ghost sm ${activeTab === 'history' ? 'active' : ''}" id="spvTabHistory" style="font-size:13px;font-weight:700;padding:9px 20px;border-radius:8px 8px 0 0;${activeTab === 'history' ? 'background:#0284c7;color:#ffffff;border-color:#0284c7;' : 'color:#475569;'}">
-          📜 Sent History (${history.length})
-        </button>
-      </div>
-
-      <!-- TAB 1: COMPOSE & SEND -->
-      <div id="spvPaneCompose" style="${activeTab === 'compose' ? 'display:block;' : 'display:none;'}">
-        <div id="spvStatusBanner" style="display:none;margin-bottom:18px;"></div>
-
-        <!-- 1. Client & Recipient Card -->
-        <div class="card" style="margin-bottom:18px;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,0.04);padding:20px;">
-          <div style="font-size:14px;font-weight:700;color:#0f2b48;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
-            <span>🎯</span><span>1. Target Recipient &amp; Client Details</span>
-          </div>
-
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px;">
-            <div>
-              <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:5px;">
-                Select Existing Client (Auto-fill)
-              </label>
-              <select id="spvClientSelect" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1.5px solid #cbd5e1;border-radius:7px;font-size:13px;background:#ffffff;color:#0f172a;">
-                <option value="">-- Choose saved client / party --</option>
-                ${clients.map(c => `<option value="${h(c.id)}" data-name="${h(c.name)}" data-email="${h(c.email || '')}" ${selectedClientName === c.name ? 'selected' : ''}>${h(c.name)}${c.email ? ' (' + h(c.email) + ')' : ''}</option>`).join('')}
-              </select>
-            </div>
-            <div>
-              <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:5px;">
-                Client Company Name
-              </label>
-              <input type="text" id="spvClientName" value="${h(selectedClientName)}" placeholder="e.g. Tata Steel / Shree Cement Pvt. Ltd." style="width:100%;box-sizing:border-box;padding:8px 12px;border:1.5px solid #cbd5e1;border-radius:7px;font-size:13px;">
-            </div>
-          </div>
-
-          <div style="margin-bottom:14px;">
-            <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:5px;">
-              Recipient Email Address ("To") *
-            </label>
-            <input type="email" id="spvTo" required value="${h(defaultTo)}" placeholder="e.g. purchase@client.com, engineering@client.com" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1.5px solid #0284c7;border-radius:7px;font-size:13.5px;background:#f0f9ff;">
-          </div>
-
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px;">
-            <div>
-              <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:5px;">Cc Email (Optional)</label>
-              <input type="text" id="spvCc" placeholder="e.g. accounts@amigoenterprises.com" style="width:100%;box-sizing:border-box;padding:7px 12px;border:1px solid #cbd5e1;border-radius:7px;font-size:12.5px;">
-            </div>
-            <div>
-              <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:5px;">Bcc Email (Optional)</label>
-              <input type="text" id="spvBcc" placeholder="e.g. amigo.sales6423@gmail.com" style="width:100%;box-sizing:border-box;padding:7px 12px;border:1px solid #cbd5e1;border-radius:7px;font-size:12.5px;">
-            </div>
-          </div>
-
-          <div>
-            <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:5px;">
-              Email Subject Line *
-            </label>
-            <input type="text" id="spvSubject" required value="${h(defaultSubject)}" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #cbd5e1;border-radius:7px;font-size:13px;font-weight:600;color:#0f2b48;">
-          </div>
-        </div>
-
-        <!-- 2. AI Pitch Assistant & Message Draft Card -->
-        <div class="card" style="margin-bottom:18px;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,0.04);padding:20px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
-            <div style="font-size:14px;font-weight:700;color:#0f2b48;display:flex;align-items:center;gap:8px;">
-              <span>📝</span><span>2. Email Pitch Draft &amp; AI Writing Tools</span>
-            </div>
-            <div style="display:flex;gap:6px;flex-wrap:wrap;">
-              <button type="button" class="btn ghost sm" id="spvAiPolish" style="font-size:11.5px;padding:4px 10px;border-color:#38bdf8;color:#0284c7;background:#f0f9ff;">
-                ✨ Polish Tone
-              </button>
-              <button type="button" class="btn ghost sm" id="spvAiPersonalize" style="font-size:11.5px;padding:4px 10px;border-color:#818cf8;color:#4f46e5;background:#eef2ff;">
-                🎯 Personalize
-              </button>
-              <button type="button" class="btn ghost sm" id="spvAiConcise" style="font-size:11.5px;padding:4px 10px;border-color:#f59e0b;color:#d97706;background:#fffbeb;">
-                ⚡ Elevator Pitch
-              </button>
-              <button type="button" class="btn ghost sm" id="spvResetDraft" style="font-size:11.5px;padding:4px 10px;border-color:#cbd5e1;color:#64748b;">
-                🔄 Reset Draft
-              </button>
-            </div>
-          </div>
-
-          <textarea id="spvBodyText" rows="15" style="width:100%;box-sizing:border-box;padding:14px;border:1.5px solid #cbd5e1;border-radius:8px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace;font-size:12.5px;line-height:1.6;color:#1e293b;background:#ffffff;resize:vertical;">${h(defaultBody)}</textarea>
-          <div style="font-size:11.5px;color:#64748b;margin-top:6px;">
-            💡 The recipient will receive this message embedded in a responsive HTML layout with official company logo, product range cards, service list, customer roster, and attached PDF catalogue.
-          </div>
-        </div>
-
-        <!-- 3. Dynamic Sender Signature Card -->
-        <div class="card" style="margin-bottom:18px;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,0.04);padding:20px;background:#f8fafc;">
-          <div style="font-size:14px;font-weight:700;color:#0f2b48;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
-            <span>👤</span><span>3. Sender Profile Signature (Dynamic for Current User)</span>
-          </div>
-
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-bottom:10px;">
-            <div>
-              <label style="display:block;font-size:11px;font-weight:600;color:#64748b;margin-bottom:4px;">Sender Name</label>
-              <input type="text" id="spvSenderName" value="${h(defaultSenderName)}" style="width:100%;box-sizing:border-box;padding:7px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;background:#ffffff;">
-            </div>
-            <div>
-              <label style="display:block;font-size:11px;font-weight:600;color:#64748b;margin-bottom:4px;">Phone / Mobile</label>
-              <input type="text" id="spvSenderPhone" value="${h(defaultSenderPhone)}" style="width:100%;box-sizing:border-box;padding:7px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;background:#ffffff;">
-            </div>
-            <div>
-              <label style="display:block;font-size:11px;font-weight:600;color:#64748b;margin-bottom:4px;">Official Email</label>
-              <input type="email" id="spvSenderEmail" value="${h(defaultSenderEmail)}" style="width:100%;box-sizing:border-box;padding:7px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;background:#ffffff;">
-            </div>
-            <div>
-              <label style="display:block;font-size:11px;font-weight:600;color:#64748b;margin-bottom:4px;">Designation</label>
-              <input type="text" id="spvSenderDesig" value="${h(defaultSenderDesig)}" style="width:100%;box-sizing:border-box;padding:7px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;background:#ffffff;">
-            </div>
-          </div>
-          <div style="font-size:11px;color:#64748b;margin-top:4px;">
-            🏢 <b>AMIGO ENTERPRISES PUNE</b> &bull; Office No:- 401, Baban Villa, Sno-6/17, Chovisawadi, Haveli Pune, Pimpri Chinchwad. (M Corp.) 412105
-          </div>
-        </div>
-
-        <!-- 4. Attachment & Dispatch Card -->
-        <div class="card" style="border-radius:12px;border:1px solid #bae6fd;box-shadow:0 2px 8px rgba(2,132,199,0.08);padding:20px;background:#f0f9ff;">
-          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px;">
-            <label style="display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:700;color:#0369a1;cursor:pointer;margin:0;">
-              <input type="checkbox" id="spvAttachPdf" checked style="width:18px;height:18px;cursor:pointer;accent-color:#0284c7;">
-              <span>📎 Attach Official Product Catalogue PDF (Amigo_Enterprises_Company_Catalogue.pdf)</span>
-            </label>
-            <span style="font-size:11.5px;font-weight:700;color:#0369a1;background:#e0f2fe;padding:4px 10px;border-radius:6px;border:1px solid #bae6fd;">
-              ⚡ High-Speed A4 PDF (&lt;1MB)
-            </span>
-          </div>
-
-          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;border-top:1px solid #bae6fd;padding-top:16px;">
-            <button type="button" class="btn ghost" id="spvBtnPreview" style="font-size:13px;font-weight:700;padding:9px 20px;border-color:#0284c7;color:#0284c7;background:#ffffff;">
-              👁️ Preview Email Template
-            </button>
-            <button type="button" class="btn" id="spvBtnSend" style="background:linear-gradient(135deg, #0284c7 0%, #1d4ed8 100%);color:#ffffff;font-size:14px;font-weight:700;padding:10px 28px;box-shadow:0 4px 14px rgba(2,132,199,0.4);border:none;border-radius:8px;cursor:pointer;">
-              🚀 Send Profile &amp; Catalogue
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB 2: SENT HISTORY -->
-      <div id="spvPaneHistory" style="${activeTab === 'history' ? 'display:block;' : 'display:none;'}">
-        <div class="card" style="border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,0.04);padding:20px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
-            <div style="font-size:15px;font-weight:700;color:#0f2b48;">
-              Dispatched Profile Emails &amp; Catalogue Transmittals
-            </div>
-            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-              <input type="text" id="spvHistSearch" placeholder="🔍 Search by client, recipient or subject..." style="padding:6px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:12.5px;width:260px;max-width:100%;">
-              ${me?.role === 'admin' && history.length ? `
-                <button type="button" class="btn ghost sm" id="spvClearAllHistBtn" style="font-size:11.5px;padding:6px 12px;color:#dc2626;border-color:#fca5a5;background:#fef2f2;font-weight:700;">
-                  🗑️ Clear All
-                </button>
-              ` : ''}
-            </div>
-          </div>
-
-          <div id="spvHistTableContainer">
-            ${history.length ? `
-              <div style="overflow-x:auto;">
-                <table style="width:100%;border-collapse:collapse;font-size:12.5px;" id="spvHistTable">
-                  <thead>
-                    <tr style="border-bottom:2px solid #e2e8f0;color:#475569;text-align:left;background:#f8fafc;">
-                      <th style="padding:10px 12px;">Date / Time</th>
-                      <th style="padding:10px 12px;">Client Company</th>
-                      <th style="padding:10px 12px;">Recipient ("To")</th>
-                      <th style="padding:10px 12px;">Sent By</th>
-                      <th style="padding:10px 12px;">Catalogue PDF</th>
-                      <th style="padding:10px 12px;">Status</th>
-                      <th style="padding:10px 12px;text-align:center;">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${history.map(item => `
-                      <tr style="border-bottom:1px solid #f1f5f9;transition:background 0.15s;" class="spv-hist-row" data-search="${h((item.clientName || '') + ' ' + (item.to || '') + ' ' + (item.subject || '') + ' ' + (item.sentBy || '')).toLowerCase()}">
-                        <td style="padding:10px 12px;white-space:nowrap;color:#64748b;">
-                          ${new Date(item.sentAt).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' })}
-                          <div style="font-size:11px;color:#94a3b8;">${new Date(item.sentAt).toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' })}</div>
-                        </td>
-                        <td style="padding:10px 12px;font-weight:700;color:#0f2b48;">
-                          ${h(item.clientName || 'Prospect')}
-                        </td>
-                        <td style="padding:10px 12px;color:#0284c7;font-family:monospace;font-size:12px;">
-                          ${h(item.to)}
-                        </td>
-                        <td style="padding:10px 12px;color:#334155;">
-                          ${h(item.senderName || item.sentBy)}
-                          <div style="font-size:10.5px;color:#64748b;">${h(item.senderDesignation || 'Amigo')}</div>
-                        </td>
-                        <td style="padding:10px 12px;">
-                          ${item.pdfAttached ? `
-                            <span style="display:inline-flex;align-items:center;gap:4px;background:#ecfdf5;color:#059669;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:700;border:1px solid #a7f3d0;">
-                              <span>📎</span><span>Catalogue PDF</span>
-                            </span>
-                          ` : `
-                            <span style="color:#94a3b8;font-size:11px;">No PDF</span>
-                          `}
-                        </td>
-                        <td style="padding:10px 12px;">
-                          <span style="background:#f0fdf4;color:#16a34a;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:700;border:1px solid #bbf7d0;">
-                            ✓ ${h(item.status || 'Sent')}
-                          </span>
-                        </td>
-                        <td style="padding:10px 12px;text-align:center;white-space:nowrap;">
-                          <button type="button" class="btn ghost sm spv-resend-btn" style="font-size:11.5px;padding:3px 10px;" data-client="${h(item.clientName || '')}" data-email="${h(item.to || '')}">
-                            🔄 Resend
-                          </button>
-                          ${me?.role === 'admin' ? `
-                            <button type="button" class="btn ghost sm spv-del-btn" style="font-size:11.5px;padding:3px 8px;margin-left:6px;color:#dc2626;border-color:#fca5a5;background:#fef2f2;" data-id="${h(item.id)}" data-client="${h(item.clientName || item.to || '')}" title="Delete Record (Admin Only)">
-                              🗑️ Delete
-                            </button>
-                          ` : ''}
-                        </td>
-                      </tr>
-                    `).join('')}
-                  </tbody>
-                </table>
-              </div>
-            ` : `
-              <div style="text-align:center;padding:48px 20px;color:#64748b;">
-                <div style="font-size:42px;margin-bottom:12px;">📭</div>
-                <div style="font-size:16px;font-weight:700;color:#1e293b;">No Company Profile Emails Sent Yet</div>
-                <div style="font-size:13px;margin-top:6px;color:#64748b;">Compose and dispatch your first official catalogue email to client companies.</div>
-                <button type="button" class="btn sm" id="spvEmptyComposeBtn" style="margin-top:16px;background:#0284c7;color:#ffffff;font-weight:700;">
-                  🚀 Compose First Profile Email
-                </button>
-              </div>
-            `}
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  // DOM Elements
-  const tabCompose = view.querySelector('#spvTabCompose');
-  const tabHistory = view.querySelector('#spvTabHistory');
-  const paneCompose = view.querySelector('#spvPaneCompose');
-  const paneHistory = view.querySelector('#spvPaneHistory');
-
-  const clientSelect = view.querySelector('#spvClientSelect');
-  const clientNameInp = view.querySelector('#spvClientName');
-  const toInp = view.querySelector('#spvTo');
-  const ccInp = view.querySelector('#spvCc');
-  const bccInp = view.querySelector('#spvBcc');
-  const subjInp = view.querySelector('#spvSubject');
-  const bodyTextarea = view.querySelector('#spvBodyText');
-
-  const senderNameInp = view.querySelector('#spvSenderName');
-  const senderPhoneInp = view.querySelector('#spvSenderPhone');
-  const senderEmailInp = view.querySelector('#spvSenderEmail');
-  const senderDesigInp = view.querySelector('#spvSenderDesig');
-  const attachPdfCheck = view.querySelector('#spvAttachPdf');
-
-  const btnPreview = view.querySelector('#spvBtnPreview');
-  const btnSend = view.querySelector('#spvBtnSend');
-  const statusBanner = view.querySelector('#spvStatusBanner');
-
-  // Tab switching
-  const switchTab = (tab) => {
-    if (tab === 'compose') {
-      tabCompose.style.background = '#0284c7';
-      tabCompose.style.color = '#ffffff';
-      tabCompose.style.borderColor = '#0284c7';
-      tabHistory.style.background = 'transparent';
-      tabHistory.style.color = '#475569';
-      tabHistory.style.borderColor = 'transparent';
-      paneCompose.style.display = 'block';
-      paneHistory.style.display = 'none';
-    } else {
-      tabHistory.style.background = '#0284c7';
-      tabHistory.style.color = '#ffffff';
-      tabHistory.style.borderColor = '#0284c7';
-      tabCompose.style.background = 'transparent';
-      tabCompose.style.color = '#475569';
-      tabCompose.style.borderColor = 'transparent';
-      paneHistory.style.display = 'block';
-      paneCompose.style.display = 'none';
-    }
-  };
-
-  tabCompose.onclick = () => switchTab('compose');
-  tabHistory.onclick = () => switchTab('history');
-
-  const emptyComposeBtn = view.querySelector('#spvEmptyComposeBtn');
-  if (emptyComposeBtn) emptyComposeBtn.onclick = () => switchTab('compose');
-
-  // Client Selection auto-fill
-  clientSelect.onchange = () => {
-    const opt = clientSelect.selectedOptions[0];
-    if (opt && opt.value) {
-      const name = opt.getAttribute('data-name') || '';
-      const email = opt.getAttribute('data-email') || '';
-      clientNameInp.value = name;
-      if (email) toInp.value = email;
-      subjInp.value = `Company Profile & Product Catalogue | Amigo Enterprises Pune - ${name}`;
-      bodyTextarea.value = OFFICIAL_CATALOGUE_EMAIL_DRAFT(name, senderNameInp.value, senderPhoneInp.value, senderEmailInp.value);
-    }
-  };
-
-  clientNameInp.oninput = () => {
-    const name = clientNameInp.value.trim();
-    if (name) {
-      subjInp.value = `Company Profile & Product Catalogue | Amigo Enterprises Pune - ${name}`;
-    }
-  };
-
-  // AI Toolbar Handlers
-  const handleAi = async (action, label) => {
-    const text = bodyTextarea.value.trim();
-    if (!text) return say('Please enter some text in the body first');
-    const cName = clientNameInp.value.trim();
-    say('✨ AI Assistant is refining your company profile pitch...', 0);
-    try {
-      const res = await api('POST', 'ai/transform', { text, action, context: cName || 'Client' });
-      if (res && res.result) {
-        bodyTextarea.value = res.result;
-        say('✨ AI pitch refined successfully!', 1);
-      }
-    } catch (err) {
-      say('AI Assist note: ' + err.message);
-    }
-  };
-
-  view.querySelector('#spvAiPolish').onclick = () => handleAi('polish', 'Polish');
-  view.querySelector('#spvAiPersonalize').onclick = () => handleAi('profile_personalize', 'Personalize');
-  view.querySelector('#spvAiConcise').onclick = () => handleAi('profile_concise', 'Concise');
-  view.querySelector('#spvResetDraft').onclick = () => {
-    const cName = clientNameInp.value.trim();
-    bodyTextarea.value = OFFICIAL_CATALOGUE_EMAIL_DRAFT(cName, senderNameInp.value, senderPhoneInp.value, senderEmailInp.value);
-    say('🔄 Reset to official Amigo Enterprises draft.', 1);
-  };
-
-  // Preview Email
-  btnPreview.onclick = () => {
-    previewCatalogueProfileEmail({
-      clientName: clientNameInp.value.trim(),
-      subject: subjInp.value.trim(),
-      bodyText: bodyTextarea.value.trim(),
-      senderName: senderNameInp.value.trim(),
-      senderPhone: senderPhoneInp.value.trim(),
-      senderEmail: senderEmailInp.value.trim(),
-      senderDesignation: senderDesigInp.value.trim()
-    });
-  };
-
-  // Send Email Handler
-  btnSend.onclick = async () => {
-    const to = toInp.value.trim();
-    const cc = ccInp.value.trim();
-    const bcc = bccInp.value.trim();
-    const subject = subjInp.value.trim();
-    const bodyText = bodyTextarea.value.trim();
-    const clientName = clientNameInp.value.trim();
-    const senderName = senderNameInp.value.trim();
-    const senderPhone = senderPhoneInp.value.trim();
-    const senderEmail = senderEmailInp.value.trim();
-    const senderDesignation = senderDesigInp.value.trim();
-    const attachPdf = attachPdfCheck.checked;
-
-    if (!to) {
-      toInp.focus();
-      return say('Recipient email ("To") is required.');
-    }
-    if (!subject) {
-      subjInp.focus();
-      return say('Email subject is required.');
-    }
-    if (!bodyText) {
-      bodyTextarea.focus();
-      return say('Email message body cannot be empty.');
-    }
-
-    btnSend.disabled = true;
-    btnSend.innerHTML = '⏳ Sending...';
-
-    statusBanner.style.display = 'block';
-    statusBanner.innerHTML = `<div class="msg" style="background:#e0f2fe;color:#0369a1;display:flex;align-items:center;gap:10px;"><span>⏳</span><span>Preparing email &amp; generating catalogue attachment...</span></div>`;
-
-    let attachments = [];
-    if (attachPdf) {
-      try {
-        statusBanner.innerHTML = `<div class="msg" style="background:#e0f2fe;color:#0369a1;display:flex;align-items:center;gap:10px;"><span>⏳</span><span>Generating official product catalogue PDF...</span></div>`;
-        const pdfAtt = await generateCataloguePdfBlob();
-        if (pdfAtt) attachments.push(pdfAtt);
-      } catch (pdfErr) {
-        console.error('PDF generation error:', pdfErr);
-        btnSend.disabled = false;
-        btnSend.innerHTML = '🚀 Send Profile &amp; Catalogue';
-        statusBanner.innerHTML = `<div class="msg" style="background:#fee2e2;color:#991b1b;display:flex;align-items:center;gap:10px;"><span>❌</span><span>PDF attachment failed: ${h(pdfErr.message)}. Email was NOT sent to protect catalogue delivery. Please retry.</span></div>`;
-        return say('PDF attachment failed: ' + pdfErr.message);
-      }
-    }
-
-    try {
-      statusBanner.innerHTML = `<div class="msg" style="background:#e0f2fe;color:#0369a1;display:flex;align-items:center;gap:10px;"><span>⏳</span><span>Dispatching email via Amigo SMTP server...</span></div>`;
-      const res = await api('POST', 'catalogue/send-mail', {
-        to,
-        cc,
-        bcc,
-        clientName,
-        subject,
-        bodyText,
-        senderName,
-        senderPhone,
-        senderEmail,
-        senderDesignation,
-        attachments
-      });
-
-      say('✅ ' + (res.message || 'Company Profile sent successfully!'), 1);
-      statusBanner.innerHTML = `<div class="msg ok" style="display:flex;align-items:center;gap:10px;"><span>✅</span><span>${h(res.message || 'Company Profile sent successfully!')}</span></div>`;
-      btnSend.disabled = false;
-      btnSend.innerHTML = '🚀 Send Profile &amp; Catalogue';
-
-      // Reload view with updated history
-      setTimeout(() => sendProfileView('history'), 1200);
-    } catch (sendErr) {
-      statusBanner.innerHTML = `<div class="msg" style="background:#fee2e2;color:#991b1b;display:flex;align-items:center;gap:10px;"><span>❌</span><span>Failed to send: ${h(sendErr.message)}</span></div>`;
-      btnSend.disabled = false;
-      btnSend.innerHTML = '🚀 Send Profile &amp; Catalogue';
-      say('Error: ' + sendErr.message);
-    }
-  };
-
-  // Sent History Search & Resend
-  const histSearch = view.querySelector('#spvHistSearch');
-  if (histSearch) {
-    histSearch.oninput = () => {
-      const q = histSearch.value.trim().toLowerCase();
-      view.querySelectorAll('.spv-hist-row').forEach(row => {
-        const text = row.getAttribute('data-search') || '';
-        row.style.display = (!q || text.includes(q)) ? '' : 'none';
-      });
-    };
-  }
-
-  view.querySelectorAll('.spv-resend-btn').forEach(btn => {
-    btn.onclick = () => {
-      const name = btn.getAttribute('data-client') || '';
-      const email = btn.getAttribute('data-email') || '';
-      sendProfileView('compose', { name, email });
-    };
-  });
-
-  // Admin-only single record deletion
-  view.querySelectorAll('.spv-del-btn').forEach(btn => {
-    btn.onclick = async () => {
-      if (me?.role !== 'admin') {
-        say('Access denied: Only administrators can delete sent history records.');
-        return;
-      }
-      const recordId = btn.getAttribute('data-id');
-      const clientName = btn.getAttribute('data-client') || 'this record';
-      if (!confirm('Are you sure you want to delete the sent history record for "' + clientName + '"? This action cannot be undone.')) {
-        return;
-      }
-      try {
-        await api('DELETE', 'catalogue/mail-history/' + recordId);
-        say('Sent history record deleted successfully.', 1);
-        sendProfileView('history');
-      } catch (err) {
-        say('Failed to delete history: ' + err.message);
-      }
-    };
-  });
-
-  // Admin-only clear all history
-  const clearAllBtn = view.querySelector('#spvClearAllHistBtn');
-  if (clearAllBtn) {
-    clearAllBtn.onclick = async () => {
-      if (me?.role !== 'admin') {
-        say('Access denied: Only administrators can delete sent history records.');
-        return;
-      }
-      if (!confirm('Are you sure you want to delete ALL sent profile email history records? This cannot be undone.')) {
-        return;
-      }
-      try {
-        await api('DELETE', 'catalogue/mail-history/clear-all');
-        say('All sent history cleared successfully.', 1);
-        sendProfileView('history');
-      } catch (err) {
-        say('Failed to clear history: ' + err.message);
-      }
-    };
-  }
-}
-
-async function openSendCatalogueProfileModal(defaultClient = null) {
-  let clients = [];
-  try {
-    clients = (await load('clients')) || [];
-    clients.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
-  } catch (err) {}
-
-  const normDes = normalizeDesignation(me?.designation);
-  const defaultSenderName = me?.fullName || (normDes === 'sales executive' ? 'Ashwini Kharat' : (me?.username || 'Ashwini Kharat'));
-  const defaultSenderPhone = me?.contact || '8421159145';
-  const defaultSenderEmail = me?.email || (normDes === 'sales executive' ? 'amigo.sales6423@gmail.com' : 'amigo.sales6423@gmail.com');
-  const defaultSenderDesig = me?.designation || (normDes === 'sales executive' ? 'Sales Executive' : 'Sales Executive');
-
-  let selectedClientName = defaultClient?.name || '';
-  let defaultTo = defaultClient?.email || '';
-  let defaultSubject = `Company Profile & Product Catalogue | Amigo Enterprises Pune${selectedClientName ? ' - ' + selectedClientName : ''}`;
-  let defaultBody = OFFICIAL_CATALOGUE_EMAIL_DRAFT(selectedClientName, defaultSenderName, defaultSenderPhone, defaultSenderEmail);
-
-  let existing = document.getElementById('catProfileMailModal');
-  if (existing) existing.remove();
-
-  const o = document.createElement('div');
-  o.id = 'catProfileMailModal';
-  o.className = 'mail-modal-overlay';
-  o.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.8);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;overflow-y:auto;';
-
-  o.innerHTML = `
-    <div class="card" style="width:780px;max-width:96vw;max-height:92vh;margin:0;display:flex;flex-direction:column;padding:0;background:#ffffff;border-radius:14px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.35);border:1px solid #cbd5e1;overflow:hidden">
-      <!-- Modal Header -->
-      <div style="padding:18px 24px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg, #091e3a 0%, #0f2b48 100%);color:#ffffff">
-        <div style="display:flex;align-items:center;gap:12px">
-          <span style="font-size:26px">📧</span>
-          <div>
-            <h2 style="margin:0;font-size:18px;font-weight:800;letter-spacing:0.3px;color:#ffffff">Send Company Profile &amp; Catalogue</h2>
-            <div style="font-size:12px;color:#93c5fd;margin-top:2px">Share official ESP spares credentials, product range &amp; PDF catalogue with clients</div>
-          </div>
-        </div>
-        <button type="button" class="btn ghost sm" id="btnCloseCatMail" style="color:#ffffff;border-color:rgba(255,255,255,0.3);font-size:18px;line-height:1;padding:4px 10px;border-radius:6px">✕</button>
-      </div>
-
-      <!-- Modal Body (Scrollable) -->
-      <div style="padding:22px 26px;overflow-y:auto;flex:1">
-        <form id="fCatProfileMail" onsubmit="return false;">
-          
-          <!-- Client Selector -->
-          <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:14px 16px;margin-bottom:16px">
-            <label style="margin:0 0 6px 0;font-weight:700;color:#0f2b48;display:flex;align-items:center;justify-content:space-between">
-              <span>🎯 Target Client / Company:</span>
-              <span style="font-size:11px;font-weight:normal;color:#64748b">Selecting auto-fills recipient, greeting &amp; subject</span>
-            </label>
-            <div class="grid" style="grid-template-columns:1fr 1fr;gap:12px">
-              <div>
-                <select id="cpmClientSelect" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #94a3b8;font-size:13px;background:#ffffff">
-                  <option value="">-- Choose Existing Client from Master Data --</option>
-                  ${clients.map(c => `<option value="${h(c.id)}" data-name="${h(c.name)}" data-email="${h(c.email || '')}" ${defaultClient?.id === c.id ? 'selected' : ''}>${h(c.name)}${c.email ? ' (' + h(c.email) + ')' : ''}</option>`).join('')}
-                </select>
-              </div>
-              <div>
-                <input id="cpmClientName" placeholder="Or enter client company name here..." value="${h(selectedClientName)}" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #94a3b8;font-size:13px">
-              </div>
-            </div>
-          </div>
-
-          <!-- Email Addressing -->
-          <div class="grid" style="grid-template-columns:2fr 1fr 1fr;gap:12px;margin-bottom:14px">
-            <div>
-              <label style="font-weight:700;color:#1e293b">To (Recipient Email) *</label>
-              <input id="cpmTo" placeholder="client.procurement@domain.com" value="${h(defaultTo)}" required style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #94a3b8;font-size:13px">
-            </div>
-            <div>
-              <label style="font-weight:600;color:#64748b">Cc (Optional)</label>
-              <input id="cpmCc" placeholder="e.g. sales@amigo.in" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #cbd5e1;font-size:13px">
-            </div>
-            <div>
-              <label style="font-weight:600;color:#64748b">Bcc (Optional)</label>
-              <input id="cpmBcc" placeholder="e.g. kuldeep.amigo@gmail.com" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #cbd5e1;font-size:13px">
-            </div>
-          </div>
-
-          <!-- Subject Line -->
-          <div style="margin-bottom:14px">
-            <label style="font-weight:700;color:#1e293b">Email Subject *</label>
-            <input id="cpmSubject" value="${h(defaultSubject)}" required style="width:100%;padding:9px 12px;border-radius:6px;border:1px solid #94a3b8;font-size:13.5px;font-weight:600;color:#0f2b48">
-          </div>
-
-          <!-- AI Toolbar & Body Editor -->
-          <div style="margin-bottom:16px">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:8px">
-              <label style="margin:0;font-weight:700;color:#1e293b">Company Profile Pitch &amp; Introduction:</label>
-              <div style="display:flex;align-items:center;gap:6px">
-                <span style="font-size:11px;font-weight:700;color:#7c3aed">✨ AI Tools:</span>
-                <button type="button" class="btn ghost sm" id="btnAiPolish" style="font-size:11px;padding:3px 8px;border-color:#ddd6fe;color:#6d28d9" title="Polish grammar, clarity & business tone">
-                  ✨ Polish Tone
-                </button>
-                <button type="button" class="btn ghost sm" id="btnAiPersonalize" style="font-size:11px;padding:3px 8px;border-color:#ddd6fe;color:#6d28d9" title="Personalize specifically for this client/industry">
-                  🎯 Personalize
-                </button>
-                <button type="button" class="btn ghost sm" id="btnAiConcise" style="font-size:11px;padding:3px 8px;border-color:#ddd6fe;color:#6d28d9" title="Create concise elevator pitch">
-                  ⚡ Elevator Pitch
-                </button>
-                <button type="button" class="btn ghost sm" id="btnResetDraft" style="font-size:11px;padding:3px 8px;border-color:#cbd5e1;color:#475569" title="Reset to official full draft">
-                  🔄 Reset Draft
-                </button>
-              </div>
-            </div>
-            <textarea id="cpmBody" rows="11" style="width:100%;padding:12px;border-radius:8px;border:1px solid #cbd5e1;font-size:12.5px;line-height:1.6;font-family:inherit;color:#1e293b;resize:vertical">${h(defaultBody)}</textarea>
-          </div>
-
-          <!-- Dynamic Sender Signature Profile -->
-          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px;margin-bottom:16px">
-            <div style="font-size:12px;font-weight:700;color:#0f2b48;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px">
-              <span>👤 Sender Profile Signature (Dynamic for Current User)</span>
-            </div>
-            <div class="grid" style="grid-template-columns:1fr 1fr 1.2fr 1fr;gap:10px">
-              <div>
-                <label style="font-size:11px;margin:0 0 2px;color:#64748b">Sender Name</label>
-                <input id="cpmSenderName" value="${h(defaultSenderName)}" style="width:100%;padding:6px 8px;border-radius:4px;border:1px solid #cbd5e1;font-size:12px;font-weight:600">
-              </div>
-              <div>
-                <label style="font-size:11px;margin:0 0 2px;color:#64748b">Phone / Mobile</label>
-                <input id="cpmSenderPhone" value="${h(defaultSenderPhone)}" style="width:100%;padding:6px 8px;border-radius:4px;border:1px solid #cbd5e1;font-size:12px">
-              </div>
-              <div>
-                <label style="font-size:11px;margin:0 0 2px;color:#64748b">Official Email</label>
-                <input id="cpmSenderEmail" value="${h(defaultSenderEmail)}" style="width:100%;padding:6px 8px;border-radius:4px;border:1px solid #cbd5e1;font-size:12px">
-              </div>
-              <div>
-                <label style="font-size:11px;margin:0 0 2px;color:#64748b">Designation</label>
-                <input id="cpmSenderDesig" value="${h(defaultSenderDesig)}" style="width:100%;padding:6px 8px;border-radius:4px;border:1px solid #cbd5e1;font-size:12px">
-              </div>
-            </div>
-            <div style="font-size:11px;color:#64748b;margin-top:8px">
-              🏢 <b>AMIGO ENTERPRISES PUNE:</b> Office No:- 401, Baban Villa, Sno-6/17, Chovisawadi, Haveli Pune, Pimpri Chinchwad. (M Corp.) 412105
-            </div>
-          </div>
-
-          <!-- PDF Attachment Option -->
-          <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">
-            <label style="margin:0;display:flex;align-items:center;gap:10px;color:#065f46;font-weight:700;font-size:13px;cursor:pointer">
-              <input type="checkbox" id="cpmAttachPdf" checked style="width:18px;height:18px;accent-color:#059669;cursor:pointer">
-              <span>📎 Attach Official Product Catalogue PDF (Amigo_Enterprises_Company_Catalogue.pdf)</span>
-            </label>
-            <span style="font-size:11px;color:#047857;background:#d1fae5;padding:3px 8px;border-radius:12px;font-weight:600">
-              Live Catalogue PDF
-            </span>
-          </div>
-
-          <!-- Status / Progress Banner -->
-          <div id="cpmStatusBanner" style="display:none;margin-bottom:14px"></div>
-
-        </form>
-      </div>
-
-      <!-- Modal Footer -->
-      <div style="padding:14px 24px;border-top:1px solid #e2e8f0;background:#f8fafc;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-        <div>
-          <button type="button" class="btn ghost" id="btnPreviewCatEmail" style="font-size:13px;font-weight:600;padding:8px 16px">
-            👁️ Preview Email
-          </button>
-        </div>
-        <div style="display:flex;gap:10px">
-          <button type="button" class="btn ghost" id="btnCancelCatMail" style="font-size:13px;padding:8px 16px">
-            Cancel
-          </button>
-          <button type="button" class="btn" id="btnSubmitCatMail" style="background:linear-gradient(135deg, #0284c7 0%, #1d4ed8 100%);color:#ffffff;font-size:13px;font-weight:700;padding:8px 24px;box-shadow:0 4px 12px rgba(2,132,199,0.35);border:none">
-            🚀 Send Profile &amp; Catalogue
-          </button>
-        </div>
-      </div>
-    </div>
-  `;
-
-  document.body.appendChild(o);
-
-  // Close handlers
-  const close = () => o.remove();
-  o.querySelector('#btnCloseCatMail').onclick = close;
-  o.querySelector('#btnCancelCatMail').onclick = close;
-
-  // Client Selection logic
-  const clientSelect = o.querySelector('#cpmClientSelect');
-  const clientNameInp = o.querySelector('#cpmClientName');
-  const toInp = o.querySelector('#cpmTo');
-  const subjInp = o.querySelector('#cpmSubject');
-  const bodyTextarea = o.querySelector('#cpmBody');
-  const senderNameInp = o.querySelector('#cpmSenderName');
-  const senderPhoneInp = o.querySelector('#cpmSenderPhone');
-  const senderEmailInp = o.querySelector('#cpmSenderEmail');
-  const senderDesigInp = o.querySelector('#cpmSenderDesig');
-
-  clientSelect.onchange = () => {
-    const opt = clientSelect.options[clientSelect.selectedIndex];
-    if (opt && opt.value) {
-      const name = opt.getAttribute('data-name') || '';
-      const email = opt.getAttribute('data-email') || '';
-      clientNameInp.value = name;
-      if (email) toInp.value = email;
-      subjInp.value = `Company Profile & Product Catalogue | Amigo Enterprises Pune - ${name}`;
-      // Update greeting in body
-      bodyTextarea.value = OFFICIAL_CATALOGUE_EMAIL_DRAFT(name, senderNameInp.value, senderPhoneInp.value, senderEmailInp.value);
-    }
-  };
-
-  clientNameInp.oninput = () => {
-    const name = clientNameInp.value.trim();
-    if (name) {
-      subjInp.value = `Company Profile & Product Catalogue | Amigo Enterprises Pune - ${name}`;
-    }
-  };
-
-  // AI Toolbar Handlers
-  const handleAiAction = async (action, actionLabel) => {
-    const text = bodyTextarea.value.trim();
-    if (!text) {
-      say('Please enter some text in the body first');
-      return;
-    }
-    const cName = clientNameInp.value.trim();
-    const btn = o.querySelector(`#btnAi${actionLabel}`);
-    if (btn) {
-      btn.disabled = true;
-      btn.textContent = '⏳ Processing...';
-    }
-    try {
-      say('✨ AI Assistant is refining your company profile email...', 0);
-      const res = await api('POST', 'ai/transform', {
-        text,
-        action,
-        context: cName || 'Client'
-      });
-      if (res && res.result) {
-        bodyTextarea.value = res.result;
-        say('✨ AI update applied successfully!', 1);
-      }
-    } catch (err) {
-      say('AI Assist note: ' + err.message);
-    } finally {
-      if (btn) {
-        btn.disabled = false;
-        btn.textContent = (actionLabel === 'Polish' ? '✨ Polish Tone' : (actionLabel === 'Personalize' ? '🎯 Personalize' : '⚡ Elevator Pitch'));
-      }
-    }
-  };
-
-  o.querySelector('#btnAiPolish').onclick = () => handleAiAction('polish', 'Polish');
-  o.querySelector('#btnAiPersonalize').onclick = () => handleAiAction('profile_personalize', 'Personalize');
-  o.querySelector('#btnAiConcise').onclick = () => handleAiAction('profile_concise', 'Concise');
-  o.querySelector('#btnResetDraft').onclick = () => {
-    const cName = clientNameInp.value.trim();
-    bodyTextarea.value = OFFICIAL_CATALOGUE_EMAIL_DRAFT(cName, senderNameInp.value, senderPhoneInp.value, senderEmailInp.value);
-    say('🔄 Reset to official Amigo Enterprises draft.', 1);
-  };
-
-  // Preview Email Handler
-  o.querySelector('#btnPreviewCatEmail').onclick = () => {
-    const cName = clientNameInp.value.trim();
-    const subj = subjInp.value.trim();
-    const bodyTxt = bodyTextarea.value.trim();
-    const sName = senderNameInp.value.trim();
-    const sPhone = senderPhoneInp.value.trim();
-    const sEmail = senderEmailInp.value.trim();
-    const sDesig = senderDesigInp.value.trim();
-
-    previewCatalogueProfileEmail({
-      clientName: cName,
-      subject: subj,
-      bodyText: bodyTxt,
-      senderName: sName,
-      senderPhone: sPhone,
-      senderEmail: sEmail,
-      senderDesignation: sDesig
-    });
-  };
-
-  // Submit & Send Handler
-  const sendBtn = o.querySelector('#btnSubmitCatMail');
-  sendBtn.onclick = async () => {
-    const to = toInp.value.trim();
-    const cc = o.querySelector('#cpmCc').value.trim();
-    const bcc = o.querySelector('#cpmBcc').value.trim();
-    const subject = subjInp.value.trim();
-    const bodyText = bodyTextarea.value.trim();
-    const clientName = clientNameInp.value.trim();
-    const senderName = senderNameInp.value.trim();
-    const senderPhone = senderPhoneInp.value.trim();
-    const senderEmail = senderEmailInp.value.trim();
-    const senderDesignation = senderDesigInp.value.trim();
-    const attachPdf = o.querySelector('#cpmAttachPdf').checked;
-
-    if (!to) {
-      toInp.focus();
-      say('Recipient email ("To") is required.');
-      return;
-    }
-    if (!subject) {
-      subjInp.focus();
-      say('Email subject is required.');
-      return;
-    }
-    if (!bodyText) {
-      bodyTextarea.focus();
-      say('Email message body cannot be empty.');
-      return;
-    }
-
-    sendBtn.disabled = true;
-    sendBtn.innerHTML = '⏳ Sending...';
-
-    const statusBanner = o.querySelector('#cpmStatusBanner');
-    statusBanner.style.display = 'block';
-    statusBanner.innerHTML = `<div class="msg" style="background:#e0f2fe;color:#0369a1;display:flex;align-items:center;gap:10px"><span>⏳</span><span>Preparing email &amp; generating catalogue attachment...</span></div>`;
-
-    let attachments = [];
-    if (attachPdf) {
-      try {
-        statusBanner.innerHTML = `<div class="msg" style="background:#e0f2fe;color:#0369a1;display:flex;align-items:center;gap:10px"><span>⏳</span><span>Generating official product catalogue PDF...</span></div>`;
-        const pdfAtt = await generateCataloguePdfBlob();
-        if (pdfAtt) attachments.push(pdfAtt);
-      } catch (pdfErr) {
-        console.error('PDF generation error:', pdfErr);
-        sendBtn.disabled = false;
-        sendBtn.innerHTML = '🚀 Send Profile &amp; Catalogue';
-        statusBanner.innerHTML = `<div class="msg" style="background:#fee2e2;color:#991b1b;display:flex;align-items:center;gap:10px"><span>❌</span><span>PDF attachment failed: ${h(pdfErr.message)}. Email was NOT sent.</span></div>`;
-        return say('PDF attachment failed: ' + pdfErr.message);
-      }
-    }
-
-    try {
-      statusBanner.innerHTML = `<div class="msg" style="background:#e0f2fe;color:#0369a1;display:flex;align-items:center;gap:10px"><span>⏳</span><span>Dispatching email via Amigo SMTP server...</span></div>`;
-      const res = await api('POST', 'catalogue/send-mail', {
-        to,
-        cc,
-        bcc,
-        clientName,
-        subject,
-        bodyText,
-        senderName,
-        senderPhone,
-        senderEmail,
-        senderDesignation,
-        attachments
-      });
-
-      say('✅ ' + (res.message || 'Company Profile sent successfully!'), 1);
-      o.remove();
-
-      // Trigger history count refresh
-      const histBtn = document.getElementById('btnCatMailHistory');
-      if (histBtn && res.totalSent) {
-        histBtn.innerHTML = `📜 Sent History (${res.totalSent})`;
-      }
-    } catch (sendErr) {
-      statusBanner.innerHTML = `<div class="msg" style="background:#fee2e2;color:#991b1b;display:flex;align-items:center;gap:10px"><span>❌</span><span>Failed to send: ${h(sendErr.message)}</span></div>`;
-      sendBtn.disabled = false;
-      sendBtn.innerHTML = '🚀 Send Profile &amp; Catalogue';
-      say('Error: ' + sendErr.message);
-    }
-  };
-}
-
-function previewCatalogueProfileEmail(data) {
-  let existing = document.getElementById('catMailPreviewModal');
-  if (existing) existing.remove();
-
-  const previewHtml = buildClientCompanyProfileHtml(data);
-
-  const pModal = document.createElement('div');
-  pModal.id = 'catMailPreviewModal';
-  pModal.className = 'mail-modal-overlay';
-  pModal.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.85);backdrop-filter:blur(5px);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;';
-
-  pModal.innerHTML = `
-    <div class="card" style="width:1200px;max-width:98vw;max-height:94vh;margin:0;display:flex;flex-direction:column;padding:0;background:#ffffff;border-radius:14px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);border:1px solid #cbd5e1;overflow:hidden">
-      <div style="padding:14px 20px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;background:#0f2b48;color:#ffffff">
-        <div style="font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px">
-          <span>👁️ Email Preview:</span>
-          <span style="font-size:13px;color:#93c5fd;font-weight:normal">${h(data.subject)}</span>
-        </div>
-        <button type="button" class="btn ghost sm" id="btnCloseCatPreview" style="color:#ffffff;border-color:rgba(255,255,255,0.3);font-size:16px;line-height:1;padding:3px 8px">✕</button>
-      </div>
-      <div style="flex:1;overflow:hidden;background:#f1f5f9;display:flex;flex-direction:column">
-        <iframe id="catPreviewIframe" style="width:100%;height:100%;border:none;flex:1"></iframe>
-      </div>
-      <div style="padding:12px 20px;border-top:1px solid #e2e8f0;background:#ffffff;display:flex;align-items:center;justify-content:flex-end">
-        <button type="button" class="btn" id="btnDoneCatPreview" style="font-size:12px;padding:6px 16px">Done</button>
-      </div>
-    </div>
-  `;
-
-  document.body.appendChild(pModal);
-
-  const iframe = pModal.querySelector('#catPreviewIframe');
-  const doc = iframe.contentWindow.document;
-  doc.open();
-  doc.write(previewHtml);
-  doc.close();
-
-  const close = () => pModal.remove();
-  pModal.querySelector('#btnCloseCatPreview').onclick = close;
-  pModal.querySelector('#btnDoneCatPreview').onclick = close;
-}
-
-async function deleteCatalogueMailHistoryItem(id, clientName = '') {
-  if (me?.role !== 'admin') {
-    say('Access denied: Only administrators can delete sent history records.');
-    return;
-  }
-  if (!confirm('Delete this sent history record' + (clientName ? ' for ' + clientName : '') + '? This action cannot be undone.')) {
-    return;
-  }
-  try {
-    await api('DELETE', 'catalogue/mail-history/' + id);
-    say('Sent history record deleted.', 1);
-    openCatalogueMailHistoryModal();
-  } catch (err) {
-    say('Delete failed: ' + err.message);
-  }
-}
-
-async function openCatalogueMailHistoryModal() {
-  let existing = document.getElementById('catMailHistoryModal');
-  if (existing) existing.remove();
-
-  const m = document.createElement('div');
-  m.id = 'catMailHistoryModal';
-  m.className = 'mail-modal-overlay';
-  m.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.8);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;';
-
-  m.innerHTML = `
-    <div class="card" style="width:900px;max-width:96vw;max-height:90vh;margin:0;display:flex;flex-direction:column;padding:0;background:#ffffff;border-radius:14px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.35);border:1px solid #cbd5e1;overflow:hidden">
-      <div style="padding:18px 24px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg, #091e3a 0%, #0f2b48 100%);color:#ffffff">
-        <div style="display:flex;align-items:center;gap:10px">
-          <span style="font-size:24px">📜</span>
-          <div>
-            <h2 style="margin:0;font-size:18px;font-weight:800;color:#ffffff">Sent Company Profile Emails History</h2>
-            <div style="font-size:12px;color:#93c5fd;margin-top:2px">Audit log and tracking of catalogue pitches sent through the portal</div>
-          </div>
-        </div>
-        <button type="button" class="btn ghost sm" id="btnCloseCatHist" style="color:#ffffff;border-color:rgba(255,255,255,0.3);font-size:18px;line-height:1;padding:4px 10px">✕</button>
-      </div>
-      <div id="catHistContent" style="padding:20px;overflow-y:auto;flex:1">
-        <div style="text-align:center;padding:32px;color:#64748b">
-          <div class="view-spinner-ring" style="margin:0 auto 12px"></div>
-          <div>Loading sent emails history...</div>
-        </div>
-      </div>
-      <div style="padding:12px 20px;border-top:1px solid #e2e8f0;background:#f8fafc;display:flex;align-items:center;justify-content:space-between">
-        <button type="button" class="btn sm" style="background:#0284c7;color:#fff" onclick="openSendCatalogueProfileModal()">
-          + Send Another Profile Email
-        </button>
-        <button type="button" class="btn ghost sm" id="btnCloseCatHistBottom">Close</button>
-      </div>
-    </div>
-  `;
-
-  document.body.appendChild(m);
-  const close = () => m.remove();
-  m.querySelector('#btnCloseCatHist').onclick = close;
-  m.querySelector('#btnCloseCatHistBottom').onclick = close;
-
-  try {
-    const history = (await api('GET', 'catalogue/mail-history')) || [];
-    const container = m.querySelector('#catHistContent');
-    if (!history.length) {
-      container.innerHTML = `
-        <div style="text-align:center;padding:48px 20px;color:#64748b">
-          <div style="font-size:42px;margin-bottom:12px">📭</div>
-          <div style="font-size:16px;font-weight:700;color:#1e293b">No Catalogue Emails Sent Yet</div>
-          <div style="font-size:13px;margin-top:6px;color:#64748b">Use the "Send Company Profile" button to send your first catalogue pitch with attached PDF.</div>
-          <button class="btn sm" style="margin-top:16px;background:#0284c7;color:#fff" onclick="document.getElementById('catMailHistoryModal').remove();openSendCatalogueProfileModal()">
-            📧 Compose First Company Profile Email
-          </button>
-        </div>
-      `;
-      return;
-    }
-
-    container.innerHTML = `
-      <div style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse;font-size:12.5px">
-          <thead>
-            <tr style="border-bottom:2px solid #e2e8f0;color:#475569;text-align:left">
-              <th style="padding:8px 10px">Date / Time</th>
-              <th style="padding:8px 10px">Client Company</th>
-              <th style="padding:8px 10px">Recipient ("To")</th>
-              <th style="padding:8px 10px">Sent By</th>
-              <th style="padding:8px 10px">Catalogue PDF</th>
-              <th style="padding:8px 10px">Status</th>
-              <th style="padding:8px 10px;text-align:center">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${history.map(item => `
-              <tr style="border-bottom:1px solid #f1f5f9;transition:background 0.15s" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
-                <td style="padding:10px;white-space:nowrap;color:#64748b">
-                  ${new Date(item.sentAt).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' })}
-                  <div style="font-size:11px;color:#94a3b8">${new Date(item.sentAt).toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' })}</div>
-                </td>
-                <td style="padding:10px;font-weight:700;color:#0f2b48">
-                  ${h(item.clientName || 'Prospect')}
-                </td>
-                <td style="padding:10px;color:#1e293b">
-                  ${h(item.to)}
-                  ${item.cc ? `<div style="font-size:11px;color:#64748b">Cc: ${h(item.cc)}</div>` : ''}
-                </td>
-                <td style="padding:10px;color:#334155">
-                  ${h(item.senderName || item.sentBy)}
-                  <div style="font-size:11px;color:#64748b">${h(item.senderDesignation || 'Sales')}</div>
-                </td>
-                <td style="padding:10px">
-                  ${item.pdfAttached ? '<span style="background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600">📎 Catalogue PDF</span>' : '<span style="color:#94a3b8;font-size:11px">None</span>'}
-                </td>
-                <td style="padding:10px">
-                  <span style="background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700">
-                    ✔ Sent
-                  </span>
-                </td>
-                <td style="padding:10px;text-align:center;white-space:nowrap">
-                  <button class="btn ghost sm" style="font-size:11px;padding:3px 8px" onclick="document.getElementById('catMailHistoryModal').remove();openSendCatalogueProfileModal({ name:${JSON.stringify(item.clientName || '')}, email:${JSON.stringify(item.to || '')} })">
-                    🔄 Resend
-                  </button>
-                  ${me?.role === 'admin' ? `
-                    <button class="btn ghost sm" style="font-size:11px;padding:3px 8px;margin-left:6px;color:#dc2626;border-color:#fca5a5" onclick="deleteCatalogueMailHistoryItem('${h(item.id)}', '${h(item.clientName || '')}')" title="Delete Record (Admin Only)">
-                      🗑️
-                    </button>
-                  ` : ''}
-                </td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </div>
-    `;
-  } catch (err) {
-    m.querySelector('#catHistContent').innerHTML = `
-      <div style="text-align:center;padding:32px;color:#ef4444">
-        Failed to load mail history: ${h(err.message)}
-      </div>
-    `;
-  }
-}
-
-
-
-/* ========================================================
-   ANIMATION-PREVIEW: SEAL STAMP & TAX INVOICES MESH JS
-   ======================================================== */
-function showDocumentSealStamp(docNum, client, msg) {
-  let overlay = document.getElementById('amigoStampModal');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'amigoStampModal';
-    overlay.className = 'stamp-modal-overlay';
-    overlay.onclick = () => overlay.classList.remove('active');
-    overlay.innerHTML = `
-      <div class="stamp-modal-card" onclick="event.stopPropagation()">
-        <div class="stamp-modal-graphic">
-          <div class="stamp-modal-dashed"></div>
-          <div class="stamp-modal-inner">✓</div>
-        </div>
-        <h3 style="font-size:20px;font-weight:900;color:#fff;margin-bottom:6px;" id="stampDocNum">AE/26-27/011</h3>
-        <p style="color:#34d399;font-weight:700;font-size:13.5px;margin-bottom:10px;" id="stampDocClient">Amigo Official Document</p>
-        <p style="color:#94a3b8;font-size:12.5px;max-width:320px;margin:0 auto 20px;" id="stampDocMsg">Official Commercial Seal Applied & Dispatched</p>
-        <button class="btn" style="background:#10b981;margin:0 auto;display:block;" onclick="document.getElementById('amigoStampModal').classList.remove('active')">
-          Done
-        </button>
-      </div>
-    `;
-    document.body.appendChild(overlay);
-  }
-
-  document.getElementById('stampDocNum').textContent = docNum || 'Amigo Commercial Document';
-  document.getElementById('stampDocClient').textContent = client || 'Official Stamp Verified';
-  document.getElementById('stampDocMsg').textContent = msg || 'Document Digitally Signed & Processed Successfully';
-  
-  overlay.classList.add('active');
-  setTimeout(() => {
-    overlay.classList.remove('active');
-  }, 3200);
-}
-
-// Section-contained Tax Invoices, Documents & Financial Dashboard mesh loop
-let invSectionMeshLoop = null;
-let invActiveCanvas = null;
-let invActiveSection = null;
-let invActiveIsDark = false;
-let invSectionNodes = [];
-let invSectionMouse = { x: null, y: null };
-
-const lightMeshItems = [
-  { type: 'text', val: '₹', size: 23, color: '#312e81', glow: '#6366f1' },
-  { type: 'text', val: '₹', size: 20, color: '#3730a3', glow: '#818cf8' },
-  { type: 'text', val: 'GST', size: 16, color: '#0369a1', glow: '#38bdf8' },
-  { type: 'text', val: '%', size: 20, color: '#047857', glow: '#34d399' },
-  { type: 'text', val: '🧾', size: 21, color: '#4338ca', glow: '#818cf8' },
-  { type: 'text', val: '📈', size: 20, color: '#b45309', glow: '#fbbf24' },
-  { type: 'dot', radius: 5.2, color: '#4338ca', glow: '#818cf8' },
-  { type: 'dot', radius: 5.8, color: '#0284c7', glow: '#38bdf8' },
-  { type: 'dot', radius: 4.8, color: '#059669', glow: '#34d399' },
-  { type: 'text', val: '✦', size: 18, color: '#6d28d9', glow: '#a78bfa' }
-];
-
-const darkMeshItems = [
-  { type: 'text', val: '₹', size: 24, color: '#e0e7ff', glow: '#818cf8' },
-  { type: 'text', val: '₹', size: 20, color: '#bae6fd', glow: '#38bdf8' },
-  { type: 'text', val: 'GST', size: 16, color: '#a7f3d0', glow: '#34d399' },
-  { type: 'text', val: '%', size: 20, color: '#f5d0fe', glow: '#c084fc' },
-  { type: 'text', val: '🧾', size: 21, color: '#e0e7ff', glow: '#818cf8' },
-  { type: 'text', val: '📈', size: 20, color: '#fef08a', glow: '#fbbf24' },
-  { type: 'dot', radius: 5.4, color: '#818cf8', glow: '#a5b4fc' },
-  { type: 'dot', radius: 6.0, color: '#38bdf8', glow: '#7dd3fc' },
-  { type: 'dot', radius: 5.0, color: '#34d399', glow: '#6ee7b7' },
-  { type: 'text', val: '✦', size: 19, color: '#f0abfc', glow: '#e879f9' }
-];
-
-function getLiveMeshElements() {
-  const canvas = document.getElementById('invSectionMeshCanvas') || document.querySelector('.inv-section-mesh-canvas');
-  if (!canvas) return { canvas: null, section: null };
-  const section = canvas.closest('#dashHeroSection, #invHeroSection, .inv-hero-section, .hud-hero') || canvas.parentElement;
-  return { canvas, section };
-}
-
-function spawnInvMeshNodes(width, height, isDark) {
-  const w = width > 50 ? width : 1000;
-  const h = height > 50 ? height : 190;
-  const count = Math.min(46, Math.max(26, Math.floor(w / 30)));
-  const items = isDark ? darkMeshItems : lightMeshItems;
-  invSectionNodes = [];
-  for (let i = 0; i < count; i++) {
-    const item = items[i % items.length];
-    invSectionNodes.push({
-      x: Math.random() * w,
-      y: Math.random() * h,
-      vx: (Math.random() - 0.5) * 1.80,
-      vy: (Math.random() - 0.5) * 1.80,
-      item: item,
-      pulseOffset: Math.random() * Math.PI * 2
-    });
-  }
-}
-
-function bindInvHeroEvents(section, canvas) {
-  if (!section || !canvas) return;
-  section.onmousemove = (e) => {
-    const rect = canvas.getBoundingClientRect();
-    invSectionMouse.x = e.clientX - rect.left;
-    invSectionMouse.y = e.clientY - rect.top;
-  };
-  section.onmouseleave = () => {
-    invSectionMouse.x = null;
-    invSectionMouse.y = null;
-  };
-}
-
-function syncInvMeshSize() {
-  const { canvas, section } = getLiveMeshElements();
-  if (canvas && section) {
-    const sw = section.clientWidth || section.offsetWidth || 1000;
-    const sh = section.clientHeight || section.offsetHeight || 190;
-    if (sw > 0 && canvas.width !== sw) canvas.width = sw;
-    if (sh > 0 && canvas.height !== sh) canvas.height = sh;
-  }
-}
-window.syncInvMeshSize = syncInvMeshSize;
-
-function stopTaxInvoicesMesh() {
-  if (invSectionMeshLoop) {
-    cancelAnimationFrame(invSectionMeshLoop);
-    invSectionMeshLoop = null;
-  }
-  invActiveCanvas = null;
-  invActiveSection = null;
-}
-window.stopTaxInvoicesMesh = stopTaxInvoicesMesh;
-
-function startTaxInvoicesMesh() {
-  initInvSectionMesh();
-}
-window.startTaxInvoicesMesh = startTaxInvoicesMesh;
-
-function initInvSectionMesh() {
-  const { canvas, section } = getLiveMeshElements();
-  if (!canvas || !section || !canvas.isConnected) {
-    stopTaxInvoicesMesh();
-    return;
-  }
-
-  const isDark = Boolean(section.classList.contains('hud-hero') || section.id === 'dashHeroSection');
-  invActiveCanvas = canvas;
-  invActiveSection = section;
-  invActiveIsDark = isDark;
-  bindInvHeroEvents(section, canvas);
-  syncInvMeshSize();
-
-  if (!invSectionNodes || invSectionNodes.length === 0) {
-    spawnInvMeshNodes(canvas.width, canvas.height, isDark);
-  }
-
-  if (invSectionMeshLoop) {
-    cancelAnimationFrame(invSectionMeshLoop);
-    invSectionMeshLoop = null;
-  }
-
-  function render() {
-    const { canvas: liveCanvas, section: liveSection } = getLiveMeshElements();
-
-    // If hero section or canvas is absent from DOM, stop loop
-    if (!liveCanvas || !liveSection || !liveCanvas.isConnected) {
-      stopTaxInvoicesMesh();
-      return;
-    }
-
-    const currentIsDark = Boolean(liveSection.classList.contains('hud-hero') || liveSection.id === 'dashHeroSection');
-
-    // Auto-detect DOM replacements (e.g. Dashboard <-> Invoices route change, Refresh, filter, search):
-    if (liveCanvas !== invActiveCanvas || liveSection !== invActiveSection || currentIsDark !== invActiveIsDark) {
-      invActiveCanvas = liveCanvas;
-      invActiveSection = liveSection;
-      invActiveIsDark = currentIsDark;
-      bindInvHeroEvents(liveSection, liveCanvas);
-      syncInvMeshSize();
-      spawnInvMeshNodes(liveCanvas.width, liveCanvas.height, currentIsDark);
-    }
-
-    // Adapt to full container width on sidebar expand/collapse and window resize
-    const sw = liveSection.clientWidth || liveSection.offsetWidth || 1000;
-    const sh = liveSection.clientHeight || liveSection.offsetHeight || 190;
-    if (sw > 20 && liveCanvas.width !== sw) liveCanvas.width = sw;
-    if (sh > 20 && liveCanvas.height !== sh) liveCanvas.height = sh;
-
-    const w = liveCanvas.width;
-    const h = liveCanvas.height;
-    if (w <= 20 || h <= 20) {
-      invSectionMeshLoop = requestAnimationFrame(render);
-      return;
-    }
-
-    const ctx = liveCanvas.getContext('2d');
-    if (!ctx) {
-      invSectionMeshLoop = requestAnimationFrame(render);
-      return;
-    }
-
-    try {
-      if (!invSectionNodes || invSectionNodes.length === 0) {
-        spawnInvMeshNodes(w, h, currentIsDark);
-      }
-
-      ctx.clearRect(0, 0, w, h);
-
-      // 1. Draw bold, high-contrast connecting lines
-      const lineBase = currentIsDark ? "rgba(129, 140, 248, " : "rgba(79, 70, 229, ";
-      const lineAlphaMax = currentIsDark ? 0.70 : 0.65;
-      const maxDist = 125;
-      for (let i = 0; i < invSectionNodes.length; i++) {
-        for (let j = i + 1; j < invSectionNodes.length; j++) {
-          const dx = invSectionNodes[i].x - invSectionNodes[j].x;
-          const dy = invSectionNodes[i].y - invSectionNodes[j].y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < maxDist) {
-            ctx.strokeStyle = lineBase + (lineAlphaMax * (1 - dist / maxDist)) + ")";
-            ctx.lineWidth = currentIsDark ? 1.7 : 1.8;
-            ctx.beginPath();
-            ctx.moveTo(invSectionNodes[i].x, invSectionNodes[i].y);
-            ctx.lineTo(invSectionNodes[j].x, invSectionNodes[j].y);
-            ctx.stroke();
-          }
-        }
-      }
-
-      // 2. High-contrast, magnetic laser connection to mouse cursor
-      if (invSectionMouse.x !== null && !isNaN(invSectionMouse.x)) {
-        const mouseLineBase = currentIsDark ? "rgba(56, 189, 248, " : "rgba(2, 132, 199, ";
-        const mouseAlphaMax = currentIsDark ? 0.90 : 0.85;
-        const mouseDistMax = 120;
-        for (let i = 0; i < invSectionNodes.length; i++) {
-          const dx = invSectionNodes[i].x - invSectionMouse.x;
-          const dy = invSectionNodes[i].y - invSectionMouse.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < mouseDistMax) {
-            ctx.strokeStyle = mouseLineBase + (mouseAlphaMax * (1 - dist / mouseDistMax)) + ")";
-            ctx.lineWidth = 2.4;
-            ctx.beginPath();
-            ctx.moveTo(invSectionNodes[i].x, invSectionNodes[i].y);
-            ctx.lineTo(invSectionMouse.x, invSectionMouse.y);
-            ctx.stroke();
-          }
-        }
-      }
-
-      // 3. Move & draw nodes with rich glowing halos and sharp typography
-      const now = Date.now();
-      invSectionNodes.forEach(n => {
-        if (isNaN(n.x) || n.x < -20 || n.x > w + 20) n.x = Math.random() * w;
-        if (isNaN(n.y) || n.y < -20 || n.y > h + 20) n.y = Math.random() * h;
-
-        n.x += n.vx;
-        n.y += n.vy;
-
-        if (n.x < 0) { n.x = 0; n.vx = Math.abs(n.vx); }
-        else if (n.x > w) { n.x = w; n.vx = -Math.abs(n.vx); }
-
-        if (n.y < 0) { n.y = 0; n.vy = Math.abs(n.vy); }
-        else if (n.y > h) { n.y = h; n.vy = -Math.abs(n.vy); }
-
-        if (invSectionMouse.x !== null && !isNaN(invSectionMouse.x)) {
-          const dx = n.x - invSectionMouse.x;
-          const dy = n.y - invSectionMouse.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 75 && dist > 1) {
-            const ang = Math.atan2(dy, dx);
-            n.x += Math.cos(ang) * 2.6;
-            n.y += Math.sin(ang) * 2.6;
-          }
-        }
-
-        ctx.save();
-        const pulse = 0.85 + 0.15 * Math.sin(now / 350 + (n.pulseOffset || 0));
-        ctx.shadowColor = n.item.glow;
-        ctx.shadowBlur = (currentIsDark ? 10 : 8) * pulse;
-
-        if (n.item.type === 'dot') {
-          // Ambient outer halo
-          ctx.fillStyle = n.item.glow;
-          ctx.globalAlpha = (currentIsDark ? 0.35 : 0.28) * pulse;
-          ctx.beginPath();
-          ctx.arc(n.x, n.y, n.item.radius * 2.4, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.globalAlpha = 1.0;
-
-          // Vivid glowing core
-          ctx.fillStyle = n.item.color;
-          ctx.beginPath();
-          ctx.arc(n.x, n.y, n.item.radius, 0, Math.PI * 2);
-          ctx.fill();
-
-          // Specular white center sparkle
-          ctx.fillStyle = '#ffffff';
-          ctx.beginPath();
-          ctx.arc(n.x - 1, n.y - 1, n.item.radius * 0.40, 0, Math.PI * 2);
-          ctx.fill();
-        } else {
-          ctx.fillStyle = n.item.color;
-          ctx.font = "900 " + n.item.size + "px 'Plus Jakarta Sans', system-ui, sans-serif";
-          ctx.fillText(n.item.val, n.x, n.y);
-        }
-        ctx.restore();
-      });
-
-    } catch (drawErr) {
-      console.warn('Mesh render warn:', drawErr);
-    } finally {
-      invSectionMeshLoop = requestAnimationFrame(render);
-    }
-  }
-
-  invSectionMeshLoop = requestAnimationFrame(render);
-}
-window.initInvSectionMesh = initInvSectionMesh;
-
-// Self-healing heartbeat: guarantees mesh is ALWAYS running whenever a hero canvas is in DOM
-setInterval(() => {
-  const { canvas } = getLiveMeshElements();
-  if (canvas && canvas.isConnected) {
-    if (!invSectionMeshLoop || canvas !== invActiveCanvas) {
-      initInvSectionMesh();
-    }
-  } else if (!canvas && invSectionMeshLoop) {
-    stopTaxInvoicesMesh();
-  }
-}, 250);
-
-// Auto-resume whenever tab is re-focused or becomes visible
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') {
-    const { canvas } = getLiveMeshElements();
-    if (canvas && canvas.isConnected) {
-      initInvSectionMesh();
-    }
-  }
-});
-
-window.addEventListener('focus', () => {
-  const { canvas } = getLiveMeshElements();
-  if (canvas && canvas.isConnected) {
-    initInvSectionMesh();
-  }
-});
-
-window.addEventListener('resize', syncInvMeshSize);
-
-
-
-// ==========================================
-// SIDEBAR BOTTOM: EXECUTIVE ENTERPRISE PRO
-// ==========================================
-// High-precision ambient shimmer and breathing depth running smoothly on the GPU compositor.
-function initSideExecutivePro() {
-  const sb = document.getElementById('supportBtn');
-  const ub = document.getElementById('sideUserCard');
-  if (sb && !sb.classList.contains('pro-support')) sb.classList.add('pro-support');
-  if (ub && !ub.classList.contains('pro-user')) ub.classList.add('pro-user');
-}
-window.initSideExecutivePro = initSideExecutivePro;
-setTimeout(initSideExecutivePro, 50);
-
-
-
-// ============================================================================
-// AI B2B Lead Generator View (Restricted to OperationsAdmin Testing)
-// ============================================================================
-async function leadGenView() {
+async function leadGenView(activeSubTab = 'crm') {
   const isOpsAdmin = (me?.username || '').toLowerCase() === 'operationsadmin' || 
                      normalizeDesignation(me?.designation) === 'operations admin';
   if (!isOpsAdmin) {
@@ -18211,31 +16286,31 @@ async function leadGenView() {
   const view = $('#view');
   if (!view) return;
 
-  // Initial loading state
   view.innerHTML = `
     <div style="padding:40px;text-align:center;color:#64748b;">
       <div class="view-spinner-ring" style="margin:0 auto 16px;"></div>
-      <div style="font-size:16px;font-weight:700;color:#1e293b;">Loading AI Lead Generator Lab...</div>
-      <div style="font-size:12px;margin-top:4px;">Fetching product catalogue &amp; Gemini settings</div>
+      <div style="font-size:16px;font-weight:700;color:#1e293b;">Loading Amigo Sales CRM &amp; AI Discovery Hub...</div>
+      <div style="font-size:12px;margin-top:4px;">Fetching product catalogue, active pipeline &amp; deduplication registry</div>
     </div>
   `;
 
-  // Fetch products and current leadgen settings
   let products = [];
-  let settings = { configured: false, maskedKey: '', model: 'gemini-1.5-pro' };
+  let settings = { configured: false, maskedKey: '', model: 'gemini-3.5-flash', excludedCount: 0 };
+  let pipelineData = { leads: [], stats: { total: 0, new: 0, call_done: 0, profile_sent: 0, follow_up: 0, converted: 0, invalid_number: 0 } };
 
   try {
-    const [pList, sData] = await Promise.all([
+    const [pList, sData, pData] = await Promise.all([
       load('products').catch(() => []),
-      api('GET', 'leadgen/settings').catch(() => ({ configured: false, maskedKey: '', model: 'gemini-1.5-pro' }))
+      api('GET', 'leadgen/settings').catch(() => ({ configured: false, maskedKey: '', model: 'gemini-3.5-flash', excludedCount: 0 })),
+      api('GET', 'leadgen/pipeline').catch(() => ({ leads: [], stats: {} }))
     ]);
     products = pList || [];
     settings = sData || settings;
+    pipelineData = pData || pipelineData;
   } catch (err) {
-    console.warn('Error loading initial leadgen data:', err);
+    console.warn('Error loading CRM initial data:', err);
   }
 
-  // Common industrial targets for Amigo Enterprises
   const defaultIndustries = [
     'Thermal Power Plants (Coal / Lignite / Biomass)',
     'Cement Manufacturing & Grinding Units',
@@ -18254,291 +16329,386 @@ async function leadGenView() {
     'Pan-India (Major Heavy Industrial Belts)'
   ];
 
-  view.innerHTML = `
-    <div style="max-width:1300px;margin:0 auto;padding-bottom:50px">
-      <!-- Hero Header -->
-      <div class="hud-hero" style="margin-bottom:20px;padding:24px 28px;background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%);border-radius:16px;color:#fff;position:relative;overflow:hidden;box-shadow:0 10px 25px -5px rgba(0,0,0,0.25);">
-        <div style="position:relative;z-index:2;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">
-          <div>
-            <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(99,102,241,0.25);border:1px solid rgba(129,140,248,0.4);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;color:#c7d2fe;margin-bottom:10px;">
-              <span>🔒 OperationsAdmin Experimental Lab</span> &bull; <span>Google Gemini Pro</span>
-            </div>
-            <h1 style="margin:0 0 6px;font-size:24px;font-weight:700;color:#f8fafc;display:flex;align-items:center;gap:10px">
-              <span>🎯 AI B2B Lead Generator &amp; Customer Discovery</span>
-            </h1>
-            <div style="font-size:13px;color:#94a3b8;max-width:750px;line-height:1.5">
-              Discover active industrial plants, factories, and procurement managers in India who need Amigo Enterprises' ESP spares, insulators, controllers, and heating elements with verified contact details.
-            </div>
-          </div>
-          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-            <button class="btn ghost sm" id="btnToggleSettings" style="background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.2);display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px">
-              <span>⚙️ Gemini Pro Settings</span>
-              <span id="cfgStatusBadge" style="font-size:10px;padding:2px 6px;border-radius:10px;background:${settings.configured ? '#10b981' : '#f59e0b'};color:#fff">${settings.configured ? 'Configured' : 'Key Needed'}</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Settings Drawer / Modal Card -->
-      <div id="settingsBox" class="card" style="display:${settings.configured ? 'none' : 'block'};margin-bottom:20px;padding:20px 24px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:12px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-          <div>
-            <h3 style="margin:0 0 4px;font-size:16px;color:#0f172a;display:flex;align-items:center;gap:8px">
-              <span>✨ Google Gemini API Key Configuration</span>
-            </h3>
-            <div style="font-size:12px;color:#64748b">
-              Your key powers the real-time Google search grounding and structured contact extraction.
-            </div>
-          </div>
-          <a href="https://aistudio.google.com/app/apikey" target="_blank" style="font-size:12px;color:#4f46e5;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:4px">
-            Get Free Gemini API Key &nearr;
-          </a>
-        </div>
-        
-        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:16px;align-items:end">
-          <div>
-            <label style="display:block;font-size:12px;font-weight:600;color:#334155;margin-bottom:6px">Gemini API Key</label>
-            <div style="position:relative">
-              <input type="password" id="txtGeminiKey" class="inp" placeholder="${settings.configured ? settings.maskedKey : 'Paste AI Studio Key (AIzaSy...)'}" style="width:100%;padding-right:40px;font-family:monospace" />
-              <button type="button" id="btnToggleKeyEye" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#64748b">👁️</button>
-            </div>
-          </div>
-
-          <div>
-            <label style="display:block;font-size:12px;font-weight:600;color:#334155;margin-bottom:6px">Gemini Model</label>
-            <select id="selGeminiModel" class="inp" style="width:100%">
-              <option value="gemini-3.5-flash" ${settings.model === 'gemini-3.5-flash' ? 'selected' : ''}>gemini-3.5-flash (Recommended - Fast &amp; High Accuracy)</option>
-              <option value="gemini-3.8-flash" ${settings.model === 'gemini-3.8-flash' ? 'selected' : ''}>gemini-3.8-flash (Latest Flash Model)</option>
-              <option value="gemini-3.7-flash" ${settings.model === 'gemini-3.7-flash' ? 'selected' : ''}>gemini-3.7-flash (Hybrid Reasoning &amp; Speed)</option>
-              <option value="gemini-3.1-pro-preview" ${settings.model === 'gemini-3.1-pro-preview' ? 'selected' : ''}>gemini-3.1-pro-preview (Deep Thinking Pro)</option>
-            </select>
-          </div>
-
-          <div style="display:flex;gap:10px">
-            <button class="btn" id="btnSaveKey" style="background:#0b6fc4;color:#fff;border-radius:8px;padding:9px 18px">💾 Save Key</button>
-            <button class="btn ghost" id="btnTestKey" style="border-radius:8px;padding:9px 14px">⚡ Test Connection</button>
-          </div>
-        </div>
-        <div id="settingsFeedback" style="margin-top:12px;font-size:13px;display:none"></div>
-      </div>
-
-      <!-- Lead Search Formulation Panel -->
-      <div class="card" style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:24px;box-shadow:0 4px 12px rgba(0,0,0,0.03);margin-bottom:24px">
-        <h2 style="margin:0 0 16px;font-size:17px;font-weight:700;color:#0f172a;display:flex;align-items:center;gap:8px">
-          <span>🔍 Formulate Industrial Customer Search</span>
-        </h2>
-
-        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:18px;margin-bottom:18px">
-          <!-- Product Selector -->
-          <div>
-            <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:6px">Select Amigo Product</label>
-            <select id="selLeadProduct" class="inp" style="width:100%;font-size:13px">
-              ${products.map(p => `<option value="${h(p.name)}">${h(p.name)} ${p.hsn ? ' (HSN: ' + p.hsn + ')' : ''}</option>`).join('')}
-              <option value="__custom__">➕ Type Custom Product or Category...</option>
-            </select>
-            <input type="text" id="txtCustomProduct" class="inp" placeholder="e.g. ESP Discharge Electrode, Ceramic Insulator, Rapping Hammer" style="width:100%;margin-top:8px;display:none" />
-          </div>
-
-          <!-- Target Industry -->
-          <div>
-            <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:6px">Target Industrial Sector</label>
-            <select id="selIndustry" class="inp" style="width:100%;font-size:13px">
-              ${defaultIndustries.map(ind => `<option value="${h(ind)}">${h(ind)}</option>`).join('')}
-              <option value="All Heavy Industrial Manufacturing Units">All Heavy Industrial Sectors</option>
-            </select>
-          </div>
-
-          <!-- Target Location -->
-          <div>
-            <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:6px">Geographic Location</label>
-            <input type="text" id="txtLocation" class="inp" value="Maharashtra (Pune, Nagpur, Chandrapur)" list="locSuggestions" style="width:100%;font-size:13px" />
-            <datalist id="locSuggestions">
-              ${defaultLocations.map(loc => `<option value="${h(loc)}"></option>`).join('')}
-            </datalist>
-          </div>
-        </div>
-
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;padding-top:14px;border-top:1px solid #f1f5f9">
-          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#64748b">
-            <span>Result Batch Size:</span>
-            <select id="selBatchSize" class="inp" style="width:75px;padding:4px 8px">
-              <option value="5">5</option>
-              <option value="8" selected>8</option>
-              <option value="12">12</option>
-            </select>
-            <span style="font-size:11px;color:#94a3b8">(Keeps accuracy high &amp; response fast)</span>
-          </div>
-
-          <button id="btnLaunchDiscovery" class="btn" style="background:linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);color:#fff;border:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:700;display:inline-flex;align-items:center;gap:10px;box-shadow:0 4px 14px rgba(79,70,229,0.3);cursor:pointer">
-            <span id="btnIcon">🚀</span> <span id="btnText">Launch Live AI Customer Discovery</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Live Search Progress Indicator (hidden by default) -->
-      <div id="discoveryProgress" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:20px;margin-bottom:24px;text-align:center">
-        <div class="view-spinner-ring" style="margin:0 auto 12px"></div>
-        <div id="progressStepTitle" style="font-weight:700;color:#166534;font-size:15px">Gemini Pro is searching live Google indexes &amp; directories...</div>
-        <div id="progressStepSub" style="font-size:12px;color:#15803d;margin-top:4px">Connecting to verified manufacturing units, power stations &amp; procurement directories...</div>
-      </div>
-
-      <!-- Discovered Leads Container -->
-      <div id="leadsResultsContainer" style="display:none">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px">
-          <div>
-            <h2 id="resultsHeading" style="margin:0;font-size:18px;font-weight:700;color:#0f172a">Discovered Customer Leads</h2>
-            <div id="resultsSubheading" style="font-size:13px;color:#64748b;margin-top:3px">Verified potential corporate buyers for your selected product</div>
-          </div>
-          <div style="display:flex;gap:10px">
-            <button id="btnExportCsv" class="btn ghost sm" style="display:inline-flex;align-items:center;gap:6px">
-              <span>📥 Export CSV</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03)">
-          <div style="overflow-x:auto">
-            <table class="tbl" style="width:100%;border-collapse:collapse;font-size:13px">
-              <thead>
-                <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;text-align:left;color:#475569;font-weight:600">
-                  <th style="padding:12px 16px;min-width:240px">Company / Plant Name</th>
-                  <th style="padding:12px 16px;min-width:180px">Contact Person</th>
-                  <th style="padding:12px 16px;min-width:170px">Phone / Mobile</th>
-                  <th style="padding:12px 16px;min-width:190px">Email Address</th>
-                  <th style="padding:12px 16px;min-width:220px">Plant Location / Address</th>
-                  <th style="padding:12px 16px;min-width:140px">Match &amp; Need</th>
-                  <th style="padding:12px 16px;min-width:130px;text-align:center">Action</th>
-                </tr>
-              </thead>
-              <tbody id="leadsTableBody">
-                <!-- Rows injected here -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  // Hook up UI events
+  let currentSubTab = activeSubTab; // 'crm' or 'discover'
+  let currentFilter = 'all'; // 'all', 'new', 'call_done', 'profile_sent', 'follow_up', 'converted', 'invalid_number'
+  let searchQuery = '';
   let lastDiscoveredLeads = [];
 
-  // Toggle settings
-  const btnToggleSettings = $('#btnToggleSettings');
-  const settingsBox = $('#settingsBox');
-  if (btnToggleSettings && settingsBox) {
-    btnToggleSettings.addEventListener('click', () => {
-      settingsBox.style.display = settingsBox.style.display === 'none' ? 'block' : 'none';
-    });
+  function renderHub() {
+    const stats = pipelineData.stats || {};
+    const totalLeads = stats.total || 0;
+
+    view.innerHTML = `
+      <div style="max-width:1380px;margin:0 auto;padding-bottom:50px">
+        <!-- Hero Header -->
+        <div class="hud-hero" style="margin-bottom:18px;padding:22px 26px;background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%);border-radius:14px;color:#fff;position:relative;box-shadow:0 8px 24px -4px rgba(0,0,0,0.25);">
+          <div style="position:relative;z-index:2;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px">
+            <div>
+              <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(99,102,241,0.25);border:1px solid rgba(129,140,248,0.4);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;color:#c7d2fe;margin-bottom:8px;">
+                <span>🔒 OperationsAdmin CRM Command</span> &bull; <span>Google Gemini Pro</span> &bull; <span>Smart Deduplication Active</span>
+              </div>
+              <h1 style="margin:0 0 4px;font-size:23px;font-weight:700;color:#f8fafc;display:flex;align-items:center;gap:10px">
+                <span>🎯 Amigo B2B Customer Discovery &amp; Sales CRM</span>
+              </h1>
+              <div style="font-size:13px;color:#94a3b8;line-height:1.4">
+                Discover up to 50 targeted industrial plants &amp; contractors, track executive calling actions, send profiles, and convert verified leads.
+              </div>
+            </div>
+
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+              <button class="btn ghost sm" id="btnToggleSettings" style="background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.2);display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:8px">
+                <span>⚙️ Gemini Pro Settings</span>
+                <span style="font-size:10px;padding:2px 6px;border-radius:10px;background:${settings.configured ? '#10b981' : '#f59e0b'};color:#fff">${settings.configured ? 'Configured' : 'Key Needed'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gemini Settings Box (Collapsible) -->
+        <div id="settingsBox" class="card" style="display:${settings.configured ? 'none' : 'block'};margin-bottom:18px;padding:18px 22px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <div>
+              <h3 style="margin:0;font-size:15px;color:#0f172a">✨ Google Gemini Configuration &amp; Deduplication Registry</h3>
+              <div style="font-size:12px;color:#64748b;margin-top:2px">
+                Currently tracking <b>${settings.excludedCount || 0}</b> unique firms &amp; numbers in the permanent exclusion registry (never repeated).
+              </div>
+            </div>
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" style="font-size:12px;color:#4f46e5;font-weight:600;text-decoration:none">Get Free Gemini API Key &nearr;</a>
+          </div>
+          
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:14px;align-items:end">
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:#334155;margin-bottom:5px">Gemini API Key</label>
+              <div style="position:relative">
+                <input type="password" id="txtGeminiKey" class="inp" placeholder="${settings.configured ? settings.maskedKey : 'Paste AI Studio Key'}" style="width:100%;padding-right:40px;font-family:monospace" />
+                <button type="button" id="btnToggleKeyEye" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#64748b">👁️</button>
+              </div>
+            </div>
+
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:#334155;margin-bottom:5px">Gemini Model</label>
+              <select id="selGeminiModel" class="inp" style="width:100%">
+                <option value="gemini-3.5-flash" ${settings.model === 'gemini-3.5-flash' ? 'selected' : ''}>gemini-3.5-flash (Recommended - Fast &amp; Accurate)</option>
+                <option value="gemini-3.8-flash" ${settings.model === 'gemini-3.8-flash' ? 'selected' : ''}>gemini-3.8-flash (Latest Flash Model)</option>
+                <option value="gemini-3.7-flash" ${settings.model === 'gemini-3.7-flash' ? 'selected' : ''}>gemini-3.7-flash (Hybrid Reasoning)</option>
+                <option value="gemini-3.1-pro-preview" ${settings.model === 'gemini-3.1-pro-preview' ? 'selected' : ''}>gemini-3.1-pro-preview (Deep Thinking Pro)</option>
+              </select>
+            </div>
+
+            <div style="display:flex;gap:8px">
+              <button class="btn" id="btnSaveKey" style="background:#0b6fc4;color:#fff;border-radius:8px;padding:8px 14px">💾 Save</button>
+              <button class="btn ghost" id="btnTestKey" style="border-radius:8px;padding:8px 12px">⚡ Test Connection</button>
+            </div>
+          </div>
+          <div id="settingsFeedback" style="margin-top:10px;font-size:12px;display:none"></div>
+        </div>
+
+        <!-- KPI Metric Summary Bar -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(170px, 1fr));gap:12px;margin-bottom:18px">
+          <div class="card" style="padding:14px 18px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.02)">
+            <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px">Total CRM Pipeline</div>
+            <div style="font-size:22px;font-weight:800;color:#0f172a;margin-top:4px">${stats.total || 0}</div>
+          </div>
+          <div class="card" style="padding:14px 18px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.02)">
+            <div style="font-size:11px;font-weight:700;color:#0b6fc4;text-transform:uppercase;letter-spacing:0.5px">New to Call</div>
+            <div style="font-size:22px;font-weight:800;color:#0b6fc4;margin-top:4px">${stats.new || 0}</div>
+          </div>
+          <div class="card" style="padding:14px 18px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.02)">
+            <div style="font-size:11px;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:0.5px">Calls Done</div>
+            <div style="font-size:22px;font-weight:800;color:#10b981;margin-top:4px">${stats.call_done || 0}</div>
+          </div>
+          <div class="card" style="padding:14px 18px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.02)">
+            <div style="font-size:11px;font-weight:700;color:#6366f1;text-transform:uppercase;letter-spacing:0.5px">Profiles Sent</div>
+            <div style="font-size:22px;font-weight:800;color:#6366f1;margin-top:4px">${stats.profile_sent || 0}</div>
+          </div>
+          <div class="card" style="padding:14px 18px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.02)">
+            <div style="font-size:11px;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:0.5px">Converted to Clients</div>
+            <div style="font-size:22px;font-weight:800;color:#059669;margin-top:4px">${stats.converted || 0}</div>
+          </div>
+          <div class="card" style="padding:14px 18px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.02)">
+            <div style="font-size:11px;font-weight:700;color:#dc2626;text-transform:uppercase;letter-spacing:0.5px">Invalid / Dead</div>
+            <div style="font-size:22px;font-weight:800;color:#dc2626;margin-top:4px">${stats.invalid_number || 0}</div>
+          </div>
+        </div>
+
+        <!-- Main Tab Switcher -->
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px;border-bottom:2px solid #e2e8f0;padding-bottom:10px">
+          <div style="display:flex;gap:10px">
+            <button id="tabBtnCrm" class="btn sm" style="background:${currentSubTab === 'crm' ? '#0b6fc4' : '#f1f5f9'};color:${currentSubTab === 'crm' ? '#fff' : '#475569'};font-weight:700;padding:8px 16px;border-radius:8px">
+              📋 Sales Calling Queue &amp; CRM Pipeline (${totalLeads})
+            </button>
+            <button id="tabBtnDiscover" class="btn sm" style="background:${currentSubTab === 'discover' ? '#0b6fc4' : '#f1f5f9'};color:${currentSubTab === 'discover' ? '#fff' : '#475569'};font-weight:700;padding:8px 16px;border-radius:8px">
+              🎯 AI Market Discovery (Up to 50 Leads)
+            </button>
+          </div>
+          <div style="font-size:12px;color:#64748b">
+            ${currentSubTab === 'crm' ? 'Track human sales calls, profile dispatch, and qualification' : 'AI searches live market &amp; automatically excludes previously seen firms'}
+          </div>
+        </div>
+
+        <!-- TAB 1: AI MARKET DISCOVERY -->
+        <div id="sectionDiscover" style="display:${currentSubTab === 'discover' ? 'block' : 'none'}">
+          <div class="card" style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:22px;box-shadow:0 4px 12px rgba(0,0,0,0.03);margin-bottom:20px">
+            <h2 style="margin:0 0 14px;font-size:17px;font-weight:700;color:#0f172a;display:flex;align-items:center;gap:8px">
+              <span>🔍 Scan Industrial Market (Mega Plants, Mid Process Units &amp; Contractors)</span>
+            </h2>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:16px;margin-bottom:16px">
+              <div>
+                <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:6px">Select Amigo Product</label>
+                <select id="selLeadProduct" class="inp" style="width:100%;font-size:13px">
+                  ${products.map(p => `<option value="${h(p.name)}">${h(p.name)} ${p.hsn ? ' (HSN: ' + p.hsn + ')' : ''}</option>`).join('')}
+                  <option value="__custom__">➕ Type Custom Product / Equipment...</option>
+                </select>
+                <input type="text" id="txtCustomProduct" class="inp" placeholder="e.g. ESP Discharge Electrode, Delrin Sheet, Rapper Coil" style="width:100%;margin-top:8px;display:none" />
+              </div>
+
+              <div>
+                <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:6px">Industrial Sector</label>
+                <select id="selIndustry" class="inp" style="width:100%;font-size:13px">
+                  ${defaultIndustries.map(ind => `<option value="${h(ind)}">${h(ind)}</option>`).join('')}
+                  <option value="All Heavy Industrial Manufacturing Units">All Heavy Industrial Sectors</option>
+                </select>
+              </div>
+
+              <div>
+                <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:6px">Geographic Location</label>
+                <input type="text" id="txtLocation" class="inp" value="Maharashtra (Pune, Nagpur, Chandrapur)" list="locSuggestions" style="width:100%;font-size:13px" />
+                <datalist id="locSuggestions">
+                  ${defaultLocations.map(loc => `<option value="${h(loc)}"></option>`).join('')}
+                </datalist>
+              </div>
+            </div>
+
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;padding-top:14px;border-top:1px solid #f1f5f9">
+              <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#64748b">
+                <span style="font-weight:600;color:#334155">Batch Size:</span>
+                <select id="selBatchSize" class="inp" style="font-weight:700;color:#0f172a;padding:5px 10px">
+                  <option value="10">10 Leads (Quick Scan)</option>
+                  <option value="25">25 Leads (Balanced Mix)</option>
+                  <option value="50" selected>50 Leads (Complete Market: Mega + Mid + Small Contractors)</option>
+                </select>
+                <span style="font-size:11px;color:#10b981;font-weight:600;background:#ecfdf5;padding:3px 8px;border-radius:6px">
+                  ✓ ${settings.excludedCount || 0} Previous Firms Auto-Excluded
+                </span>
+              </div>
+
+              <button id="btnLaunchDiscovery" class="btn" style="background:linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);color:#fff;border:none;padding:11px 22px;border-radius:10px;font-size:14px;font-weight:700;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 14px rgba(79,70,229,0.3);cursor:pointer">
+                <span id="btnIcon">🚀</span> <span id="btnText">Launch Live Market Scan</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Progress Spinner -->
+          <div id="discoveryProgress" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:22px;margin-bottom:20px;text-align:center">
+            <div class="view-spinner-ring" style="margin:0 auto 12px"></div>
+            <div id="progressStepTitle" style="font-weight:700;color:#166534;font-size:15px">Gemini Pro is running Multi-Tier Industrial Market Discovery...</div>
+            <div id="progressStepSub" style="font-size:12px;color:#15803d;margin-top:4px">Querying Mega Power Plants, Sugar Boilers, Paper Mills &amp; MIDC Engineering Contractors. Deduplicating against previous lists...</div>
+          </div>
+
+          <!-- Discovery Results Table -->
+          <div id="discoveryResultsBox" style="display:none">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px">
+              <div>
+                <h2 id="discResultsHeading" style="margin:0;font-size:17px;font-weight:700;color:#0f172a">Discovered Market Leads</h2>
+                <div id="discResultsSub" style="font-size:12px;color:#64748b;margin-top:2px">Unstaged raw market scan. Add qualified leads to the CRM Sales Calling Queue below.</div>
+              </div>
+              <div style="display:flex;gap:10px">
+                <button id="btnAddAllToCrm" class="btn sm" style="background:#0b6fc4;color:#fff;font-weight:700;padding:8px 14px;border-radius:8px">
+                  📥 Add All (<span id="discCountBadge">0</span>) to Sales Queue (CRM)
+                </button>
+                <button id="btnExportDiscCsv" class="btn ghost sm" style="padding:8px 12px">
+                  📥 Export CSV
+                </button>
+              </div>
+            </div>
+
+            <div class="card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03)">
+              <div style="overflow-x:auto">
+                <table class="tbl" style="width:100%;border-collapse:collapse;font-size:13px">
+                  <thead>
+                    <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;text-align:left;color:#475569;font-weight:600">
+                      <th style="padding:11px 14px;min-width:230px">Plant / Company Name</th>
+                      <th style="padding:11px 14px;min-width:140px">Industrial Tier</th>
+                      <th style="padding:11px 14px;min-width:170px">Contact Person</th>
+                      <th style="padding:11px 14px;min-width:160px">Phone / Mobile</th>
+                      <th style="padding:11px 14px;min-width:180px">Email Address</th>
+                      <th style="padding:11px 14px;min-width:200px">Location / Address</th>
+                      <th style="padding:11px 14px;min-width:120px">Relevance</th>
+                      <th style="padding:11px 14px;min-width:130px;text-align:center">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="discTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: CRM SALES CALLING QUEUE & PIPELINE TRACKER -->
+        <div id="sectionCrm" style="display:${currentSubTab === 'crm' ? 'block' : 'none'}">
+          <!-- Filter Controls -->
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px">
+            <!-- Filter Pills -->
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <button class="crm-filter-btn ${currentFilter === 'all' ? 'active' : ''}" data-filter="all">All (${stats.total || 0})</button>
+              <button class="crm-filter-btn ${currentFilter === 'new' ? 'active' : ''}" data-filter="new" style="color:#0b6fc4">🆕 New (${stats.new || 0})</button>
+              <button class="crm-filter-btn ${currentFilter === 'call_done' ? 'active' : ''}" data-filter="call_done" style="color:#10b981">📞 Call Done (${stats.call_done || 0})</button>
+              <button class="crm-filter-btn ${currentFilter === 'profile_sent' ? 'active' : ''}" data-filter="profile_sent" style="color:#6366f1">🚀 Profile Sent (${stats.profile_sent || 0})</button>
+              <button class="crm-filter-btn ${currentFilter === 'follow_up' ? 'active' : ''}" data-filter="follow_up" style="color:#d97706">⏳ Follow-up (${stats.follow_up || 0})</button>
+              <button class="crm-filter-btn ${currentFilter === 'converted' ? 'active' : ''}" data-filter="converted" style="color:#059669">🤝 Converted (${stats.converted || 0})</button>
+              <button class="crm-filter-btn ${currentFilter === 'invalid_number' ? 'active' : ''}" data-filter="invalid_number" style="color:#dc2626">❌ Invalid / Dead (${stats.invalid_number || 0})</button>
+            </div>
+
+            <!-- Search box -->
+            <div style="display:flex;gap:8px">
+              <input type="text" id="txtCrmSearch" class="inp" placeholder="Search by name, phone, city..." style="width:230px;padding:6px 12px;font-size:12px" />
+              <button id="btnExportCrmCsv" class="btn ghost sm" style="padding:6px 10px;font-size:12px">📥 Export CSV</button>
+            </div>
+          </div>
+
+          <!-- CRM Leads List / Cards -->
+          <div id="crmLeadsContainer">
+            <!-- Injected by renderCrmList() -->
+          </div>
+        </div>
+      </div>
+    `;
+
+    applyCrmStyles();
+    bindHubEvents();
+    if (currentSubTab === 'crm') renderCrmList();
   }
 
-  // Key eye toggle
-  const txtGeminiKey = $('#txtGeminiKey');
-  const btnToggleKeyEye = $('#btnToggleKeyEye');
-  if (btnToggleKeyEye && txtGeminiKey) {
-    btnToggleKeyEye.addEventListener('click', () => {
-      txtGeminiKey.type = txtGeminiKey.type === 'password' ? 'text' : 'password';
-    });
-  }
-
-  // Save Key
-  const btnSaveKey = $('#btnSaveKey');
-  const selGeminiModel = $('#selGeminiModel');
-  const settingsFeedback = $('#settingsFeedback');
-  if (btnSaveKey) {
-    btnSaveKey.addEventListener('click', async () => {
-      const apiKey = (txtGeminiKey.value || '').trim();
-      const model = selGeminiModel.value;
-      if (!apiKey && !settings.configured) {
-        settingsFeedback.style.display = 'block';
-        settingsFeedback.style.color = '#dc2626';
-        settingsFeedback.innerText = 'Please enter an API key first.';
-        return;
+  function applyCrmStyles() {
+    if ($('#crmCustomStyle')) return;
+    const style = document.createElement('style');
+    style.id = 'crmCustomStyle';
+    style.innerHTML = `
+      .crm-filter-btn {
+        background: #fff;
+        border: 1px solid #cbd5e1;
+        padding: 5px 11px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+        color: #475569;
+        cursor: pointer;
+        transition: all 0.15s ease;
       }
-      btnSaveKey.disabled = true;
-      btnSaveKey.innerText = 'Saving...';
+      .crm-filter-btn:hover { background: #f1f5f9; }
+      .crm-filter-btn.active {
+        background: #0f172a;
+        color: #fff !important;
+        border-color: #0f172a;
+      }
+      .tier-badge {
+        font-size: 10px;
+        padding: 2px 7px;
+        border-radius: 6px;
+        font-weight: 700;
+        display: inline-block;
+      }
+      .tier-mega { background: #fef3c7; color: #92400e; }
+      .tier-mid { background: #e0e7ff; color: #3730a3; }
+      .tier-sme { background: #ecfdf5; color: #065f46; }
+      .status-pill {
+        font-size: 11px;
+        font-weight: 700;
+        padding: 3px 9px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function bindHubEvents() {
+    // Tab switching
+    $('#tabBtnCrm')?.addEventListener('click', () => { currentSubTab = 'crm'; renderHub(); });
+    $('#tabBtnDiscover')?.addEventListener('click', () => { currentSubTab = 'discover'; renderHub(); });
+
+    // Settings drawer toggle
+    $('#btnToggleSettings')?.addEventListener('click', () => {
+      const box = $('#settingsBox');
+      if (box) box.style.display = box.style.display === 'none' ? 'block' : 'none';
+    });
+
+    // Password eye toggle
+    $('#btnToggleKeyEye')?.addEventListener('click', () => {
+      const el = $('#txtGeminiKey');
+      if (el) el.type = el.type === 'password' ? 'text' : 'password';
+    });
+
+    // Save key
+    $('#btnSaveKey')?.addEventListener('click', async () => {
+      const apiKey = ($('#txtGeminiKey')?.value || '').trim();
+      const model = $('#selGeminiModel')?.value || 'gemini-3.5-flash';
+      const fb = $('#settingsFeedback');
       try {
-        const res = await api('POST', 'leadgen/settings', { apiKey, model });
-        settingsFeedback.style.display = 'block';
-        settingsFeedback.style.color = '#16a34a';
-        settingsFeedback.innerText = '✓ Key and model saved successfully!';
-        $('#cfgStatusBadge').innerText = 'Configured';
-        $('#cfgStatusBadge').style.background = '#10b981';
+        await api('POST', 'leadgen/settings', { apiKey, model });
+        fb.style.display = 'block'; fb.style.color = '#16a34a'; fb.innerText = '✓ Settings saved successfully!';
         settings.configured = true;
       } catch (e) {
-        settingsFeedback.style.display = 'block';
-        settingsFeedback.style.color = '#dc2626';
-        settingsFeedback.innerText = 'Error: ' + e.message;
-      } finally {
-        btnSaveKey.disabled = false;
-        btnSaveKey.innerText = '💾 Save Key';
+        fb.style.display = 'block'; fb.style.color = '#dc2626'; fb.innerText = 'Error: ' + e.message;
       }
     });
-  }
 
-  // Test Key
-  const btnTestKey = $('#btnTestKey');
-  if (btnTestKey) {
-    btnTestKey.addEventListener('click', async () => {
-      const apiKey = (txtGeminiKey.value || '').trim();
-      const model = selGeminiModel.value;
-      btnTestKey.disabled = true;
-      btnTestKey.innerText = 'Testing...';
-      settingsFeedback.style.display = 'block';
-      settingsFeedback.style.color = '#475569';
-      settingsFeedback.innerText = 'Testing connection with Google Gemini servers...';
+    // Test key
+    $('#btnTestKey')?.addEventListener('click', async () => {
+      const apiKey = ($('#txtGeminiKey')?.value || '').trim();
+      const model = $('#selGeminiModel')?.value || 'gemini-3.5-flash';
+      const fb = $('#settingsFeedback');
+      fb.style.display = 'block'; fb.style.color = '#475569'; fb.innerText = 'Testing connection...';
       try {
         const res = await api('POST', 'leadgen/test', { apiKey, model });
-        settingsFeedback.style.color = '#16a34a';
-        settingsFeedback.innerText = '✓ ' + (res.message || 'Connection successful!');
+        fb.style.color = '#16a34a'; fb.innerText = '✓ ' + (res.message || 'Connected successfully!');
       } catch (e) {
-        settingsFeedback.style.color = '#dc2626';
-        settingsFeedback.innerText = 'Connection error: ' + e.message;
-      } finally {
-        btnTestKey.disabled = false;
-        btnTestKey.innerText = '⚡ Test Connection';
+        fb.style.color = '#dc2626'; fb.innerText = 'Connection error: ' + e.message;
       }
     });
-  }
 
-  // Custom product toggle
-  const selLeadProduct = $('#selLeadProduct');
-  const txtCustomProduct = $('#txtCustomProduct');
-  if (selLeadProduct && txtCustomProduct) {
-    selLeadProduct.addEventListener('change', () => {
-      txtCustomProduct.style.display = selLeadProduct.value === '__custom__' ? 'block' : 'none';
-      if (selLeadProduct.value === '__custom__') txtCustomProduct.focus();
+    // Custom product field toggle
+    $('#selLeadProduct')?.addEventListener('change', (e) => {
+      const isCustom = e.target.value === '__custom__';
+      $('#txtCustomProduct').style.display = isCustom ? 'block' : 'none';
+      if (isCustom) $('#txtCustomProduct').focus();
     });
-  }
 
-  // Launch Discovery
-  const btnLaunchDiscovery = $('#btnLaunchDiscovery');
-  const discoveryProgress = $('#discoveryProgress');
-  const leadsResultsContainer = $('#leadsResultsContainer');
-  const leadsTableBody = $('#leadsTableBody');
+    // Filter pills
+    document.querySelectorAll('.crm-filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        currentFilter = btn.getAttribute('data-filter') || 'all';
+        document.querySelectorAll('.crm-filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderCrmList();
+      });
+    });
 
-  if (btnLaunchDiscovery) {
-    btnLaunchDiscovery.addEventListener('click', async () => {
-      let product = selLeadProduct.value;
-      if (product === '__custom__') {
-        product = (txtCustomProduct.value || '').trim();
-      }
-      if (!product) {
-        say('Please select or specify a product first.', 0);
-        return;
-      }
+    // Search box
+    $('#txtCrmSearch')?.addEventListener('input', (e) => {
+      searchQuery = (e.target.value || '').trim().toLowerCase();
+      renderCrmList();
+    });
+
+    // Launch Discovery
+    $('#btnLaunchDiscovery')?.addEventListener('click', async () => {
+      let product = $('#selLeadProduct').value;
+      if (product === '__custom__') product = ($('#txtCustomProduct').value || '').trim();
+      if (!product) return say('Please select or enter a product', 0);
 
       const industry = ($('#selIndustry')?.value || '').trim();
       const location = ($('#txtLocation')?.value || 'Maharashtra').trim();
-      const maxResults = parseInt($('#selBatchSize')?.value) || 8;
-      const customKey = (txtGeminiKey?.value || '').trim();
-      const customModel = selGeminiModel?.value;
+      const maxResults = parseInt($('#selBatchSize')?.value) || 50;
+      const customKey = ($('#txtGeminiKey')?.value || '').trim();
+      const customModel = $('#selGeminiModel')?.value || 'gemini-3.5-flash';
 
-      btnLaunchDiscovery.disabled = true;
-      $('#btnText').innerText = 'Agent Researching Real-time...';
-      $('#btnIcon').innerText = '⏳';
-      discoveryProgress.style.display = 'block';
-      leadsResultsContainer.style.display = 'none';
+      $('#btnLaunchDiscovery').disabled = true;
+      $('#btnText').innerText = `Scanning Market for ${maxResults} Leads...`;
+      $('#discoveryProgress').style.display = 'block';
+      $('#discoveryResultsBox').style.display = 'none';
 
       try {
         const res = await api('POST', 'leadgen/discover', {
@@ -18550,166 +16720,431 @@ async function leadGenView() {
           model: customModel
         });
 
-        if (!res.leads || !res.leads.length) {
-          throw new Error('No companies returned. Try broadening the location or product term.');
+        lastDiscoveredLeads = res.leads || [];
+        if (!lastDiscoveredLeads.length) {
+          throw new Error('No new companies found. Try changing the location or product keywords.');
         }
 
-        lastDiscoveredLeads = res.leads;
-        renderLeadsTable(res.leads, product, location);
-        leadsResultsContainer.style.display = 'block';
+        renderDiscoveryTable(lastDiscoveredLeads, product, location);
+        $('#discoveryResultsBox').style.display = 'block';
       } catch (err) {
         say('Discovery error: ' + err.message, 0);
-        if (err.message.includes('key') || err.message.includes('API key')) {
-          settingsBox.style.display = 'block';
-          txtGeminiKey?.focus();
-        }
       } finally {
-        btnLaunchDiscovery.disabled = false;
-        $('#btnText').innerText = 'Launch Live AI Customer Discovery';
-        $('#btnIcon').innerText = '🚀';
-        discoveryProgress.style.display = 'none';
+        $('#btnLaunchDiscovery').disabled = false;
+        $('#btnText').innerText = 'Launch Live Market Scan';
+        $('#discoveryProgress').style.display = 'none';
       }
+    });
+
+    // Add All Discovered to Sales Queue (CRM)
+    $('#btnAddAllToCrm')?.addEventListener('click', async () => {
+      if (!lastDiscoveredLeads.length) return;
+      const btn = $('#btnAddAllToCrm');
+      btn.disabled = true;
+      btn.innerText = 'Staging into Sales Queue...';
+
+      try {
+        const res = await api('POST', 'leadgen/stage-leads', {
+          leads: lastDiscoveredLeads
+        });
+
+        say(res.message || 'Leads added to CRM Sales Queue!', 1);
+        btn.innerText = '✓ All Added to Sales Queue!';
+        // Refresh pipeline data and switch to CRM tab
+        const freshPipe = await api('GET', 'leadgen/pipeline');
+        pipelineData = freshPipe;
+        currentSubTab = 'crm';
+        renderHub();
+      } catch (e) {
+        btn.disabled = false;
+        btn.innerText = '📥 Add All to Sales Queue (CRM)';
+        say('Failed to stage leads: ' + e.message, 0);
+      }
+    });
+
+    // Export CRM CSV
+    $('#btnExportCrmCsv')?.addEventListener('click', () => {
+      const leads = pipelineData.leads || [];
+      if (!leads.length) return say('No CRM leads to export', 0);
+      exportLeadsToCsv(leads, 'Amigo_CRM_Pipeline');
+    });
+
+    // Export Discovery CSV
+    $('#btnExportDiscCsv')?.addEventListener('click', () => {
+      if (!lastDiscoveredLeads.length) return say('No discovered leads to export', 0);
+      exportLeadsToCsv(lastDiscoveredLeads, 'Amigo_Market_Discovery');
     });
   }
 
-  // Render Table Function
-  function renderLeadsTable(leads, prod, loc) {
-    $('#resultsHeading').innerText = `Discovered ${leads.length} Target Plants for "${prod}"`;
-    $('#resultsSubheading').innerText = `Target Location: ${loc} &bull; Powered by Google Gemini Pro Live Discovery`;
+  function renderDiscoveryTable(leads, prod, loc) {
+    $('#discResultsHeading').innerText = `Discovered ${leads.length} Target Firms for "${prod}"`;
+    $('#discResultsSub').innerText = `Location: ${loc} &bull; Includes Mega Plants, Mid Process Units &amp; Contractors`;
+    $('#discCountBadge').innerText = leads.length;
 
-    leadsTableBody.innerHTML = leads.map((lead, idx) => {
-      const phoneDisplay = lead.mobile || lead.phone || 'N/A';
-      const cleanPhone = phoneDisplay.replace(/[^\d+]/g, '');
-      const emailDisplay = lead.email || 'N/A';
-      const scoreBadgeColor = lead.matchScore >= 9 ? '#10b981' : (lead.matchScore >= 7 ? '#0b6fc4' : '#64748b');
+    const tbody = $('#discTableBody');
+    tbody.innerHTML = leads.map((l, idx) => {
+      const tierClass = l.tier?.includes('Mega') ? 'tier-mega' : (l.tier?.includes('Process') ? 'tier-mid' : 'tier-sme');
+      const phoneDisplay = l.mobile || l.phone || 'N/A';
+      const cleanP = phoneDisplay.replace(/[^\d+]/g, '');
 
       return `
         <tr style="border-bottom:1px solid #f1f5f9;vertical-align:top">
-          <td style="padding:14px 16px">
-            <div style="font-weight:700;color:#0f172a;font-size:14px">${h(lead.name)}</div>
-            <div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap">
-              <span style="font-size:10px;background:#f1f5f9;color:#475569;padding:2px 8px;border-radius:6px;font-weight:600">${h(lead.industry)}</span>
-              ${lead.gstin ? `<span style="font-size:10px;background:#e0e7ff;color:#4338ca;padding:2px 8px;border-radius:6px;font-weight:600">GSTIN: ${h(lead.gstin)}</span>` : ''}
-              ${lead.website ? `<a href="${lead.website.startsWith('http') ? lead.website : 'https://' + lead.website}" target="_blank" style="font-size:10px;color:#0b6fc4;text-decoration:none;padding:2px 4px">&nearr; Website</a>` : ''}
-            </div>
+          <td style="padding:12px 14px">
+            <div style="font-weight:700;color:#0f172a;font-size:13px">${h(l.name)}</div>
+            <div style="margin-top:3px;font-size:11px;color:#64748b">${h(l.industry)}</div>
+            ${l.website ? `<a href="${l.website.startsWith('http') ? l.website : 'https://' + l.website}" target="_blank" style="font-size:10px;color:#0b6fc4;text-decoration:none">&nearr; Website</a>` : ''}
           </td>
-
-          <td style="padding:14px 16px">
-            <div style="font-weight:600;color:#334155">${h(lead.contact || 'Purchase / Plant Head')}</div>
-            <div style="font-size:11px;color:#64748b">Procurement &amp; Spares</div>
+          <td style="padding:12px 14px">
+            <span class="tier-badge ${tierClass}">${h(l.tier || 'Industrial')}</span>
           </td>
-
-          <td style="padding:14px 16px">
-            <div style="display:flex;align-items:center;gap:6px">
-              ${cleanPhone.length >= 8 
-                ? `<a href="tel:${cleanPhone}" style="color:#0b6fc4;font-weight:600;text-decoration:none">${h(phoneDisplay)}</a>`
-                : `<span style="color:#64748b">${h(phoneDisplay)}</span>`
-              }
-              ${lead.isPhoneValid ? `<span title="Valid phone format" style="color:#10b981;font-size:12px">✓</span>` : ''}
-            </div>
-            ${cleanPhone.length >= 10 ? `
-              <div style="margin-top:4px">
-                <a href="https://wa.me/${cleanPhone.replace(/^\+/, '')}" target="_blank" style="font-size:11px;color:#16a34a;text-decoration:none;display:inline-flex;align-items:center;gap:3px">
-                  <span>💬 WhatsApp</span>
-                </a>
-              </div>
-            ` : ''}
+          <td style="padding:12px 14px">
+            <div style="font-weight:600;color:#334155;font-size:12px">${h(l.contact || 'Purchase Head')}</div>
           </td>
-
-          <td style="padding:14px 16px">
-            ${emailDisplay !== 'N/A' 
-              ? `<a href="mailto:${h(emailDisplay)}" style="color:#0b6fc4;text-decoration:none;font-weight:500">${h(emailDisplay)}</a>`
-              : `<span style="color:#94a3b8">Not listed</span>`
-            }
+          <td style="padding:12px 14px">
+            <div style="font-size:12px;font-weight:600">${cleanP.length >= 8 ? `<a href="tel:${cleanP}" style="color:#0b6fc4;text-decoration:none">${h(phoneDisplay)}</a>` : h(phoneDisplay)}</div>
+            ${cleanP.length >= 10 ? `<div style="margin-top:2px"><a href="https://wa.me/${cleanP.replace(/^\+/, '')}" target="_blank" style="font-size:10px;color:#16a34a;text-decoration:none">💬 WhatsApp</a></div>` : ''}
           </td>
-
-          <td style="padding:14px 16px;font-size:12px;color:#334155;line-height:1.4">
-            <div>${h(lead.address || (lead.city + ', ' + lead.state))}</div>
+          <td style="padding:12px 14px;font-size:12px">
+            ${l.email ? `<a href="mailto:${h(l.email)}" style="color:#0b6fc4;text-decoration:none">${h(l.email)}</a>` : '<span style="color:#94a3b8">N/A</span>'}
           </td>
-
-          <td style="padding:14px 16px">
-            <div style="display:inline-flex;align-items:center;gap:4px;background:${scoreBadgeColor}15;color:${scoreBadgeColor};padding:3px 8px;border-radius:12px;font-size:11px;font-weight:700">
-              <span>${lead.matchScore}/10 Match</span>
-            </div>
-            <div style="font-size:11px;color:#64748b;margin-top:4px;line-height:1.3" title="${h(lead.buyingReason)}">
-              ${h(lead.buyingReason.length > 70 ? lead.buyingReason.slice(0, 70) + '...' : lead.buyingReason)}
-            </div>
+          <td style="padding:12px 14px;font-size:12px;color:#334155">
+            <div>${h(l.address || (l.city + ', ' + l.state))}</div>
           </td>
-
-          <td style="padding:14px 16px;text-align:center">
-            <button class="btn sm btnAddClient" data-idx="${idx}" style="background:#0b6fc4;color:#fff;border-radius:6px;padding:6px 10px;font-size:11px;width:100%;white-space:nowrap">
-              ➕ Add to Clients
+          <td style="padding:12px 14px">
+            <div style="font-weight:700;color:#10b981;font-size:11px">${l.matchScore}/10 Match</div>
+            <div style="font-size:10px;color:#64748b;margin-top:2px" title="${h(l.buyingReason)}">${h((l.buyingReason || '').slice(0, 50))}...</div>
+          </td>
+          <td style="padding:12px 14px;text-align:center">
+            <button class="btn sm btnStageSingle" data-idx="${idx}" style="background:#0b6fc4;color:#fff;font-size:11px;padding:5px 9px;border-radius:6px;width:100%">
+              📥 Add to CRM
             </button>
           </td>
         </tr>
       `;
     }).join('');
 
-    // Attach click handlers to "Add to Clients" buttons
-    document.querySelectorAll('.btnAddClient').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
+    // Single stage buttons
+    tbody.querySelectorAll('.btnStageSingle').forEach(btn => {
+      btn.addEventListener('click', async () => {
         const idx = parseInt(btn.getAttribute('data-idx'));
         const lead = leads[idx];
         if (!lead) return;
-
         btn.disabled = true;
-        btn.innerText = 'Saving...';
-
+        btn.innerText = 'Staging...';
         try {
-          const res = await api('POST', 'leadgen/add-client', {
-            name: lead.name,
-            phone: lead.phone || lead.mobile,
-            mobile: lead.mobile,
-            email: lead.email,
-            address: lead.address || (lead.city + ', ' + lead.state),
-            gstin: lead.gstin,
-            contact: lead.contact
-          });
-
+          await api('POST', 'leadgen/stage-leads', { lead });
           btn.style.background = '#10b981';
-          btn.innerText = res.alreadyExists ? '✓ Already Added' : '✓ In Clients';
-          say(res.message || 'Client added successfully!', 1);
-        } catch (err) {
+          btn.innerText = '✓ In Sales Queue';
+          const fresh = await api('GET', 'leadgen/pipeline');
+          pipelineData = fresh;
+        } catch (e) {
           btn.disabled = false;
-          btn.innerText = '➕ Add to Clients';
-          say('Failed to add client: ' + err.message, 0);
+          btn.innerText = '📥 Add to CRM';
+          say('Failed: ' + e.message, 0);
         }
       });
     });
   }
 
-  // Export CSV
-  const btnExportCsv = $('#btnExportCsv');
-  if (btnExportCsv) {
-    btnExportCsv.addEventListener('click', () => {
-      if (!lastDiscoveredLeads.length) return;
-      const headers = ['Company Name', 'Industry', 'Contact Person', 'Phone', 'Mobile', 'Email', 'Address', 'City', 'State', 'GSTIN', 'Match Score', 'Buying Reason', 'Website'];
-      const rows = lastDiscoveredLeads.map(l => [
-        `"${(l.name || '').replace(/"/g, '""')}"`,
-        `"${(l.industry || '').replace(/"/g, '""')}"`,
-        `"${(l.contact || '').replace(/"/g, '""')}"`,
-        `"${(l.phone || '').replace(/"/g, '""')}"`,
-        `"${(l.mobile || '').replace(/"/g, '""')}"`,
-        `"${(l.email || '').replace(/"/g, '""')}"`,
-        `"${(l.address || '').replace(/"/g, '""')}"`,
-        `"${(l.city || '').replace(/"/g, '""')}"`,
-        `"${(l.state || '').replace(/"/g, '""')}"`,
-        `"${(l.gstin || '').replace(/"/g, '""')}"`,
-        l.matchScore || '',
-        `"${(l.buyingReason || '').replace(/"/g, '""')}"`,
-        `"${(l.website || '').replace(/"/g, '""')}"`
-      ]);
+  function renderCrmList() {
+    const container = $('#crmLeadsContainer');
+    if (!container) return;
 
-      const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Amigo_Leads_${new Date().toISOString().slice(0, 10)}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
+    let list = pipelineData.leads || [];
+
+    // Filter by status
+    if (currentFilter !== 'all') {
+      if (currentFilter === 'invalid_number') {
+        list = list.filter(l => l.status === 'invalid_number' || l.status === 'invalid_email');
+      } else {
+        list = list.filter(l => (l.status || 'new') === currentFilter);
+      }
+    }
+
+    // Filter by search
+    if (searchQuery) {
+      list = list.filter(l => {
+        const full = [l.name, l.phone, l.mobile, l.email, l.city, l.state, l.contact, l.product].join(' ').toLowerCase();
+        return full.includes(searchQuery);
+      });
+    }
+
+    if (!list.length) {
+      container.innerHTML = `
+        <div style="padding:48px 20px;text-align:center;background:#fff;border:1px dashed #cbd5e1;border-radius:12px;color:#64748b">
+          <div style="font-size:32px;margin-bottom:8px">📭</div>
+          <div style="font-size:15px;font-weight:700;color:#1e293b">No Leads in this Filter View</div>
+          <div style="font-size:12px;margin-top:4px">
+            ${pipelineData.leads?.length ? 'Try choosing a different status filter above or clearing search.' : 'Switch to the "AI Market Discovery" tab above and launch a scan to populate your Sales Calling Queue!'}
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    const statusBadges = {
+      new: { label: '🆕 New to Call', bg: '#eff6ff', color: '#1d4ed8' },
+      call_done: { label: '📞 Call Done', bg: '#f0fdf4', color: '#15803d' },
+      profile_sent: { label: '🚀 Profile Sent', bg: '#f5f3ff', color: '#6d28d9' },
+      follow_up: { label: '⏳ Follow-up', bg: '#fffbeb', color: '#b45309' },
+      converted: { label: '🤝 Converted to Client', bg: '#ecfdf5', color: '#047857' },
+      invalid_number: { label: '❌ Invalid Number', bg: '#fef2f2', color: '#b91c1c' },
+      invalid_email: { label: '❌ Invalid Email', bg: '#fef2f2', color: '#b91c1c' },
+      not_interested: { label: '🚫 Archived', bg: '#f1f5f9', color: '#475569' }
+    };
+
+    container.innerHTML = list.map(l => {
+      const st = statusBadges[l.status || 'new'] || statusBadges.new;
+      const tierClass = l.tier?.includes('Mega') ? 'tier-mega' : (l.tier?.includes('Process') ? 'tier-mid' : 'tier-sme');
+      const cleanP = (l.mobile || l.phone || '').replace(/[^\d+]/g, '');
+      const histCount = (l.history || []).length;
+
+      return `
+        <div class="card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 20px;margin-bottom:12px;box-shadow:0 2px 6px rgba(0,0,0,0.02)">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px">
+            <!-- Left Info -->
+            <div style="flex:1;min-width:320px">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+                <span style="font-size:15px;font-weight:700;color:#0f172a">${h(l.name)}</span>
+                <span class="tier-badge ${tierClass}">${h(l.tier || 'Industrial')}</span>
+                <span class="status-pill" style="background:${st.bg};color:${st.color}">${st.label}</span>
+                ${l.product ? `<span style="font-size:10px;background:#f1f5f9;color:#475569;padding:2px 6px;border-radius:4px;font-weight:600">Part: ${h(l.product)}</span>` : ''}
+              </div>
+
+              <div style="font-size:12px;color:#475569;margin-bottom:6px">
+                <b>Contact:</b> ${h(l.contact || 'Purchase / Maintenance GM')} &bull; 
+                <b>Location:</b> ${h(l.address || (l.city + ', ' + l.state))}
+                ${l.gstin ? ` &bull; <b>GSTIN:</b> ${h(l.gstin)}` : ''}
+              </div>
+
+              <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:12px">
+                <div>
+                  📞 ${cleanP.length >= 8 ? `<a href="tel:${cleanP}" style="color:#0b6fc4;font-weight:700;text-decoration:none">${h(l.phone || l.mobile)}</a>` : '<span style="color:#64748b">' + (l.phone || l.mobile || 'N/A') + '</span>'}
+                  ${cleanP.length >= 10 ? `<a href="https://wa.me/${cleanP.replace(/^\+/, '')}" target="_blank" style="margin-left:6px;font-size:11px;color:#16a34a;text-decoration:none">💬 WhatsApp</a>` : ''}
+                </div>
+                <div>
+                  ✉️ ${l.email ? `<a href="mailto:${h(l.email)}" style="color:#0b6fc4;font-weight:600;text-decoration:none">${h(l.email)}</a>` : '<span style="color:#94a3b8">No email</span>'}
+                </div>
+                ${l.website ? `<div>🌐 <a href="${l.website.startsWith('http') ? l.website : 'https://' + l.website}" target="_blank" style="color:#0b6fc4;text-decoration:none">&nearr; Website</a></div>` : ''}
+              </div>
+
+              ${l.buyingReason ? `
+                <div style="margin-top:8px;font-size:11px;color:#64748b;background:#f8fafc;padding:6px 10px;border-radius:6px;border-left:3px solid #0b6fc4">
+                  <b>Technical Need:</b> ${h(l.buyingReason)}
+                </div>
+              ` : ''}
+
+              ${l.notes ? `
+                <div style="margin-top:6px;font-size:11px;color:#1e293b;background:#fef3c7;padding:5px 9px;border-radius:6px">
+                  <b>Executive Note:</b> ${h(l.notes)}
+                </div>
+              ` : ''}
+            </div>
+
+            <!-- Right Interactive Actions -->
+            <div style="display:flex;flex-direction:column;gap:6px;min-width:210px;align-items:stretch">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+                <button class="btn sm btnCrmCall" data-id="${l.id}" style="background:#10b981;color:#fff;border-radius:6px;font-size:11px;padding:6px">
+                  📞 Call Done
+                </button>
+                <button class="btn sm btnCrmProfile" data-id="${l.id}" data-email="${h(l.email || '')}" data-name="${h(l.name)}" style="background:#6366f1;color:#fff;border-radius:6px;font-size:11px;padding:6px">
+                  🚀 Send Profile
+                </button>
+              </div>
+
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+                <button class="btn ghost sm btnCrmFollowUp" data-id="${l.id}" style="border-radius:6px;font-size:11px;padding:6px;color:#d97706">
+                  ⏳ Follow-up
+                </button>
+                <button class="btn sm btnCrmConvert" data-id="${l.id}" data-name="${h(l.name)}" style="background:#059669;color:#fff;border-radius:6px;font-size:11px;padding:6px">
+                  🤝 Convert
+                </button>
+              </div>
+
+              <div style="display:flex;gap:6px;justify-content:space-between">
+                <button class="btn ghost sm btnCrmInvalidNum" data-id="${l.id}" style="font-size:10px;color:#dc2626;padding:3px 6px">
+                  ❌ Invalid No.
+                </button>
+                <button class="btn ghost sm btnCrmHistory" data-id="${l.id}" style="font-size:10px;color:#475569;padding:3px 6px">
+                  📜 History (${histCount})
+                </button>
+                <button class="btn ghost sm btnCrmDelete" data-id="${l.id}" style="font-size:10px;color:#94a3b8;padding:3px 6px">
+                  🗑️
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- History Drawer (collapsible) -->
+          <div id="hist_${l.id}" style="display:none;margin-top:12px;padding-top:10px;border-top:1px dashed #e2e8f0;font-size:11px">
+            <div style="font-weight:700;color:#334155;margin-bottom:6px">📜 Activity &amp; Outreach Audit Trail:</div>
+            ${(l.history || []).map(hItem => `
+              <div style="padding:4px 0;color:#475569;display:flex;gap:10px">
+                <span style="color:#94a3b8;min-width:110px">${new Date(hItem.timestamp).toLocaleString('en-IN', { dateStyle:'short', timeStyle:'short' })}</span>
+                <span style="font-weight:600;color:#0f172a">${h(hItem.byName || hItem.by)}</span>
+                <span style="color:#0b6fc4">${h(hItem.actionLabel || hItem.action)}</span>
+                ${hItem.notes ? `<span style="color:#1e293b">- "${h(hItem.notes)}"</span>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    bindCrmActionHandlers();
+  }
+
+  function bindCrmActionHandlers() {
+    // Call Done
+    document.querySelectorAll('.btnCrmCall').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-id');
+        const notes = prompt('Enter Call Feedback / Customer Requirement (e.g. Discussed with stores head, needs quotation in Jan shutdown):');
+        if (notes === null) return;
+        try {
+          await api('POST', 'leadgen/lead-action', { leadId: id, action: 'call_done', notes });
+          say('Call status updated successfully!', 1);
+          refreshPipeline();
+        } catch (e) { say('Error: ' + e.message, 0); }
+      });
+    });
+
+    // Send Profile Direct Email
+    document.querySelectorAll('.btnCrmProfile').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-id');
+        let toEmail = btn.getAttribute('data-email');
+        const name = btn.getAttribute('data-name');
+
+        if (!toEmail) {
+          toEmail = prompt(`Enter email address to send Amigo Company Profile to ${name}:`);
+          if (!toEmail) return;
+        }
+
+        const customNote = prompt(`Confirm sending Amigo Company Profile & Product Catalogue to ${toEmail}:\n(Optional: Add custom message below, or leave blank)`, '');
+        if (customNote === null) return;
+
+        btn.disabled = true;
+        btn.innerText = 'Sending...';
+
+        try {
+          const res = await api('POST', 'leadgen/send-profile-direct', { leadId: id, toEmail, customNote });
+          say(res.message || 'Profile emailed successfully!', 1);
+          refreshPipeline();
+        } catch (e) {
+          btn.disabled = false;
+          btn.innerText = '🚀 Send Profile';
+          say('Email error: ' + e.message, 0);
+        }
+      });
+    });
+
+    // Follow Up
+    document.querySelectorAll('.btnCrmFollowUp').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-id');
+        const nextDate = prompt('Enter Follow-up Date (e.g. Next Monday / 15-Dec):', 'Next Monday');
+        if (nextDate === null) return;
+        const notes = prompt('Follow-up Note (e.g. Client requested callback after budget approval):', '');
+        if (notes === null) return;
+        try {
+          await api('POST', 'leadgen/lead-action', { leadId: id, action: 'follow_up', nextFollowUp: nextDate, notes });
+          say('Follow-up scheduled!', 1);
+          refreshPipeline();
+        } catch (e) { say('Error: ' + e.message, 0); }
+      });
+    });
+
+    // Convert to Official Client Master
+    document.querySelectorAll('.btnCrmConvert').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-id');
+        const name = btn.getAttribute('data-name');
+        if (!confirm(`Confirm converting "${name}" into official Client Directory?\n\nThis will permanently register them as a Client for Invoicing and Quotations.`)) return;
+
+        try {
+          const res = await api('POST', 'leadgen/lead-action', { leadId: id, action: 'convert', notes: 'Converted to official client directory' });
+          say(res.message || 'Client successfully registered!', 1);
+          refreshPipeline();
+        } catch (e) { say('Error: ' + e.message, 0); }
+      });
+    });
+
+    // Invalid Number
+    document.querySelectorAll('.btnCrmInvalidNum').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-id');
+        if (!confirm('Mark this number as Invalid / Disconnected?\n\nThis will permanently blacklist the number so it is never dialed or returned in future searches.')) return;
+        try {
+          await api('POST', 'leadgen/lead-action', { leadId: id, action: 'invalid_number', notes: 'Number disconnected / not in service' });
+          say('Lead marked invalid & number blacklisted from future searches.', 1);
+          refreshPipeline();
+        } catch (e) { say('Error: ' + e.message, 0); }
+      });
+    });
+
+    // History Toggle
+    document.querySelectorAll('.btnCrmHistory').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-id');
+        const drawer = $('#hist_' + id);
+        if (drawer) drawer.style.display = drawer.style.display === 'none' ? 'block' : 'none';
+      });
+    });
+
+    // Delete
+    document.querySelectorAll('.btnCrmDelete').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-id');
+        if (!confirm('Remove this lead from the CRM pipeline?')) return;
+        try {
+          await api('POST', 'leadgen/delete-lead', { leadId: id });
+          refreshPipeline();
+        } catch (e) { say('Error: ' + e.message, 0); }
+      });
     });
   }
+
+  async function refreshPipeline() {
+    try {
+      const fresh = await api('GET', 'leadgen/pipeline');
+      pipelineData = fresh;
+      renderHub();
+    } catch {}
+  }
+
+  function exportLeadsToCsv(leads, filePrefix) {
+    const headers = ['Company Name', 'Industrial Tier', 'Product', 'Status', 'Contact Person', 'Phone', 'Mobile', 'Email', 'Address', 'City', 'State', 'GSTIN', 'Match Score', 'Notes', 'Buying Reason', 'Website'];
+    const rows = leads.map(l => [
+      `"${(l.name || '').replace(/"/g, '""')}"`,
+      `"${(l.tier || '').replace(/"/g, '""')}"`,
+      `"${(l.product || '').replace(/"/g, '""')}"`,
+      `"${(l.status || 'new').replace(/"/g, '""')}"`,
+      `"${(l.contact || '').replace(/"/g, '""')}"`,
+      `"${(l.phone || '').replace(/"/g, '""')}"`,
+      `"${(l.mobile || '').replace(/"/g, '""')}"`,
+      `"${(l.email || '').replace(/"/g, '""')}"`,
+      `"${(l.address || '').replace(/"/g, '""')}"`,
+      `"${(l.city || '').replace(/"/g, '""')}"`,
+      `"${(l.state || '').replace(/"/g, '""')}"`,
+      `"${(l.gstin || '').replace(/"/g, '""')}"`,
+      l.matchScore || '',
+      `"${(l.notes || '').replace(/"/g, '""')}"`,
+      `"${(l.buyingReason || '').replace(/"/g, '""')}"`,
+      `"${(l.website || '').replace(/"/g, '""')}"`
+    ]);
+
+    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${filePrefix}_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  renderHub();
 }
 
 </script></body></html>

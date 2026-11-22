@@ -26,3 +26,6 @@ Thumbs.db
 
 # Local leadgen settings with API keys
 data/leadgen.json
+
+data/crm_leads.json
+data/seen_leads.json

@@ -1492,6 +1492,117 @@ async function callGeminiWithFallback({ apiKey, model = 'gemini-3.5-flash', prom
   }
 }
 
+
+// ---------- CRM Leads & Deduplication Registry Helpers ----------
+const CRM_LEADS_FILE = path.join(DATA, 'crm_leads.json');
+const SEEN_REGISTRY_FILE = path.join(DATA, 'seen_leads.json');
+
+const readCrmLeads = () => {
+  if (db.isDbActive()) {
+    const s = db.getCachedSetting('crm_leads');
+    if (Array.isArray(s)) return s;
+  }
+  try {
+    if (fs.existsSync(CRM_LEADS_FILE)) {
+      const parsed = JSON.parse(fs.readFileSync(CRM_LEADS_FILE, 'utf8'));
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch {}
+  return [];
+};
+
+const writeCrmLeads = async (leads) => {
+  if (db.isDbActive()) {
+    await db.saveSetting('crm_leads', leads).catch(() => {});
+  }
+  try {
+    fs.mkdirSync(DATA, { recursive: true });
+    fs.writeFileSync(CRM_LEADS_FILE, JSON.stringify(leads, null, 2));
+  } catch {}
+};
+
+const normalizeCompanyName = (name) => {
+  if (!name) return '';
+  return String(name).toLowerCase()
+    .replace(/\b(pvt|ltd|limited|private|enterprises|industries|corp|corporation|llp|inc|co|company)\b/gi, '')
+    .replace(/[^a-z0-9]/g, '')
+    .trim();
+};
+
+const normalizePhone = (phone) => {
+  if (!phone) return '';
+  const digits = String(phone).replace(/\D/g, '');
+  return digits.slice(-10); // Match last 10 digits
+};
+
+const readSeenRegistry = () => {
+  let reg = { names: [], phones: [], domains: [] };
+  if (db.isDbActive()) {
+    const s = db.getCachedSetting('seen_leads');
+    if (s && Array.isArray(s.names)) reg = s;
+  }
+  try {
+    if (fs.existsSync(SEEN_REGISTRY_FILE)) {
+      const parsed = JSON.parse(fs.readFileSync(SEEN_REGISTRY_FILE, 'utf8'));
+      if (parsed && Array.isArray(parsed.names)) reg = parsed;
+    }
+  } catch {}
+
+  // Also include all existing client names and phones from clients table
+  try {
+    const clients = readTable('clients') || [];
+    for (const c of clients) {
+      const nName = normalizeCompanyName(c.name);
+      if (nName && !reg.names.includes(nName)) reg.names.push(nName);
+      const nPhone = normalizePhone(c.phone || c.mobile);
+      if (nPhone && !reg.phones.includes(nPhone)) reg.phones.push(nPhone);
+    }
+  } catch {}
+
+  // Also include all companies in CRM leads
+  try {
+    const crmList = readCrmLeads();
+    for (const l of crmList) {
+      const nName = normalizeCompanyName(l.name);
+      if (nName && !reg.names.includes(nName)) reg.names.push(nName);
+      const nPhone = normalizePhone(l.phone || l.mobile);
+      if (nPhone && !reg.phones.includes(nPhone)) reg.phones.push(nPhone);
+    }
+  } catch {}
+
+  return reg;
+};
+
+const recordSeenLeads = async (leads) => {
+  const reg = readSeenRegistry();
+  for (const l of leads) {
+    const nName = normalizeCompanyName(l.name);
+    if (nName && !reg.names.includes(nName)) reg.names.push(nName);
+    const nPhone = normalizePhone(l.phone || l.mobile);
+    if (nPhone && !reg.phones.includes(nPhone)) reg.phones.push(nPhone);
+    if (l.website) {
+      try {
+        const u = new URL(l.website.startsWith('http') ? l.website : 'https://' + l.website);
+        const host = u.hostname.replace(/^www\./, '').toLowerCase();
+        if (host && !reg.domains.includes(host)) reg.domains.push(host);
+      } catch {}
+    }
+  }
+
+  // Keep registry bounded to 5000 items
+  if (reg.names.length > 5000) reg.names = reg.names.slice(-5000);
+  if (reg.phones.length > 5000) reg.phones = reg.phones.slice(-5000);
+  if (reg.domains.length > 2000) reg.domains = reg.domains.slice(-2000);
+
+  if (db.isDbActive()) {
+    await db.saveSetting('seen_leads', reg).catch(() => {});
+  }
+  try {
+    fs.mkdirSync(DATA, { recursive: true });
+    fs.writeFileSync(SEEN_REGISTRY_FILE, JSON.stringify(reg, null, 2));
+  } catch {}
+};
+
 // ---------- Setup ----------
 function init() {
   if (IS_SERVERLESS || db.isDbActive()) return;
@@ -2543,18 +2654,20 @@ async function api(req, res, parts) {
     if (id === 'settings') {
       if (m === 'GET') {
         const masked = cfg.geminiApiKey ? (cfg.geminiApiKey.slice(0, 4) + '...' + cfg.geminiApiKey.slice(-4)) : '';
+        const seen = readSeenRegistry();
         return send(res, 200, {
           ok: true,
           configured: !!cfg.geminiApiKey,
           maskedKey: masked,
           model: cfg.geminiModel || 'gemini-3.5-flash',
-          availableModels: ['gemini-3.5-flash', 'gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.1-pro-preview']
+          availableModels: ['gemini-3.5-flash', 'gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.1-pro-preview'],
+          excludedCount: seen.names.length
         });
       }
       if (m === 'POST') {
         const b = await body(req);
         const newKey = String(b.apiKey || '').trim();
-        const newModel = String(b.model || 'gemini-1.5-pro').trim();
+        const newModel = String(b.model || 'gemini-3.5-flash').trim();
         const update = { ...cfg };
         if (newKey) update.geminiApiKey = newKey;
         if (newModel) update.geminiModel = newModel;
@@ -2574,7 +2687,7 @@ async function api(req, res, parts) {
       const b = await body(req);
       const keyToTest = (b.apiKey || cfg.geminiApiKey || '').trim();
       if (!keyToTest) throw fail(400, 'Please enter a Gemini API Key first');
-      const modelToTest = b.model || cfg.geminiModel || 'gemini-1.5-pro';
+      const modelToTest = b.model || cfg.geminiModel || 'gemini-3.5-flash';
 
       try {
         const result = await callGeminiOnce({
@@ -2593,71 +2706,370 @@ async function api(req, res, parts) {
       }
     }
 
+    // Pipeline / CRM Leads List
+    if (id === 'pipeline') {
+      if (m === 'GET') {
+        const leads = readCrmLeads();
+        const stats = {
+          total: leads.length,
+          new: leads.filter(l => !l.status || l.status === 'new').length,
+          call_done: leads.filter(l => l.status === 'call_done').length,
+          profile_sent: leads.filter(l => l.status === 'profile_sent').length,
+          follow_up: leads.filter(l => l.status === 'follow_up').length,
+          converted: leads.filter(l => l.status === 'converted').length,
+          invalid_number: leads.filter(l => l.status === 'invalid_number' || l.status === 'invalid_email').length
+        };
+        return send(res, 200, { ok: true, leads, stats });
+      }
+    }
+
+    // Add Discovered Leads to CRM Staging Queue (Does NOT insert into main clients table)
+    if (id === 'stage-leads' && m === 'POST') {
+      const b = await body(req);
+      const incoming = Array.isArray(b.leads) ? b.leads : (b.lead ? [b.lead] : []);
+      if (!incoming.length) throw fail(400, 'No leads provided to stage');
+
+      const existingLeads = readCrmLeads();
+      const seen = readSeenRegistry();
+      const newlyAdded = [];
+
+      for (const item of incoming) {
+        const normName = normalizeCompanyName(item.name);
+        const normP = normalizePhone(item.phone || item.mobile);
+
+        // Check if already in CRM
+        const existsInCrm = existingLeads.find(x => normalizeCompanyName(x.name) === normName || (normP && normalizePhone(x.phone || x.mobile) === normP));
+        if (existsInCrm) continue;
+
+        const newLead = {
+          id: 'crm_' + newId(),
+          name: String(item.name || '').trim(),
+          industry: String(item.industry || 'Industrial Unit').trim(),
+          tier: String(item.tier || 'Tier-2 Process Unit').trim(),
+          product: String(item.product || b.product || '').trim(),
+          address: String(item.address || '').trim(),
+          city: String(item.city || '').trim(),
+          state: String(item.state || '').trim(),
+          phone: String(item.phone || '').trim(),
+          mobile: String(item.mobile || '').trim(),
+          email: String(item.email || '').trim(),
+          contact: String(item.contact || 'Purchase / Maintenance Head').trim(),
+          website: String(item.website || '').trim(),
+          gstin: String(item.gstin || '').trim(),
+          matchScore: typeof item.matchScore === 'number' ? item.matchScore : 8,
+          buyingReason: String(item.buyingReason || '').trim(),
+          status: 'new',
+          assignedTo: String(b.assignedTo || user.username || '').trim(),
+          assignedToName: String(user.fullName || user.username || '').trim(),
+          notes: '',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          history: [
+            {
+              action: 'discovered',
+              by: user.username,
+              byName: user.fullName || user.username,
+              notes: 'Added from AI Discovery to Sales Queue',
+              timestamp: new Date().toISOString()
+            }
+          ]
+        };
+
+        existingLeads.unshift(newLead);
+        newlyAdded.push(newLead);
+      }
+
+      await writeCrmLeads(existingLeads);
+      await recordSeenLeads(newlyAdded);
+
+      return send(res, 200, {
+        ok: true,
+        message: `Successfully added ${newlyAdded.length} leads to Sales Calling Queue!`,
+        addedCount: newlyAdded.length,
+        totalInCrm: existingLeads.length
+      });
+    }
+
+    // Lead Action (Call Done, Profile Sent, Follow-up, Invalid Number, Convert)
+    if (id === 'lead-action' && m === 'POST') {
+      const b = await body(req);
+      const leadId = String(b.leadId || '').trim();
+      const action = String(b.action || '').trim(); // 'call_done', 'profile_sent', 'invalid_number', 'invalid_email', 'follow_up', 'convert', 'not_interested'
+      const notes = String(b.notes || '').trim();
+      const nextFollowUp = String(b.nextFollowUp || '').trim();
+
+      if (!leadId) throw fail(400, 'Lead ID required');
+      if (!action) throw fail(400, 'Action required');
+
+      const leads = readCrmLeads();
+      const lead = leads.find(l => l.id === leadId);
+      if (!lead) throw fail(404, 'Lead not found in CRM pipeline');
+
+      const actionLabels = {
+        call_done: 'Call Connected & Discussed',
+        profile_sent: 'Company Profile & Catalogue Emailed',
+        invalid_number: 'Number Not Valid / Disconnected',
+        invalid_email: 'Email Invalid / Bounced',
+        follow_up: 'Callback Scheduled',
+        convert: 'Customer Found - Converted to Client Master',
+        not_interested: 'Archived / Not Interested'
+      };
+
+      lead.status = action === 'convert' ? 'converted' : action;
+      lead.updatedAt = new Date().toISOString();
+      if (notes) lead.notes = notes;
+      if (nextFollowUp) lead.nextFollowUp = nextFollowUp;
+
+      if (!Array.isArray(lead.history)) lead.history = [];
+      lead.history.unshift({
+        action,
+        actionLabel: actionLabels[action] || action,
+        by: user.username,
+        byName: user.fullName || user.username,
+        notes: notes || '',
+        nextFollowUp: nextFollowUp || null,
+        timestamp: new Date().toISOString()
+      });
+
+      // If Action is Convert: add permanently to official clients master directory
+      let createdClient = null;
+      if (action === 'convert') {
+        const clients = readTable('clients');
+        const exists = clients.find(c => normalizeCompanyName(c.name) === normalizeCompanyName(lead.name));
+        if (!exists) {
+          createdClient = {
+            id: newId(),
+            name: lead.name,
+            email: lead.email,
+            phone: lead.phone || lead.mobile,
+            address: lead.address || (lead.city + ', ' + lead.state),
+            gstin: lead.gstin || '',
+            contact: lead.contact || '',
+            mobile: lead.mobile || '',
+            createdAt: new Date().toISOString()
+          };
+          await locked(async () => {
+            const current = readTable('clients');
+            current.push(createdClient);
+            await writeTable('clients', current);
+          });
+        }
+      }
+
+      // If Action is Invalid Number: blacklist phone so it is never dialed or returned again
+      if (action === 'invalid_number') {
+        await recordSeenLeads([lead]);
+      }
+
+      await writeCrmLeads(leads);
+
+      return send(res, 200, {
+        ok: true,
+        message: `Action "${actionLabels[action] || action}" recorded successfully!`,
+        lead,
+        createdClient
+      });
+    }
+
+    // Direct Profile Email Dispatch from CRM
+    if (id === 'send-profile-direct' && m === 'POST') {
+      const b = await body(req);
+      const leadId = String(b.leadId || '').trim();
+      const toEmail = String(b.toEmail || '').trim();
+      const customNote = String(b.customNote || '').trim();
+
+      if (!leadId) throw fail(400, 'Lead ID required');
+      if (!toEmail) throw fail(400, 'Recipient email required');
+
+      const leads = readCrmLeads();
+      const lead = leads.find(l => l.id === leadId);
+      if (!lead) throw fail(404, 'Lead not found in CRM pipeline');
+
+      const c = mailCfg();
+      if (!c.smtpUser || !c.smtpPass) throw fail(503, 'Email SMTP is not configured in Email Settings.');
+
+      const subject = `Amigo Enterprises - Product Catalogue & ESP Spares for ${lead.name}`;
+      const bodyText = `Dear ${lead.contact || 'Sir/Madam'},
+
+Greetings from Amigo Enterprises, Pune.
+
+With reference to your requirements for Electrostatic Precipitator (ESP) spares, insulators, controllers, and heating elements, please find enclosed our complete company profile and product catalogue.
+
+${customNote ? customNote + '\n\n' : ''}We look forward to partnering with ${lead.name} for your upcoming plant maintenance and annual overhauls.
+
+Best regards,
+Amigo Enterprises, Pune`;
+
+      const html = buildCompanyProfileEmailHtml({
+        clientName: lead.name,
+        subject,
+        bodyText,
+        senderName: user.fullName || user.username,
+        senderPhone: user.contact || company().contactPhone || '',
+        senderEmail: user.email || company().contactEmail || c.smtpUser,
+        senderDesignation: user.designation || 'Operations Admin'
+      });
+
+      await smtpSend(c, {
+        to: toEmail,
+        subject,
+        html,
+        images: mailImages(),
+        text: bodyText
+      });
+
+      lead.status = 'profile_sent';
+      lead.updatedAt = new Date().toISOString();
+      if (!Array.isArray(lead.history)) lead.history = [];
+      lead.history.unshift({
+        action: 'profile_sent',
+        actionLabel: 'Company Profile Emailed',
+        by: user.username,
+        byName: user.fullName || user.username,
+        notes: `Emailed to ${toEmail}${customNote ? ' - Note: ' + customNote : ''}`,
+        timestamp: new Date().toISOString()
+      });
+
+      await writeCrmLeads(leads);
+
+      return send(res, 200, {
+        ok: true,
+        message: `Company Profile & Catalogue emailed successfully to ${toEmail}!`,
+        lead
+      });
+    }
+
+    // Delete / Archive from CRM
+    if (id === 'delete-lead' && m === 'POST') {
+      const b = await body(req);
+      const leadId = String(b.leadId || '').trim();
+      let leads = readCrmLeads();
+      leads = leads.filter(l => l.id !== leadId);
+      await writeCrmLeads(leads);
+      return send(res, 200, { ok: true, message: 'Lead removed from CRM' });
+    }
+
+    // Enhanced AI Discovery with Multi-tier generation (Mega, Mid, Contractor/SME up to 50 leads) + Auto Deduplication
     if (id === 'discover' && m === 'POST') {
       const b = await body(req);
       const activeKey = (b.apiKey || cfg.geminiApiKey || '').trim();
       if (!activeKey) throw fail(400, 'Gemini API key is not configured. Please enter your key in Gemini Settings.');
 
-      const activeModel = b.model || cfg.geminiModel || 'gemini-1.5-pro';
+      const activeModel = b.model || cfg.geminiModel || 'gemini-3.5-flash';
       const product = String(b.product || '').trim();
       const industry = String(b.industry || '').trim();
       const location = String(b.location || 'Maharashtra and Pan-India').trim();
-      const maxResults = Math.min(Math.max(parseInt(b.maxResults) || 6, 3), 15);
+      const maxResults = Math.min(Math.max(parseInt(b.maxResults) || 10, 5), 50);
 
       if (!product) throw fail(400, 'Please select or enter a product');
 
-      const systemPrompt = `You are an expert industrial procurement researcher and B2B lead generation specialist for Amigo Enterprises, Pune (Maharashtra, India).
+      // Read seen registry to enforce strict deduplication
+      const seen = readSeenRegistry();
+      const recentExclusions = seen.names.slice(-40).join(', ');
+
+      // Sub-function to generate a segment of leads
+      async function fetchSegment(segmentName, tierLabel, count, segmentInstructions) {
+        const sysPrompt = `You are an expert industrial procurement researcher and B2B lead generation specialist for Amigo Enterprises, Pune (Maharashtra, India).
 Amigo Enterprises manufactures and supplies Electrostatic Precipitator (ESP) spares, insulators, controllers, rapper diodes, thermostats, and shutdown maintenance equipment for heavy process industries.
 
 YOUR MISSION:
-Search real-time Google information and verified business sources to identify genuine operating industrial plants, manufacturing units, or engineering contractors in India that actively consume or require this product.
+Identify REAL, authentic, currently operating Indian industrial plants, manufacturing units, or engineering contractors in ${location} that need:
+PRODUCT: "${product}"
+CATEGORY SEGMENT: ${segmentName}
 
-PRODUCT SOUGHT: "${product}"
-TARGET INDUSTRY: "${industry || 'Thermal Power Plants, Cement Factories, Integrated Steel Mills, Chemical Plants, Sugar Co-generation'}"
-TARGET REGION: "${location}"
+EXCLUSIONS (DO NOT REPEAT THESE RECENTLY CONTACTED FIRMS):
+[${recentExclusions || 'None'}]
 
-RULES:
-1. Provide REAL, currently operating industrial firms / plants (do not invent or fabricate company names).
-2. For each company, provide authentic contact information:
-   - name: Official Plant / Company Name (e.g. "Adani Power Tiroda", "UltraTech Cement Awarpur", "JSW Steel Dolvi", "Tata Power", "Shree Cement")
-   - industry: Specific industry segment
-   - address: Physical plant location or registered office address with City, State, Pincode
+CRITICAL RULES:
+1. Provide REAL operating plants/companies. No fictional names.
+2. For each firm, extract authentic contact details:
+   - name: Company / Plant Name
+   - industry: Specific industrial sector
+   - address: Physical plant location or registered office with City, State, Pincode
    - city: City
    - state: State
-   - phone: Official phone number or procurement landline / mobile
-   - mobile: Direct mobile / WhatsApp number if publicly available
+   - phone: Official office / procurement landline or mobile
+   - mobile: Alternate mobile / WhatsApp number if found
    - email: Purchase, store, or general inquiry email
-   - contact: Contact person name with title (e.g. "General Manager - Procurement", "Head of Maintenance", "Store Manager")
+   - contact: Contact person name with title (e.g. "GM Procurement", "Head of Maintenance", "Store In-charge")
    - website: Official website URL or verified directory link
    - gstin: Public GST number if available
-   - matchScore: Number from 1 to 10 (10 being immediate critical buyer)
-   - buyingReason: Concrete technical reason explaining why this specific plant requires "${product}" for their ESP or boiler operation.
+   - matchScore: 1 to 10
+   - buyingReason: Concrete technical reason why this plant requires "${product}" for their ESP or boiler maintenance.
 
-FORMAT:
-Return STRICTLY a JSON array of ${maxResults} objects matching the keys above. No conversational text or markdown code fences outside the JSON.`;
+Return STRICTLY a JSON array of ${count} company objects with the keys above.`;
 
-      const userPrompt = `Search live Google data and find ${maxResults} real operating plants in ${location} that purchase "${product}" (${industry || 'Heavy Industry'}). Return ONLY the valid JSON array.`;
+        const userPrompt = `Find ${count} real operating firms in ${location} for "${product}". Segment: ${segmentName}. ${segmentInstructions}. Return ONLY valid JSON array.`;
 
-      try {
-        const { text, searchSources } = await callGeminiWithFallback({
+        const { text } = await callGeminiWithFallback({
           apiKey: activeKey,
           model: activeModel,
           prompt: userPrompt,
-          systemInstruction: systemPrompt
+          systemInstruction: sysPrompt
         });
 
-        const leads = extractJsonArrayFromText(text);
+        const arr = extractJsonArrayFromText(text);
+        return arr.map(item => ({ ...item, tier: tierLabel, product }));
+      }
 
-        // Verification & cleanup pass on the leads
-        const verifiedLeads = leads.map(l => {
+      let allRawLeads = [];
+
+      try {
+        if (maxResults <= 12) {
+          // Single pass
+          const leads = await fetchSegment(
+            'Industrial Plants and Contractors',
+            'Mixed Industrial',
+            maxResults,
+            'Include a balanced mix of heavy plants and mid-size manufacturing units'
+          );
+          allRawLeads = leads;
+        } else {
+          // Multi-tier Segmented Generation for 25 to 50 leads
+          const countT1 = Math.round(maxResults * 0.36); // Mega Plants (approx 18 for 50)
+          const countT2 = Math.round(maxResults * 0.36); // Mid-size process plants (approx 18 for 50)
+          const countT3 = maxResults - countT1 - countT2; // Small & Mid Contractors/Fabricators (approx 14 for 50)
+
+          const results = await Promise.allSettled([
+            fetchSegment('Mega Plants (Power, Steel, Cement)', 'Tier-1 Mega Plant', countT1, 'Focus on 500MW+ Thermal Power Stations, Integrated Steel Mills, Mega Cement Plants'),
+            fetchSegment('Mid-Size Process Plants (Sugar, Paper, Chemical)', 'Tier-2 Process Unit', countT2, 'Focus on Sugar Mills with Cogeneration Boilers, Paper & Pulp Mills, Chemical & Fertilizer Plants'),
+            fetchSegment('Industrial Contractors & Fabricators', 'Tier-3 Contractor / SME', countT3, 'Focus on Boiler repair contractors, ESP erection contractors, fabrication engineering units in MIDC industrial clusters')
+          ]);
+
+          for (const resItem of results) {
+            if (resItem.status === 'fulfilled' && Array.isArray(resItem.value)) {
+              allRawLeads = allRawLeads.concat(resItem.value);
+            }
+          }
+        }
+
+        // Post-filter: Deduplicate within current results and against permanent seen registry & clients table
+        const verifiedLeads = [];
+        const seenInThisBatch = new Set();
+
+        for (const l of allRawLeads) {
+          const normName = normalizeCompanyName(l.name);
+          const normP = normalizePhone(l.phone || l.mobile);
+
+          if (!normName) continue;
+          if (seenInThisBatch.has(normName)) continue;
+          if (seen.names.includes(normName)) continue; // Never show previously contacted/seen company
+          if (normP && seen.phones.includes(normP)) continue; // Never show previously contacted phone
+
+          seenInThisBatch.add(normName);
+          if (normP) seenInThisBatch.add(normP);
+
           const rawPhone = String(l.phone || l.mobile || '').replace(/[^\d+]/g, '');
           const isPhoneValid = rawPhone.length >= 8;
           const email = String(l.email || '').trim();
           const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-          return {
+          verifiedLeads.push({
+            id: 'disc_' + newId(),
             name: String(l.name || 'Unnamed Enterprise').trim(),
             industry: String(l.industry || industry || 'Industrial Plant').trim(),
+            tier: String(l.tier || 'Tier-2 Process Unit').trim(),
+            product: product,
             address: String(l.address || '').trim(),
             city: String(l.city || '').trim(),
             state: String(l.state || '').trim(),
@@ -2671,62 +3083,22 @@ Return STRICTLY a JSON array of ${maxResults} objects matching the keys above. N
             buyingReason: String(l.buyingReason || `Regular requirement for ${product} in plant emission & ESP maintenance.`).trim(),
             isPhoneValid,
             isEmailValid
-          };
-        });
+          });
+        }
 
         return send(res, 200, {
           ok: true,
           product,
           location,
+          requestedCount: maxResults,
           count: verifiedLeads.length,
           leads: verifiedLeads,
-          sources: searchSources.slice(0, 5)
+          excludedCount: seen.names.length
         });
       } catch (err) {
         console.error('Gemini Lead Discovery Error:', err);
         throw fail(500, `Lead discovery failed: ${err.message}`);
       }
-    }
-
-    if (id === 'add-client' && m === 'POST') {
-      const b = await body(req);
-      const name = String(b.name || '').trim();
-      if (!name) throw fail(400, 'Company name is required');
-
-      const clients = readTable('clients');
-      const existing = clients.find(c => (c.name || '').trim().toLowerCase() === name.toLowerCase());
-      if (existing) {
-        return send(res, 200, {
-          ok: true,
-          alreadyExists: true,
-          message: `"${name}" already exists in your Clients Directory!`,
-          client: existing
-        });
-      }
-
-      const newClient = {
-        id: newId(),
-        name: name,
-        email: String(b.email || '').trim(),
-        phone: String(b.phone || b.mobile || '').trim(),
-        address: String(b.address || '').trim(),
-        gstin: String(b.gstin || '').trim(),
-        contact: String(b.contact || '').trim(),
-        mobile: String(b.mobile || '').trim(),
-        createdAt: new Date().toISOString()
-      };
-
-      await locked(async () => {
-        const current = readTable('clients');
-        current.push(newClient);
-        await writeTable('clients', current);
-      });
-
-      return send(res, 200, {
-        ok: true,
-        message: `Successfully added "${name}" to Client Directory!`,
-        client: newClient
-      });
     }
 
     throw fail(404, 'Not found');
