@@ -3592,7 +3592,8 @@ const DEFAULT_EMPLOYEE_PERMISSIONS = {
   hr:          { view: false, manage: false },
   salaryslips: { view: true, create: false, edit: false, delete: false },
   workupdates: { view: true, create: true, edit: true, delete: false },
-  sendprofile: { view: false, send: false }
+  sendprofile: { view: false, send: false },
+  leadgen:     { view: true, create: true, delete: false }
 };
 
 const ROLE_PERMISSIONS_MAP = {
@@ -3603,6 +3604,7 @@ const ROLE_PERMISSIONS_MAP = {
     isFullAdmin: true
   },
   'operations executive': {
+    leadgen:     { view: true, create: true, delete: true },
     invoices:    { view: true, create: true, edit: true, delete: false, mail: true, scope: 'all' },
     quotation:   { view: true, create: true, edit: true, delete: false, mail: true, scope: 'all' },
     pi:          { view: true, create: true, edit: true, delete: false, mail: true, scope: 'all' },
@@ -3619,6 +3621,7 @@ const ROLE_PERMISSIONS_MAP = {
     workupdates: { view: true, create: true }
   },
   'accounts': {
+    leadgen:     { view: true, create: true, delete: false },
     invoices:    { view: true, create: true, edit: true, delete: false, mail: true, scope: 'all' },
     quotation:   { view: true, create: true, edit: true, delete: false, mail: true, scope: 'own' },
     pi:          { view: true, create: true, edit: true, delete: false, mail: true, scope: 'all' },
@@ -3635,6 +3638,7 @@ const ROLE_PERMISSIONS_MAP = {
     workupdates: { view: true, create: true }
   },
   'sales executive': {
+    leadgen:     { view: true, create: true, delete: false },
     invoices:    { view: false, create: false, edit: false, delete: false, mail: false },
     quotation:   { view: true, create: true, edit: true, delete: false, mail: true, scope: 'own' },
     pi:          { view: true, create: true, edit: true, delete: false, mail: true, scope: 'own' },
@@ -3651,6 +3655,7 @@ const ROLE_PERMISSIONS_MAP = {
     workupdates: { view: true, create: true }
   },
   'service engineer': {
+    leadgen:     { view: true, create: true, delete: false },
     invoices:    { view: false, create: false, edit: false, delete: false, mail: false },
     quotation:   { view: true, create: true, edit: true, delete: false, mail: true, scope: 'own' },
     pi:          { view: true, create: true, edit: true, delete: false, mail: true, scope: 'own' },
@@ -3672,7 +3677,7 @@ function getEffectivePermissions(user) {
   if (!user) return {};
   if (user.role === 'admin') {
     const full = {};
-    for (const k of ['invoices','quotation','pi','po','sheets','clients','products','purchases','ledgers','vouchers','catalogue','sendprofile','dash','hr','workupdates','tally']) {
+    for (const k of ['invoices','quotation','pi','po','sheets','clients','products','purchases','ledgers','vouchers','catalogue','sendprofile','dash','hr','workupdates','tally','leadgen']) {
       full[k] = { view: true, create: true, edit: true, delete: true, mail: true, scope: 'all' };
     }
     return full;
@@ -3691,6 +3696,7 @@ function getEffectivePermissions(user) {
 
   // Explicit policy overrides per company matrix
   if (normDes === 'accounts' || user.username === 'Mansi') {
+    if (!effective.leadgen) effective.leadgen = { view: true, create: true, delete: false };
     if (!effective.pi) effective.pi = { view: true, create: true, edit: true, delete: false, mail: true };
     effective.pi.scope = 'all';
     if (!effective.po) effective.po = { view: true, create: true, edit: true, delete: false, mail: true };
@@ -3705,6 +3711,7 @@ function getEffectivePermissions(user) {
   }
 
   if (normDes === 'service engineer' || user.username === 'Mahesh') {
+    if (!effective.leadgen) effective.leadgen = { view: true, create: true, delete: false };
     if (!effective.quotation) effective.quotation = { view: true, create: true, edit: true, delete: false, mail: true };
     effective.quotation.scope = 'own';
     if (!effective.po) effective.po = { view: true, create: true, edit: true, delete: false, mail: true };
@@ -3727,6 +3734,7 @@ function getEffectivePermissions(user) {
   }
 
   if (normDes === 'sales executive' || user.username === 'Ashwini') {
+    if (!effective.leadgen) effective.leadgen = { view: true, create: true, delete: false };
     effective.sendprofile = { view: true, send: true };
     if (!effective.quotation) effective.quotation = { view: true, create: true, edit: true, delete: false, mail: true };
     effective.quotation.scope = 'own';
@@ -3785,6 +3793,19 @@ function can(mod, action) {
     return me.role === 'admin' || normDes === 'operations executive' || normDes === 'sales executive' || me.username === 'Ashwini';
   }
   if (mod === 'catalogue' && (action === 'view' || action === 'mail')) return true;
+  if (mod === 'leadgen') {
+    const uName = (me.username || '').toLowerCase();
+    const normDes = normalizeDesignation(me.designation);
+    const isOpsAdmin = me.role === 'admin' || uName === 'operationsadmin' || normDes === 'operations admin';
+    const eff = getEffectivePermissions(me);
+    if (action === 'delete') {
+      return isOpsAdmin || !!(eff.leadgen && eff.leadgen.delete);
+    }
+    if (eff.leadgen && eff.leadgen[action] !== undefined) {
+      return !!eff.leadgen[action];
+    }
+    return true;
+  }
 
   const eff = getEffectivePermissions(me);
   const modPerms = eff[mod] || {};
@@ -11903,7 +11924,8 @@ const PERM_MODULES = [
   { id: 'purchases', label: 'Purchases Register', icon: '🛒', actions: ['view', 'create', 'edit', 'delete'] },
   { id: 'ledgers', label: 'Ledgers & Accounts', icon: '🏛️', actions: ['view', 'create', 'edit', 'delete'] },
   { id: 'vouchers', label: 'Vouchers & Entries', icon: '🎫', actions: ['view', 'create', 'edit', 'delete'] },
-  { id: 'catalogue', label: 'Company Catalogue', icon: '📖', actions: ['view', 'edit'] }
+  { id: 'catalogue', label: 'Company Catalogue', icon: '📖', actions: ['view', 'edit'] },
+  { id: 'leadgen', label: 'AI Lead Generator & CRM Calling Queue', icon: '🎯', actions: ['view', 'create', 'delete'] }
 ];
 
 function openPermissionsModal(user, onSaved) {
@@ -18200,9 +18222,15 @@ setTimeout(initSideExecutivePro, 50);
 // AI B2B Lead Generator View (Restricted to OperationsAdmin Testing)
 // ============================================================================
 async function leadGenView(activeSubTab = 'crm') {
-  const isOpsAdmin = (me?.username || '').toLowerCase() === 'operationsadmin' || 
-                     normalizeDesignation(me?.designation) === 'operations admin' ||
-                     me?.role === 'admin';
+  if (!can('leadgen', 'view')) {
+    say('Access Restricted: You do not have permission to access AI Lead Generation.', 0);
+    return go(getDefaultLandingTab());
+  }
+
+  const uName = (me?.username || '').toLowerCase();
+  const normDes = normalizeDesignation(me?.designation);
+  const isOpsAdmin = me?.role === 'admin' || uName === 'operationsadmin' || normDes === 'operations admin';
+  const canDeleteLead = isOpsAdmin || can('leadgen', 'delete');
 
   const view = $('#view');
   if (!view) return;
@@ -18856,7 +18884,7 @@ async function leadGenView(activeSubTab = 'crm') {
                 <button class="btn ghost sm btnCrmHistory" data-id="${l.id}" style="font-size:10px;color:#475569;padding:3px 6px">
                   📜 History (${histCount})
                 </button>
-                ${isOpsAdmin ? `
+                ${canDeleteLead ? `
                 <button class="btn ghost sm btnCrmDelete" data-id="${l.id}" style="font-size:10px;color:#94a3b8;padding:3px 6px" title="Delete Lead (Admin Only)">
                   🗑️
                 </button>
