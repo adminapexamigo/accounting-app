@@ -2207,7 +2207,7 @@ async function generateRealtimeDbBackupZip() {
   };
 }
 
-async function sendDailyBackupEmail(triggerSource = 'Automated Schedule') {
+async function sendDailyBackupEmail(triggerSource = 'Automated Schedule', isScheduled = false) {
   const mCfg = mailCfg();
   if (!mCfg.smtpUser || !mCfg.smtpPass) {
     throw new Error('SMTP credentials are not configured in system settings (Administration -> Email & Alerts).');
@@ -2346,7 +2346,9 @@ To restore or inspect: Download the attachment, log into Amigo ERP Admin, go to 
     const meta = readSyncMeta();
     const { istDateStr } = getIstDateInfo();
     meta.lastDailyBackupAt = new Date().toISOString();
-    meta.lastDailyBackupDate = istDateStr;
+    if (isScheduled) {
+      meta.lastDailyBackupDate = istDateStr;
+    }
     meta.lastDailyBackupSize = zipBuf.length;
     meta.lastDailyBackupRecipients = recipients;
     meta.lastDailyBackupTimeConfig = schedTime;
@@ -2413,7 +2415,7 @@ async function checkAndTriggerDailyBackupSchedule(source = 'Automated Background
   console.log(`[BackupScheduler] Triggering scheduled backup for ${istDateStr} (target ${targetTime} IST, current ${istTimeStr} IST) via ${source}...`);
 
   try {
-    const result = await sendDailyBackupEmail(`${source} (${targetTime} IST)`);
+    const result = await sendDailyBackupEmail(`${source} (${targetTime} IST)`, true);
     meta.lastDailyBackupDate = istDateStr;
     await writeSyncMeta(meta);
     console.log(`[BackupScheduler] Daily backup successfully executed and emailed to ${(result.recipients || []).join(', ')} for ${istDateStr}.`);
@@ -3581,7 +3583,7 @@ Return STRICTLY a JSON array of ${count} company objects with the keys above.`;
     if (m === 'POST' && id === 'send-daily-backup') {
       const isOpsAdmin = user.role === 'admin' || String(user.username || '').toLowerCase() === 'operationsadmin';
       if (!isOpsAdmin) throw fail(403, 'Permission denied: Only Administrator or OperationsAdmin can trigger daily backup.');
-      const result = await sendDailyBackupEmail(`Admin Manual Trigger (${user.fullName || user.username})`);
+      const result = await sendDailyBackupEmail(`Admin Manual Trigger (${user.fullName || user.username})`, false);
       return send(res, 200, {
         ok: true,
         message: `Daily real-time database backup emailed successfully to ${(result.recipients || []).join(', ')}`,
@@ -5218,7 +5220,7 @@ const handler = async (req, res) => {
       try {
         const mCfg = mailCfg();
         const schedTime = mCfg.dailyBackupTime || '18:30';
-        const result = await sendDailyBackupEmail(`Automated Vercel Cron (${schedTime} IST)`);
+        const result = await sendDailyBackupEmail(`Automated Vercel Cron (${schedTime} IST)`, true);
         const { istDateStr } = getIstDateInfo();
         const meta = readSyncMeta();
         meta.lastDailyBackupDate = istDateStr;
@@ -5253,7 +5255,7 @@ if (require.main === module && !IS_SERVERLESS) {
     checkAndTriggerDailyBackupSchedule('Automated Server Timer').catch(e => {
       console.error('[BackupScheduler] Background timer error:', e.message);
     });
-  }, 30000); // Daily backup schedule checker (runs every 30 seconds)
+  }, 15000); // Daily backup schedule checker (runs every 15 seconds)
   setTimeout(() => {
     checkAndTriggerDailyBackupSchedule('Server Startup Check').catch(() => {});
   }, 8000);

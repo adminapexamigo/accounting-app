@@ -4524,7 +4524,7 @@ function startLiveSyncPolling() {
     if (!me || !me.id || !localStorage.getItem('amigo_token')) return;
     try {
       // Background daily backup schedule check (once every 60s)
-      if (!window._lastSchedCheck || Date.now() - window._lastSchedCheck > 60000) {
+      if (!window._lastSchedCheck || Date.now() - window._lastSchedCheck > 10000) {
         window._lastSchedCheck = Date.now();
         api('GET', 'sync/check-daily-schedule', null, true).catch(() => {});
       }
@@ -11578,6 +11578,8 @@ async function syncView(isEmployeeMode = false) {
           msgBox.textContent = `✓ Daily automated backup scheduled for ${res.dailyBackupTime} IST!`;
         }
         say(`Daily backup schedule saved (${res.dailyBackupTime} IST)`, 1);
+        // Immediate schedule check right after saving
+        api('GET', 'sync/check-daily-schedule', null, true).catch(() => {});
         setTimeout(() => syncView(isEmployeeMode), 1500);
       } catch (err) {
         if (msgBox) {
