@@ -885,7 +885,7 @@ function checkUser(o, prev, b) { // validate the merged user record
   if (m.role === 'admin') { o.otpRequired = ''; o.faceRequired = ''; }
 }
 
-const MAIL_DEFAULTS = { smtpHost: 'smtp.gmail.com', smtpPort: 465, smtpSecure: true, smtpUser: '', smtpPass: '', mailTo: '', supportEmail: '', alertTime: '17:30', otpEmployees: true, otpAdmin: true, faceEmployees: true };
+const MAIL_DEFAULTS = { smtpHost: 'smtp.gmail.com', smtpPort: 465, smtpSecure: true, smtpUser: '', smtpPass: '', mailTo: '', supportEmail: '', alertTime: '17:30', dailyBackupTime: '18:30', dailyBackupRecipients: 'kuldeep.amigo@gmail.com, budamale7@gmail.com', otpEmployees: true, otpAdmin: true, faceEmployees: true };
 const mailCfg = () => {
   const dbSetting = db.isDbActive() ? (db.getCachedSetting('mail') || {}) : {};
   let fileSetting = {};
@@ -2021,6 +2021,400 @@ function hasPermission(user, mod, action) {
   return !!modPerms[action];
 }
 
+
+// =========================================================================
+// SHARED SYNC META & DYNAMIC REAL-TIME DATABASE BACKUP SUBSYSTEM
+// =========================================================================
+
+const syncFile = path.join(DATA, 'sync.json');
+
+const readSyncMeta = () => {
+  if (db.isDbActive()) {
+    const s = db.getCachedSetting('sync_meta');
+    if (s && s.history) return s;
+  }
+  try { return JSON.parse(fs.readFileSync(syncFile, 'utf8')); }
+  catch { return { lastSyncAt: '', syncedBy: '', lastEmailedAt: '', emailedBy: '', lastDailyBackupDate: '', lastDailyBackupAt: '', history: [] }; }
+};
+
+const writeSyncMeta = async meta => {
+  if (db.isDbActive()) {
+    await db.saveSetting('sync_meta', meta).catch(() => {});
+  }
+  try {
+    fs.mkdirSync(DATA, { recursive: true });
+    fs.writeFileSync(syncFile, JSON.stringify(meta, null, 2));
+  } catch {}
+};
+
+function getIstDateInfo() {
+  const istDate = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+  const pad = n => String(n).padStart(2, '0');
+  const istTimeStr = `${pad(istDate.getHours())}:${pad(istDate.getMinutes())}`;
+  const istDateStr = `${istDate.getFullYear()}-${pad(istDate.getMonth() + 1)}-${pad(istDate.getDate())}`;
+  return { istDate, istTimeStr, istDateStr };
+}
+
+const SUPABASE_ALL_TABLES = [
+  'activity_logs',
+  'app_settings',
+  'clients',
+  'docs',
+  'invoices',
+  'leaves',
+  'ledgers',
+  'logins',
+  'products',
+  'purchases',
+  'salaryslips',
+  'sheets',
+  'users',
+  'vouchers',
+  'workupdates'
+];
+
+function rowsToPostgresCsv(rows, fields) {
+  if (!rows || !rows.length) {
+    return (fields ? fields.map(f => f.name).join(',') : '') + '\n';
+  }
+  const colNames = fields ? fields.map(f => f.name) : Object.keys(rows[0]);
+  const header = colNames.join(',');
+  const bodyLines = rows.map(r => colNames.map(c => {
+    let val = r[c];
+    if (val === null || val === undefined) return '';
+    if (typeof val === 'object') val = JSON.stringify(val);
+    val = String(val);
+    return /[",\n\r]/.test(val) ? '"' + val.replace(/"/g, '""') + '"' : val;
+  }).join(','));
+  return [header, ...bodyLines].join('\n') + '\n';
+}
+
+async function generateRealtimeDbBackupZip() {
+  const fileMap = {};
+  const stats = {};
+  let tablesToBackup = [];
+
+  if (db.isDbActive() && db.pool) {
+    try {
+      await db.refreshCache(true);
+      // Dynamic Table Discovery: query both information_schema.tables AND pg_catalog.pg_tables
+      // to discover all current and future base tables in the public schema dynamically.
+      const discoveryQuery = `
+        SELECT table_name 
+        FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+          AND table_type = 'BASE TABLE'
+          AND table_name NOT IN ('spatial_ref_sys')
+        UNION
+        SELECT tablename AS table_name
+        FROM pg_catalog.pg_tables
+        WHERE schemaname = 'public'
+          AND tablename NOT IN ('spatial_ref_sys')
+        ORDER BY table_name ASC
+      `;
+      const discRes = await db.pool.query(discoveryQuery);
+      if (discRes.rows && discRes.rows.length) {
+        tablesToBackup = discRes.rows.map(r => r.table_name);
+      }
+    } catch (discErr) {
+      console.error('[Backup] Dynamic table discovery error:', discErr.message);
+    }
+  }
+
+  // Ensure all known schema and baseline tables are also present in the union set
+  const unionTables = Array.from(new Set([
+    ...tablesToBackup,
+    ...SUPABASE_ALL_TABLES,
+    ...Object.keys(SCHEMA)
+  ])).sort();
+
+  tablesToBackup = unionTables;
+
+  const fullDump = {
+    exportedAt: new Date().toISOString(),
+    source: 'Supabase PostgreSQL (schema: public)',
+    totalTables: tablesToBackup.length,
+    tables: {}
+  };
+
+  if (db.isDbActive() && db.pool) {
+    for (const t of tablesToBackup) {
+      try {
+        const safeTableName = t.replace(/"/g, '""');
+        const res = await db.pool.query('SELECT * FROM public."' + safeTableName + '"');
+        stats[t] = res.rows.length;
+        fullDump.tables[t] = res.rows;
+        fileMap[t + '.csv'] = rowsToPostgresCsv(res.rows, res.fields);
+        fileMap[t + '.json'] = JSON.stringify(res.rows, null, 2);
+      } catch (tableErr) {
+        console.error(`[Backup] Error querying dynamic Supabase table ${t}:`, tableErr.message);
+      }
+    }
+    fileMap['supabase_full_dump.json'] = JSON.stringify(fullDump, null, 2);
+  }
+
+  // Fallback or offline support if DB pool wasn't available
+  if (Object.keys(fileMap).length === 0) {
+    for (const t of Object.keys(SCHEMA)) {
+      const list = readTable(t);
+      stats[t] = list.length;
+      fileMap[t + '.csv'] = [SCHEMA[t].join(',')].concat(list.map(o => SCHEMA[t].map(k => esc(o[k])).join(','))).join('\n') + '\n';
+      fileMap[t + '.json'] = JSON.stringify(list, null, 2);
+    }
+  }
+
+  // Also include application-level JSON settings for complete 1-click restore
+  const jsonKeys = ['company', 'leadgen', 'crm_leads', 'seen_leads', 'mail', 'monitoring', 'catalogue', 'cataloguemails', 'sync_meta'];
+  for (const k of jsonKeys) {
+    let val = null;
+    if (db.isDbActive()) {
+      val = db.getCachedSetting(k);
+    }
+    if (!val) {
+      try {
+        const fp = path.join(DATA, k + '.json');
+        if (fs.existsSync(fp)) val = JSON.parse(fs.readFileSync(fp, 'utf8'));
+      } catch {}
+    }
+    if (val !== null && val !== undefined) {
+      fileMap[k + '.json'] = JSON.stringify(val, null, 2);
+    }
+  }
+
+  // Activity logs
+  if (db.isDbActive()) {
+    try {
+      const act = db.getCachedActivity();
+      if (act && Object.keys(act).length) {
+        fileMap['activity_logs.json'] = JSON.stringify(act, null, 2);
+      }
+    } catch {}
+  }
+
+  // Create zip buffer
+  const zipBuf = createZip(fileMap);
+  const todayStr = ldate();
+  const timestamp = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'full', timeStyle: 'medium' });
+
+  return {
+    fileMap,
+    zipBuf,
+    stats,
+    todayStr,
+    timestamp,
+    sizeKb: (zipBuf.length / 1024).toFixed(1),
+    fileCount: Object.keys(fileMap).length
+  };
+}
+
+async function sendDailyBackupEmail(triggerSource = 'Automated Schedule') {
+  const mCfg = mailCfg();
+  if (!mCfg.smtpUser || !mCfg.smtpPass) {
+    throw new Error('SMTP credentials are not configured in system settings (Administration -> Email & Alerts).');
+  }
+
+  const schedTime = mCfg.dailyBackupTime || '18:30';
+  let recipients = ['kuldeep.amigo@gmail.com', 'budamale7@gmail.com'];
+  if (mCfg.dailyBackupRecipients) {
+    const parsed = String(mCfg.dailyBackupRecipients).split(',').map(x => x.trim()).filter(Boolean);
+    if (parsed.length) recipients = parsed;
+  }
+
+  const backup = await generateRealtimeDbBackupZip();
+  const { zipBuf, stats, todayStr, timestamp, sizeKb, fileCount } = backup;
+
+  // Read CRM lead count
+  let crmCount = 0;
+  try {
+    const crmLeads = readCrmLeads();
+    crmCount = Array.isArray(crmLeads) ? crmLeads.length : 0;
+  } catch {}
+
+  const sortedTableNames = Object.keys(stats).sort();
+  const dynamicTableRows = [];
+  for (let i = 0; i < sortedTableNames.length; i += 2) {
+    const t1 = sortedTableNames[i];
+    const t2 = sortedTableNames[i + 1];
+    dynamicTableRows.push(`
+      <tr>
+        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">🗄️ <code>${hx(t1)}</code></td>
+        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats[t1] ?? 0}</td>
+        ${t2 ? `
+        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">🗄️ <code>${hx(t2)}</code></td>
+        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats[t2] ?? 0}</td>
+        ` : `
+        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#94a3b8">—</td>
+        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#94a3b8;text-align:right">—</td>
+        `}
+      </tr>
+    `);
+  }
+
+  const subject = `📦 Daily Real-Time Database Backup [${dmy(todayStr)}] - ${schedTime} IST`;
+  const text = `Amigo Enterprises - Daily Database Backup & Health Report
+Date: ${timestamp}
+Schedule Time: ${schedTime} IST
+Trigger: ${triggerSource}
+Data Source: Live Supabase PostgreSQL Database (Dynamic Catalog Discovery)
+
+Summary Metrics:
+- Tax Invoices: ${stats.invoices || 0}
+- Quotations & Docs: ${stats.docs || 0}
+- Active Clients: ${stats.clients || 0}
+- Products & Spares: ${stats.products || 0}
+- Ledger Accounts: ${stats.ledgers || 0}
+- Accounting Vouchers: ${stats.vouchers || 0}
+- CRM Leads in Queue: ${crmCount}
+- Work Updates Logged: ${stats.workupdates || 0}
+- Users: ${stats.users || 0}
+
+Attached File: Amigo_ERP_Complete_Database_Backup_${todayStr}.zip (${sizeKb} KB)
+Contains ${fileCount} dynamic tables and configuration registries.
+
+To restore or inspect: Download the attachment, log into Amigo ERP Admin, go to Administration -> Data Sync & Merge, and upload the zip file.`;
+
+  const html = emailHtml({
+    title: `Daily Database Backup - ${dmy(todayStr)}`,
+    preheader: `Real-time database backup for ${dmy(todayStr)} (${schedTime} IST)`,
+    body: `
+      <tr>
+        <td style="padding:24px 28px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+            <h2 style="margin:0;color:#0b4f8a;font-size:20px">📦 Daily Database Backup &amp; Health Report</h2>
+            <span style="font-size:11px;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;padding:4px 10px;border-radius:20px;font-weight:700">🟢 100% REAL-TIME DYNAMIC DB PULL</span>
+          </div>
+
+          <p style="margin:0 0 16px;color:#334155;font-size:14px;line-height:1.6">
+            This is the automated daily backup of <b>Amigo Enterprises</b> containing all real-time transactional, accounting, and master records compiled on <b>${hx(timestamp)}</b> based on the configured schedule (<b>${hx(schedTime)} IST</b>).
+          </p>
+
+          <!-- Metrics Matrix -->
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:20px">
+            <div style="font-size:12px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">
+              📊 Live Supabase Database Table Counts (${sortedTableNames.length} Discovered Tables):
+            </div>
+            <table style="width:100%;border-collapse:collapse;font-size:12.5px">
+              <tr style="background:#f1f5f9;border-bottom:2px solid #cbd5e1">
+                <th style="padding:6px 10px;text-align:left;color:#334155">Supabase Table</th>
+                <th style="padding:6px 10px;text-align:right;color:#334155">Live Rows</th>
+                <th style="padding:6px 10px;text-align:left;color:#334155">Supabase Table</th>
+                <th style="padding:6px 10px;text-align:right;color:#334155">Live Rows</th>
+              </tr>
+              ${dynamicTableRows.join('')}
+              <tr style="background:#f8fafc">
+                <td style="padding:6px 10px;color:#1e293b" colspan="2">🎯 <b>B2B CRM Leads in Calling Queue:</b></td>
+                <td style="padding:6px 10px;font-weight:700;color:#059669;text-align:right" colspan="2">${crmCount} leads</td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- Attachment Box -->
+          <div style="background:#eff6ff;border-left:4px solid #3b82f6;padding:14px 18px;border-radius:8px;font-size:13px;color:#1e293b;margin-bottom:18px">
+            <div style="font-weight:700;font-size:14px;color:#1d4ed8;margin-bottom:6px">📁 Attached Backup Archive:</div>
+            <b>File Name:</b> <code>Amigo_ERP_Complete_Database_Backup_${todayStr}.zip</code><br>
+            <b>Size:</b> ${sizeKb} KB (${fileCount} total dynamic tables &amp; JSON registries)<br>
+            <b>Trigger Source:</b> ${hx(triggerSource)}<br>
+            <b>Recipients:</b> ${recipients.join(', ')}
+          </div>
+
+          <div style="background:#fafafa;border:1px dashed #cbd5e1;padding:12px 16px;border-radius:8px;font-size:12px;color:#64748b">
+            <b>Admin Restore Guide:</b>
+            Download the attached <code>.zip</code> file. In Amigo ERP, log in as Administrator &rarr; navigate to <b>Administration &rarr; Data Sync &amp; Merge</b> &rarr; click <b>Upload &amp; Merge data.zip</b> to restore records or inspect any CSV file directly in Microsoft Excel.
+          </div>
+        </td>
+      </tr>
+    `
+  });
+
+  await smtpSend(mCfg, {
+    to: recipients.join(', '),
+    subject,
+    text,
+    html,
+    images: mailImages(),
+    attachments: [
+      {
+        name: `Amigo_ERP_Complete_Database_Backup_${todayStr}.zip`,
+        type: 'application/zip',
+        data: zipBuf
+      }
+    ]
+  });
+
+  // Save audit in sync_meta
+  try {
+    const meta = readSyncMeta();
+    const { istDateStr } = getIstDateInfo();
+    meta.lastDailyBackupAt = new Date().toISOString();
+    meta.lastDailyBackupDate = istDateStr;
+    meta.lastDailyBackupSize = zipBuf.length;
+    meta.lastDailyBackupRecipients = recipients;
+    meta.lastDailyBackupTimeConfig = schedTime;
+    meta.history = meta.history || [];
+    meta.history.unshift({
+      at: meta.lastDailyBackupAt,
+      by: triggerSource,
+      type: 'daily_email_backup',
+      size: zipBuf.length,
+      recipients
+    });
+    if (meta.history.length > 50) meta.history = meta.history.slice(0, 50);
+    await writeSyncMeta(meta);
+  } catch (err) {
+    console.error('[Backup] Error saving daily backup meta:', err.message);
+  }
+
+  return {
+    ok: true,
+    recipients,
+    sizeKb,
+    fileCount,
+    timestamp,
+    schedTime
+  };
+}
+
+let isDailyBackupRunning = false;
+
+async function checkAndTriggerDailyBackupSchedule(source = 'Automated Background Scheduler') {
+  if (isDailyBackupRunning) return { ok: false, reason: 'Backup already in progress' };
+
+  const mCfg = mailCfg();
+  if (!mCfg.smtpUser || !mCfg.smtpPass) {
+    return { ok: false, reason: 'SMTP credentials not configured in Email & Alerts' };
+  }
+
+  const targetTime = mCfg.dailyBackupTime || '18:30';
+  const { istTimeStr, istDateStr } = getIstDateInfo();
+
+  // If the target scheduled time has not arrived yet today, skip
+  if (istTimeStr < targetTime) {
+    return { ok: false, reason: `Target time ${targetTime} IST has not arrived yet (current: ${istTimeStr} IST)` };
+  }
+
+  const meta = readSyncMeta();
+  // If backup has already been dispatched today, skip
+  if (meta.lastDailyBackupDate === istDateStr) {
+    return { ok: false, reason: `Backup already completed today (${istDateStr}) at ${meta.lastDailyBackupAt}` };
+  }
+
+  isDailyBackupRunning = true;
+  console.log(`[BackupScheduler] Triggering scheduled backup for ${istDateStr} (target ${targetTime} IST, current ${istTimeStr} IST) via ${source}...`);
+
+  try {
+    const result = await sendDailyBackupEmail(`${source} (${targetTime} IST)`);
+    meta.lastDailyBackupDate = istDateStr;
+    await writeSyncMeta(meta);
+    console.log(`[BackupScheduler] Daily backup successfully executed and emailed to ${(result.recipients || []).join(', ')} for ${istDateStr}.`);
+    return { ok: true, triggered: true, ...result };
+  } catch (err) {
+    console.error(`[BackupScheduler] Error running scheduled daily backup:`, err.message);
+    return { ok: false, error: err.message };
+  } finally {
+    isDailyBackupRunning = false;
+  }
+}
+
 // ---------- API ----------
 async function api(req, res, parts) {
   const [a, id, sub] = parts, m = req.method;
@@ -3107,332 +3501,66 @@ Return STRICTLY a JSON array of ${count} company objects with the keys above.`;
   }
 
 
-// ---------- Shared Sync Meta & Real-Time Daily Database Backup Helpers ----------
-// (readSyncMeta & writeSyncMeta defined in outer scope)
-
-const SUPABASE_ALL_TABLES = [
-  'activity_logs',
-  'app_settings',
-  'clients',
-  'docs',
-  'invoices',
-  'leaves',
-  'ledgers',
-  'logins',
-  'products',
-  'purchases',
-  'salaryslips',
-  'sheets',
-  'users',
-  'vouchers',
-  'workupdates'
-];
-
-function rowsToPostgresCsv(rows, fields) {
-  if (!rows || !rows.length) {
-    return (fields ? fields.map(f => f.name).join(',') : '') + '\n';
-  }
-  const colNames = fields ? fields.map(f => f.name) : Object.keys(rows[0]);
-  const header = colNames.join(',');
-  const bodyLines = rows.map(r => colNames.map(c => {
-    let val = r[c];
-    if (val === null || val === undefined) return '';
-    if (typeof val === 'object') val = JSON.stringify(val);
-    val = String(val);
-    return /[",\n\r]/.test(val) ? '"' + val.replace(/"/g, '""') + '"' : val;
-  }).join(','));
-  return [header, ...bodyLines].join('\n') + '\n';
-}
-
-async function generateRealtimeDbBackupZip() {
-  const fileMap = {};
-  const stats = {};
-  let tablesToBackup = [];
-
-  if (db.isDbActive() && db.pool) {
-    try {
-      await db.refreshCache(true);
-      // Dynamic Table Discovery: query PostgreSQL catalog to discover all present and future tables
-      const discoveryQuery = `
-        SELECT table_name 
-        FROM information_schema.tables 
-        WHERE table_schema = 'public' 
-          AND table_type = 'BASE TABLE'
-        ORDER BY table_name ASC
-      `;
-      const discRes = await db.pool.query(discoveryQuery);
-      if (discRes.rows && discRes.rows.length) {
-        tablesToBackup = discRes.rows.map(r => r.table_name);
-      }
-    } catch (discErr) {
-      console.error('Dynamic table discovery error:', discErr.message);
-    }
-  }
-
-  // Fallback to standard table list if discovery was empty or offline
-  if (!tablesToBackup.length) {
-    tablesToBackup = SUPABASE_ALL_TABLES.slice();
-  }
-
-  const fullDump = {
-    exportedAt: new Date().toISOString(),
-    source: 'Supabase PostgreSQL (schema: public)',
-    totalTables: tablesToBackup.length,
-    tables: {}
-  };
-
-  if (db.isDbActive() && db.pool) {
-    for (const t of tablesToBackup) {
-      try {
-        const res = await db.pool.query('SELECT * FROM public."' + t + '"');
-        stats[t] = res.rows.length;
-        fullDump.tables[t] = res.rows;
-        fileMap[t + '.csv'] = rowsToPostgresCsv(res.rows, res.fields);
-        fileMap[t + '.json'] = JSON.stringify(res.rows, null, 2);
-      } catch (tableErr) {
-        console.error(`Error querying dynamic Supabase table ${t}:`, tableErr.message);
-      }
-    }
-    fileMap['supabase_full_dump.json'] = JSON.stringify(fullDump, null, 2);
-  }
-
-  // Fallback or offline support if DB pool wasn't available
-  if (Object.keys(fileMap).length === 0) {
-    for (const t of Object.keys(SCHEMA)) {
-      const list = readTable(t);
-      stats[t] = list.length;
-      fileMap[t + '.csv'] = [SCHEMA[t].join(',')].concat(list.map(o => SCHEMA[t].map(k => esc(o[k])).join(','))).join('\n') + '\n';
-      fileMap[t + '.json'] = JSON.stringify(list, null, 2);
-    }
-  }
-
-  // Also include application-level JSON settings for complete 1-click restore
-  const jsonKeys = ['company', 'leadgen', 'crm_leads', 'seen_leads', 'mail', 'monitoring', 'catalogue', 'cataloguemails', 'sync_meta'];
-  for (const k of jsonKeys) {
-    let val = null;
-    if (db.isDbActive()) {
-      val = db.getCachedSetting(k);
-    }
-    if (!val) {
-      try {
-        const fp = path.join(DATA, k + '.json');
-        if (fs.existsSync(fp)) val = JSON.parse(fs.readFileSync(fp, 'utf8'));
-      } catch {}
-    }
-    if (val !== null && val !== undefined) {
-      fileMap[k + '.json'] = JSON.stringify(val, null, 2);
-    }
-  }
-
-  // Activity logs
-  if (db.isDbActive()) {
-    try {
-      const act = db.getCachedActivity();
-      if (act && Object.keys(act).length) {
-        fileMap['activity_logs.json'] = JSON.stringify(act, null, 2);
-      }
-    } catch {}
-  }
-
-  // Create zip buffer
-  const zipBuf = createZip(fileMap);
-  const todayStr = ldate();
-  const timestamp = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'full', timeStyle: 'medium' });
-
-  return {
-    fileMap,
-    zipBuf,
-    stats,
-    todayStr,
-    timestamp,
-    sizeKb: (zipBuf.length / 1024).toFixed(1),
-    fileCount: Object.keys(fileMap).length
-  };
-}
-
-async function sendDailyBackupEmail(triggerSource = 'Automated Schedule (6:30 PM IST)') {
-  const mCfg = mailCfg();
-  if (!mCfg.smtpUser || !mCfg.smtpPass) {
-    throw new Error('SMTP credentials are not configured in system settings.');
-  }
-
-  const recipients = ['kuldeep.amigo@gmail.com', 'budamale7@gmail.com'];
-  const backup = await generateRealtimeDbBackupZip();
-  const { zipBuf, stats, todayStr, timestamp, sizeKb, fileCount } = backup;
-
-  // Read CRM lead count
-  let crmCount = 0;
-  try {
-    const crmLeads = readCrmLeads();
-    crmCount = Array.isArray(crmLeads) ? crmLeads.length : 0;
-  } catch {}
-
-  const sortedTableNames = Object.keys(stats).sort();
-  const dynamicTableRows = [];
-  for (let i = 0; i < sortedTableNames.length; i += 2) {
-    const t1 = sortedTableNames[i];
-    const t2 = sortedTableNames[i + 1];
-    dynamicTableRows.push(`
-      <tr>
-        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">🗄️ <code>${hx(t1)}</code></td>
-        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats[t1] ?? 0}</td>
-        ${t2 ? `
-        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b">🗄️ <code>${hx(t2)}</code></td>
-        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0b6fc4;text-align:right">${stats[t2] ?? 0}</td>
-        ` : `
-        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#94a3b8">—</td>
-        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;color:#94a3b8;text-align:right">—</td>
-        `}
-      </tr>
-    `);
-  }
-
-  const subject = `📦 Daily Real-Time Database Backup [${dmy(todayStr)}] - 6:30 PM IST`;
-  const text = `Amigo Enterprises - Daily Database Backup & Health Report
-Date: ${timestamp}
-Trigger: ${triggerSource}
-Data Source: Live Supabase PostgreSQL Database (Real-Time Pull)
-
-Summary Metrics:
-- Tax Invoices: ${stats.invoices || 0}
-- Quotations & Docs: ${stats.docs || 0}
-- Active Clients: ${stats.clients || 0}
-- Products & Spares: ${stats.products || 0}
-- Ledger Accounts: ${stats.ledgers || 0}
-- Accounting Vouchers: ${stats.vouchers || 0}
-- CRM Leads in Queue: ${crmCount}
-- Work Updates Logged: ${stats.workupdates || 0}
-- Users: ${stats.users || 0}
-
-Attached File: Amigo_ERP_Complete_Database_Backup_${todayStr}.zip (${sizeKb} KB)
-Contains ${fileCount} tables and master files.
-
-To restore or inspect: Download the attachment, log into Amigo ERP Admin, go to Administration -> Data Sync & Merge, and upload the zip file.`;
-
-  const html = emailHtml({
-    title: `Daily Database Backup - ${dmy(todayStr)}`,
-    preheader: `Real-time database backup for ${dmy(todayStr)} (6:30 PM IST)`,
-    body: `
-      <tr>
-        <td style="padding:24px 28px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
-            <h2 style="margin:0;color:#0b4f8a;font-size:20px">📦 Daily Database Backup &amp; Health Report</h2>
-            <span style="font-size:11px;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;padding:4px 10px;border-radius:20px;font-weight:700">🟢 100% REAL-TIME DB PULL</span>
-          </div>
-
-          <p style="margin:0 0 16px;color:#334155;font-size:14px;line-height:1.6">
-            This is the automated daily backup of <b>Amigo Enterprises</b> containing all real-time transactional, accounting, and master records compiled on <b>${hx(timestamp)}</b>.
-          </p>
-
-          <!-- Metrics Matrix -->
-          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:20px">
-            <div style="font-size:12px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">
-              📊 Live Database Table Counts:
-            </div>
-            <table style="width:100%;border-collapse:collapse;font-size:12.5px">
-              <tr style="background:#f1f5f9;border-bottom:2px solid #cbd5e1">
-                <th style="padding:6px 10px;text-align:left;color:#334155">Supabase Table</th>
-                <th style="padding:6px 10px;text-align:right;color:#334155">Live Rows</th>
-                <th style="padding:6px 10px;text-align:left;color:#334155">Supabase Table</th>
-                <th style="padding:6px 10px;text-align:right;color:#334155">Live Rows</th>
-              </tr>
-              ${dynamicTableRows.join('')}
-              <tr style="background:#f8fafc">
-                <td style="padding:6px 10px;color:#1e293b" colspan="2">🎯 <b>B2B CRM Leads in Calling Queue:</b></td>
-                <td style="padding:6px 10px;font-weight:700;color:#059669;text-align:right" colspan="2">${crmCount} leads</td>
-              </tr>
-            </table>
-          </div>
-
-          <!-- Attachment Box -->
-          <div style="background:#eff6ff;border-left:4px solid #3b82f6;padding:14px 18px;border-radius:8px;font-size:13px;color:#1e293b;margin-bottom:18px">
-            <div style="font-weight:700;font-size:14px;color:#1d4ed8;margin-bottom:6px">📁 Attached Backup Archive:</div>
-            <b>File Name:</b> <code>Amigo_ERP_Complete_Database_Backup_${todayStr}.zip</code><br>
-            <b>Size:</b> ${sizeKb} KB (${fileCount} total tables &amp; JSON registries)<br>
-            <b>Trigger Source:</b> ${hx(triggerSource)}<br>
-            <b>Recipients:</b> ${recipients.join(', ')}
-          </div>
-
-          <div style="background:#fafafa;border:1px dashed #cbd5e1;padding:12px 16px;border-radius:8px;font-size:12px;color:#64748b">
-            <b>Admin Restore Guide:</b>
-            Download the attached <code>.zip</code> file. In Amigo ERP, log in as Administrator &rarr; navigate to <b>Administration &rarr; Data Sync &amp; Merge</b> &rarr; click <b>Upload &amp; Merge data.zip</b> to restore records or inspect any CSV file directly in Microsoft Excel.
-          </div>
-        </td>
-      </tr>
-    `
-  });
-
-  await smtpSend(mCfg, {
-    to: recipients.join(', '),
-    subject,
-    text,
-    html,
-    images: mailImages(),
-    attachments: [
-      {
-        name: `Amigo_ERP_Complete_Database_Backup_${todayStr}.zip`,
-        type: 'application/zip',
-        data: zipBuf
-      }
-    ]
-  });
-
-  // Save audit in sync_meta
-  try {
-    const meta = readSyncMeta();
-    meta.lastDailyBackupAt = new Date().toISOString();
-    meta.lastDailyBackupSize = zipBuf.length;
-    meta.lastDailyBackupRecipients = recipients;
-    meta.history = meta.history || [];
-    meta.history.unshift({
-      at: meta.lastDailyBackupAt,
-      by: triggerSource,
-      type: 'daily_email_backup',
-      size: zipBuf.length,
-      recipients
-    });
-    if (meta.history.length > 50) meta.history = meta.history.slice(0, 50);
-    await writeSyncMeta(meta);
-  } catch (err) {
-    console.error('Error saving daily backup meta:', err.message);
-  }
-
-  return {
-    ok: true,
-    recipients,
-    sizeKb,
-    fileCount,
-    timestamp
-  };
-}
-
   if (a === 'sync') {
     if (m === 'GET' && id === 'live') {
       return send(res, 200, { revisions: db.getRevisions(), serverTime: Date.now() });
     }
-    const syncFile = path.join(DATA, 'sync.json');
-    const readSyncMeta = () => {
-      if (db.isDbActive()) {
-        const s = db.getCachedSetting('sync_meta');
-        if (s && s.history) return s;
-      }
-      try { return JSON.parse(fs.readFileSync(syncFile, 'utf8')); }
-      catch { return { lastSyncAt: '', syncedBy: '', lastEmailedAt: '', emailedBy: '', history: [] }; }
-    };
-    const writeSyncMeta = async meta => {
-      if (db.isDbActive()) {
-        await db.saveSetting('sync_meta', meta).catch(() => {});
-      }
-      try {
-        fs.mkdirSync(DATA, { recursive: true });
-        fs.writeFileSync(syncFile, JSON.stringify(meta, null, 2));
-      } catch {}
-    };
+
 
     if (m === 'GET' && (id === 'status' || !id)) {
       const meta = readSyncMeta();
       const isSunday = new Date().getDay() === 0;
-      return send(res, 200, { ...meta, isSunday });
+      const mCfg = mailCfg();
+      const { istTimeStr, istDateStr } = getIstDateInfo();
+      return send(res, 200, {
+        ...meta,
+        isSunday,
+        dailyBackupTime: mCfg.dailyBackupTime || '18:30',
+        dailyBackupRecipients: mCfg.dailyBackupRecipients || 'kuldeep.amigo@gmail.com, budamale7@gmail.com',
+        currentIstTime: istTimeStr,
+        todayIstDate: istDateStr
+      });
+    }
+
+    if (m === 'GET' && id === 'check-daily-schedule') {
+      const triggerRes = await checkAndTriggerDailyBackupSchedule('Client Heartbeat');
+      const { istTimeStr, istDateStr } = getIstDateInfo();
+      const meta = readSyncMeta();
+      const mCfg = mailCfg();
+      return send(res, 200, {
+        ...triggerRes,
+        currentIstTime: istTimeStr,
+        todayIstDate: istDateStr,
+        dailyBackupTime: mCfg.dailyBackupTime || '18:30',
+        lastDailyBackupDate: meta.lastDailyBackupDate || null
+      });
+    }
+
+    if (m === 'PUT' && id === 'backup-schedule') {
+      const isOpsAdmin = user.role === 'admin' || String(user.username || '').toLowerCase() === 'operationsadmin';
+      if (!isOpsAdmin) throw fail(403, 'Permission denied: Only Administrator or OperationsAdmin can configure backup schedule.');
+      const b = await body(req);
+      const c = mailCfg();
+      if (b.dailyBackupTime) {
+        if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(b.dailyBackupTime)) throw fail(400, 'Daily backup time must be HH:MM');
+        c.dailyBackupTime = b.dailyBackupTime;
+      }
+      if (b.dailyBackupRecipients !== undefined) {
+        const rc = String(b.dailyBackupRecipients || '').split(',').map(x => x.trim()).filter(Boolean);
+        if (rc.some(x => !EMAIL_RE.test(x))) throw fail(400, 'Invalid email address in recipients');
+        c.dailyBackupRecipients = rc.join(', ');
+      }
+      if (db.isDbActive()) await db.saveSetting('mail', c);
+      try {
+        fs.mkdirSync(DATA, { recursive: true });
+        fs.writeFileSync(path.join(DATA, 'mail.json'), JSON.stringify(c, null, 2));
+      } catch {}
+      return send(res, 200, {
+        ok: true,
+        message: 'Daily backup schedule updated successfully',
+        dailyBackupTime: c.dailyBackupTime,
+        dailyBackupRecipients: c.dailyBackupRecipients
+      });
     }
 
     if (m === 'POST' && id === 'send-daily-backup') {
@@ -3441,7 +3569,7 @@ To restore or inspect: Download the attachment, log into Amigo ERP Admin, go to 
       const result = await sendDailyBackupEmail(`Admin Manual Trigger (${user.fullName || user.username})`);
       return send(res, 200, {
         ok: true,
-        message: 'Daily real-time database backup emailed successfully to kuldeep.amigo@gmail.com and budamale7@gmail.com',
+        message: `Daily real-time database backup emailed successfully to ${(result.recipients || []).join(', ')}`,
         ...result
       });
     }
@@ -4143,7 +4271,7 @@ To restore or inspect: Download the attachment, log into Amigo ERP Admin, go to 
     }
 
     if (user.role !== 'admin') throw fail(403, 'Admin only');
-    const pub = () => ({ smtpUser: c.smtpUser, smtpPassSet: !!c.smtpPass, mailTo: c.mailTo, supportEmail: c.supportEmail || '', alertTime: c.alertTime, otpEmployees: c.otpEmployees !== false, otpAdmin: c.otpAdmin !== false, faceEmployees: c.faceEmployees !== false });
+    const pub = () => ({ smtpUser: c.smtpUser, smtpPassSet: !!c.smtpPass, mailTo: c.mailTo, supportEmail: c.supportEmail || '', alertTime: c.alertTime, dailyBackupTime: c.dailyBackupTime || '18:30', dailyBackupRecipients: c.dailyBackupRecipients || 'kuldeep.amigo@gmail.com, budamale7@gmail.com', otpEmployees: c.otpEmployees !== false, otpAdmin: c.otpAdmin !== false, faceEmployees: c.faceEmployees !== false });
     if (m === 'GET' && !id) return send(res, 200, pub());
     if (m === 'PUT' && !id) {
       const b = await body(req), to = String(b.mailTo || '').split(',').map(x => x.trim()).filter(Boolean);
@@ -4152,7 +4280,17 @@ To restore or inspect: Download the attachment, log into Amigo ERP Admin, go to 
       if (sup.some(x => !EMAIL_RE.test(x))) throw fail(400, 'Invalid email address in Support Email');
       if (b.alertTime && !/^([01]\d|2[0-3]):[0-5]\d$/.test(b.alertTime)) throw fail(400, 'Alert time must be HH:MM');
       if (b.smtpUser && !EMAIL_RE.test(b.smtpUser)) throw fail(400, 'Sender must be an email address');
-      c.smtpUser = oneLine(b.smtpUser); if (b.smtpPass) c.smtpPass = String(b.smtpPass).replace(/\s/g, ''); c.mailTo = to.join(', '); c.supportEmail = sup.join(', '); c.alertTime = b.alertTime || '17:30'; c.otpEmployees = b.otpEmployees !== false && b.otpEmployees !== 'false'; c.otpAdmin = b.otpAdmin !== false && b.otpAdmin !== 'false'; c.faceEmployees = b.faceEmployees !== false && b.faceEmployees !== 'false';
+      c.smtpUser = oneLine(b.smtpUser); if (b.smtpPass) c.smtpPass = String(b.smtpPass).replace(/\s/g, ''); c.mailTo = to.join(', '); c.supportEmail = sup.join(', '); c.alertTime = b.alertTime || '17:30';
+      if (b.dailyBackupTime) {
+        if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(b.dailyBackupTime)) throw fail(400, 'Daily backup time must be HH:MM');
+        c.dailyBackupTime = b.dailyBackupTime;
+      }
+      if (b.dailyBackupRecipients !== undefined) {
+        const rc = String(b.dailyBackupRecipients || '').split(',').map(x => x.trim()).filter(Boolean);
+        if (rc.some(x => !EMAIL_RE.test(x))) throw fail(400, 'Invalid email address in daily backup recipients');
+        c.dailyBackupRecipients = rc.join(', ');
+      }
+      c.otpEmployees = b.otpEmployees !== false && b.otpEmployees !== 'false'; c.otpAdmin = b.otpAdmin !== false && b.otpAdmin !== 'false'; c.faceEmployees = b.faceEmployees !== false && b.faceEmployees !== 'false';
       if (!c.otpEmployees && !c.faceEmployees) throw fail(400, 'Keep at least one way for employees to verify (face check or emailed code) switched on.');
       if (db.isDbActive()) {
         await db.saveSetting('mail', c);
@@ -5063,14 +5201,24 @@ const handler = async (req, res) => {
     }
     if (p === '/api/cron/daily-backup') {
       try {
-        const result = await sendDailyBackupEmail('Automated Vercel Cron (6:30 PM IST)');
+        const mCfg = mailCfg();
+        const schedTime = mCfg.dailyBackupTime || '18:30';
+        const result = await sendDailyBackupEmail(`Automated Vercel Cron (${schedTime} IST)`);
+        const { istDateStr } = getIstDateInfo();
+        const meta = readSyncMeta();
+        meta.lastDailyBackupDate = istDateStr;
+        await writeSyncMeta(meta);
         return send(res, 200, { ok: true, timestamp: new Date().toISOString(), ...result });
       } catch (err) {
         console.error('Daily backup cron failed:', err.message);
         return send(res, 500, { ok: false, error: err.message });
       }
     }
-    if (p.startsWith('/api/')) return await api(req, res, p.slice(5).split('/').filter(Boolean));
+    if (p.startsWith('/api/')) {
+      // Non-blocking passive daily backup check (ensures serverless dispatches if scheduled time passed)
+      checkAndTriggerDailyBackupSchedule('Passive Request Heartbeat').catch(() => {});
+      return await api(req, res, p.slice(5).split('/').filter(Boolean));
+    }
     serve(req, res, p);
   } catch (e) {
     if (!e.code || e.code >= 500) console.error(e);
@@ -5086,6 +5234,14 @@ if (require.main === module && !IS_SERVERLESS) {
   server.on('error', e => { console.error(e.code === 'EADDRINUSE' ? `Port ${PORT} is already in use.` : e.message); process.exit(1); });
   if (process.env.LAUNCHER_PID) setInterval(() => { try { process.kill(+process.env.LAUNCHER_PID, 0); } catch { console.log('Launcher is gone, shutting down.'); process.exit(0); } }, 5000); // never outlive the helper
   setInterval(checkInactivityAlerts, 60000); // Inactivity & offline monitoring checker (runs every minute)
+  setInterval(() => {
+    checkAndTriggerDailyBackupSchedule('Automated Server Timer').catch(e => {
+      console.error('[BackupScheduler] Background timer error:', e.message);
+    });
+  }, 30000); // Daily backup schedule checker (runs every 30 seconds)
+  setTimeout(() => {
+    checkAndTriggerDailyBackupSchedule('Server Startup Check').catch(() => {});
+  }, 8000);
   setTimeout(checkInactivityAlerts, 4000);
   server.listen(PORT, HOST, () => console.log(`Accounting app running: ${TLS ? 'https' : 'http'}://localhost:${PORT}  (LAN: ${TLS ? 'https' : 'http'}://<this-pc-ip>:${PORT})`));
   if (TLS && process.env.HTTP_REDIRECT_PORT) // optional: http://host -> https://host
