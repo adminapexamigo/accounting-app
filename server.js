@@ -2392,6 +2392,17 @@ async function checkAndTriggerDailyBackupSchedule(source = 'Automated Background
     return { ok: false, reason: `Target time ${targetTime} IST has not arrived yet (current: ${istTimeStr} IST)` };
   }
 
+  // Calculate minute difference between current time and target time
+  const [curH, curM] = istTimeStr.split(':').map(Number);
+  const [tgtH, tgtM] = targetTime.split(':').map(Number);
+  const diffMinutes = (curH * 60 + curM) - (tgtH * 60 + tgtM);
+
+  // Trigger window: within 15 minutes of scheduled time (e.g. 22:41 to 22:56)
+  // This prevents unexpected surprise dispatches hours later if the app wasn't running at schedule time.
+  if (diffMinutes > 15) {
+    return { ok: false, reason: `Target time ${targetTime} IST was more than 15 minutes ago (${diffMinutes} mins ago). Skipping automatic catchup.` };
+  }
+
   const meta = readSyncMeta();
   // If backup has already been dispatched today, skip
   if (meta.lastDailyBackupDate === istDateStr) {
@@ -3544,6 +3555,10 @@ Return STRICTLY a JSON array of ${count} company objects with the keys above.`;
       if (b.dailyBackupTime) {
         if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(b.dailyBackupTime)) throw fail(400, 'Daily backup time must be HH:MM');
         c.dailyBackupTime = b.dailyBackupTime;
+        // When admin reschedules the backup, reset today's completion date so the new schedule triggers!
+        const meta = readSyncMeta();
+        meta.lastDailyBackupDate = '';
+        await writeSyncMeta(meta);
       }
       if (b.dailyBackupRecipients !== undefined) {
         const rc = String(b.dailyBackupRecipients || '').split(',').map(x => x.trim()).filter(Boolean);
