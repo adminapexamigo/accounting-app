@@ -4523,10 +4523,16 @@ function startLiveSyncPolling() {
   liveSyncPollingTimer = setInterval(async () => {
     if (!me || !me.id || !localStorage.getItem('amigo_token')) return;
     try {
-      // Background daily backup schedule check (once every 60s)
-      if (!window._lastSchedCheck || Date.now() - window._lastSchedCheck > 10000) {
+      // Background daily backup schedule check (once every 60s, stops when today's backup is complete)
+      if (!window._lastSchedCheck || Date.now() - window._lastSchedCheck > 60000) {
         window._lastSchedCheck = Date.now();
-        api('GET', 'sync/check-daily-schedule', null, true).catch(() => {});
+        if (!window._dailyBackupCompletedToday) {
+          api('GET', 'sync/check-daily-schedule', null, true).then(resp => {
+            if (resp && resp.lastDailyBackupDate === resp.todayIstDate) {
+              window._dailyBackupCompletedToday = true;
+            }
+          }).catch(() => {});
+        }
       }
       const resp = await api('GET', 'sync/live', null, true);
       if (resp && resp.revisions) {

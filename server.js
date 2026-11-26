@@ -2379,7 +2379,7 @@ To restore or inspect: Download the attachment, log into Amigo ERP Admin, go to 
 let isDailyBackupRunning = false;
 
 async function checkAndTriggerDailyBackupSchedule(source = 'Automated Background Scheduler') {
-  if (isDailyBackupRunning) return { ok: false, reason: 'Backup already in progress' };
+  if (isDailyBackupRunning) return { ok: false, reason: 'Backup already in progress on this worker' };
 
   const mCfg = mailCfg();
   if (!mCfg.smtpUser || !mCfg.smtpPass) {
@@ -2389,39 +2389,86 @@ async function checkAndTriggerDailyBackupSchedule(source = 'Automated Background
   const targetTime = mCfg.dailyBackupTime || '18:30';
   const { istTimeStr, istDateStr } = getIstDateInfo();
 
-  // If the target scheduled time has not arrived yet today, skip
+  // 1. If target time has not arrived yet today, skip
   if (istTimeStr < targetTime) {
     return { ok: false, reason: `Target time ${targetTime} IST has not arrived yet (current: ${istTimeStr} IST)` };
   }
 
-  // Calculate minute difference between current time and target time
+  // 2. Check minute difference (window: within 15 minutes of scheduled time)
   const [curH, curM] = istTimeStr.split(':').map(Number);
   const [tgtH, tgtM] = targetTime.split(':').map(Number);
   const diffMinutes = (curH * 60 + curM) - (tgtH * 60 + tgtM);
 
-  // Trigger window: within 15 minutes of scheduled time (e.g. 22:41 to 22:56)
-  // This prevents unexpected surprise dispatches hours later if the app wasn't running at schedule time.
   if (diffMinutes > 15) {
     return { ok: false, reason: `Target time ${targetTime} IST was more than 15 minutes ago (${diffMinutes} mins ago). Skipping automatic catchup.` };
   }
 
-  const meta = readSyncMeta();
-  // If backup has already been dispatched today, skip
-  if (meta.lastDailyBackupDate === istDateStr) {
-    return { ok: false, reason: `Backup already completed today (${istDateStr}) at ${meta.lastDailyBackupAt}` };
+  // 3. ATOMIC DISTRIBUTED DATABASE LOCK ACQUISITION
+  // Atomically check-and-set lastDailyBackupDate = today in PostgreSQL in ONE single atomic statement.
+  // This guarantees that exactly ONE worker/lambda across the entire cluster can EVER acquire the lock.
+  if (db.isDbActive() && db.pool) {
+    try {
+      const lockQuery = `
+        UPDATE public.app_settings 
+        SET value = jsonb_set(
+          COALESCE(value, '{}'::jsonb), 
+          '{lastDailyBackupDate}', 
+          to_jsonb($1::text)
+        ),
+        updated_at = NOW()
+        WHERE key = 'sync_meta' 
+          AND (
+            value->>'lastDailyBackupDate' IS NULL 
+            OR value->>'lastDailyBackupDate' != $1
+          )
+        RETURNING value;
+      `;
+      const lockRes = await db.pool.query(lockQuery, [istDateStr]);
+      if (lockRes.rowCount === 0) {
+        // Lock acquisition rejected: Another worker or tab already dispatched or is currently dispatching today's backup!
+        return { ok: false, reason: `Backup already executed or locked for today (${istDateStr})` };
+      }
+      if (lockRes.rows[0]?.value) {
+        db.setCachedSetting('sync_meta', lockRes.rows[0].value);
+      }
+    } catch (lockErr) {
+      console.error('[BackupScheduler] Atomic lock error:', lockErr.message);
+      // Fallback check if atomic query failed
+      const meta = readSyncMeta();
+      if (meta.lastDailyBackupDate === istDateStr) {
+        return { ok: false, reason: `Backup already completed today (${istDateStr})` };
+      }
+    }
+  } else {
+    // Offline / Local file lock
+    const meta = readSyncMeta();
+    if (meta.lastDailyBackupDate === istDateStr) {
+      return { ok: false, reason: `Backup already completed today (${istDateStr})` };
+    }
+    meta.lastDailyBackupDate = istDateStr;
+    await writeSyncMeta(meta);
   }
 
+  // 4. Execute the email dispatch (exactly once!)
   isDailyBackupRunning = true;
-  console.log(`[BackupScheduler] Triggering scheduled backup for ${istDateStr} (target ${targetTime} IST, current ${istTimeStr} IST) via ${source}...`);
+  console.log(`[BackupScheduler] EXCLUSIVE LOCK ACQUIRED. Triggering daily backup for ${istDateStr} (target ${targetTime} IST, current ${istTimeStr} IST) via ${source}...`);
 
   try {
     const result = await sendDailyBackupEmail(`${source} (${targetTime} IST)`, true);
-    meta.lastDailyBackupDate = istDateStr;
-    await writeSyncMeta(meta);
     console.log(`[BackupScheduler] Daily backup successfully executed and emailed to ${(result.recipients || []).join(', ')} for ${istDateStr}.`);
     return { ok: true, triggered: true, ...result };
   } catch (err) {
     console.error(`[BackupScheduler] Error running scheduled daily backup:`, err.message);
+    // Release the atomic lock so it can be retried if dispatch completely failed
+    try {
+      if (db.isDbActive() && db.pool) {
+        await db.pool.query(`
+          UPDATE public.app_settings 
+          SET value = jsonb_set(value, '{lastDailyBackupDate}', '""'::jsonb)
+          WHERE key = 'sync_meta' AND value->>'lastDailyBackupDate' = $1
+        `, [istDateStr]);
+      }
+    } catch {}
     return { ok: false, error: err.message };
   } finally {
     isDailyBackupRunning = false;
@@ -5232,8 +5279,6 @@ const handler = async (req, res) => {
       }
     }
     if (p.startsWith('/api/')) {
-      // Non-blocking passive daily backup check (ensures serverless dispatches if scheduled time passed)
-      checkAndTriggerDailyBackupSchedule('Passive Request Heartbeat').catch(() => {});
       return await api(req, res, p.slice(5).split('/').filter(Boolean));
     }
     serve(req, res, p);
@@ -5255,7 +5300,7 @@ if (require.main === module && !IS_SERVERLESS) {
     checkAndTriggerDailyBackupSchedule('Automated Server Timer').catch(e => {
       console.error('[BackupScheduler] Background timer error:', e.message);
     });
-  }, 15000); // Daily backup schedule checker (runs every 15 seconds)
+  }, 60000); // Daily backup schedule checker (runs every 15 seconds)
   setTimeout(() => {
     checkAndTriggerDailyBackupSchedule('Server Startup Check').catch(() => {});
   }, 8000);
